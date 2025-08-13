@@ -143,6 +143,7 @@ void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, co
 }
 
 int main() {
+    constexpr int num_kernels = )" << kernel_configs.size() << R"(;
     std::vector<launch_function> launchers;
     std::vector<LaunchParameters> configs;
 )";
@@ -171,8 +172,8 @@ int main() {
         // best performance and launch it (informing the user which kernel
         // was chosen!!!)
 
-        out << "    BenchmarkResults result_array[" << kernel_configs.size() << "];\n";
-        out << "    for (int k = 0; k < " << kernel_configs.size() << "; k++) {\n";
+        out << "    BenchmarkResults result_array[num_kernels];\n";
+        out << "    for (int k = 0; k < num_kernels; k++) {\n";
         out <<
 R"(        const LaunchParameters& config = configs[k];
         LaunchParameters work_config = config;
@@ -211,8 +212,37 @@ R"(        const LaunchParameters& config = configs[k];
         results.ms_total_estimate = results.ms_per_batch * (config.end_batch - config.start_batch);
         result_array[k] = results;
     }
+    
+    int best_kernel = -1;
+    double best_perf = result_array[0].ms_total_estimate;
+    for (int k = 0; k < num_kernels; k++) {
+        if (result_array[k].success && result_array[k].ms_total_estimate < best_perf) {
+            best_perf = result_array[k].ms_total_estimate;
+            best_kernel = k;
+        }
+    }
+    if (best_kernel == -1) {
+        std::cerr << "All kernels failed. Aborting...\n";
+        return 1;
+    }
+    for (int k = 0; k < num_kernels; k++) {
+        std::cerr << (k == best_kernel ? "BEST> " : "      ");
+        if (result_array[k].success)
+            std::cerr << configs[k].kernel_name << ", ETA = " << result_array[k].ms_total_estimate << " ms.\n";
+        else
+            std::cerr << configs[k].kernel_name << " (failed!)\n";
+    }
+    
+    std::cerr << "Running kernel " << configs[best_kernel].kernel_name << "...\n";
+    {
+        const LaunchParameters& config = configs[best_kernel];
+        KernelMemory kernel_memory(config);
+        launch_configured_kernel(launchers[best_kernel], config, kernel_memory, true);
+        std::cerr << "Finished.\n";
+    }
+    return 0;
+}
 )";
-        out << "    return 0;\n}\n";
     }
 
     int generate_runner_source(launcher::LaunchParameters& kernel_config) {

@@ -1,6 +1,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#include <string>
 #include <vector>
 #include <chrono>
 #include <cstdint>
@@ -23,10 +24,50 @@ void gpuAssert(cudaError_t code, const char *file, int line) {
     }
 }
 
+struct LaunchParameters {
+    std::string kernel_name;
+    std::vector<u32> kernel_shared_memory;
+    u64 threads_total;
+    u64 threads_per_batch;
+    u32 threads_per_block;
+    u32 device_id;
+    i32 start_batch;
+    i32 end_batch;
+};
+struct KernelMemory {
+    u32* d_shared_mem_contents;
+    u32 shared_mem_contents_length;
+    u32 shared_mem_bytes;
+    u64* d_result_array;
+    u32* d_result_count;
+
+    KernelMemory(const LaunchParameters& lp) {
+        shared_mem_contents_length = lp.kernel_shared_memory.size();
+        shared_mem_bytes = lp.kernel_shared_memory.size() * sizeof(u32);
+        cudaMalloc(&d_shared_mem_contents, shared_mem_bytes);
+        cudaMalloc(&d_result_array, 16384 * sizeof(u64));
+        cudaMalloc(&d_result_count, sizeof(u32));
+        cudaMemcpy(d_shared_mem_contents, lp.kernel_shared_memory.data(), shared_mem_bytes, cudaMemcpyHostToDevice);
+    }
+    ~KernelMemory() {
+        cudaFree(d_shared_mem_contents);
+        cudaFree(d_result_array);
+        cudaFree(d_result_count);
+    }
+};
+struct BenchmarkResults {
+    std::string kernel_name;
+    bool success;
+    float ms_per_batch;
+    float ms_total_estimate;
+};
+
 __device__ inline void setSeed(u64* rand, u64 value){ *rand = (value ^ JRAND_MULTIPLIER) & MASK_48; }
 __device__ inline int next(u64* rand, const int bits){ *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48; return (int)((i64)*rand >> (48 - bits)); }
 __device__ inline int nextInt(u64* rand, const int n){ if ((n-1 & n) == 0) {u64 x = n * (u64)next(rand, 31); return (int)((i64)x >> 31);} else {return (int)(next(rand, 31) % n);} }
 __device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 << 24); }
+
+
 namespace kernel0 {
 extern "C" {
     __global__ void state_prediction_rolls(
@@ -161,49 +202,100 @@ extern "C" {
 }
 } //namespace
 namespace kernel0 {
-void launch(
-    const uint32_t num_blocks, const uint32_t threads_per_block, const uint32_t shared_mem_bytes,
-    uint64_t* result_array, uint32_t* result_count,
-    uint32_t* shared_mem_contents, uint32_t shared_mem_contents_length, 
-    uint64_t offset) 
+void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
 {
-    state_prediction_rolls<<< num_blocks, threads_per_block, shared_mem_bytes >>> (
-        result_array, result_count, shared_mem_contents, shared_mem_contents_length, offset
+    state_prediction_rolls<<< num_blocks, lp.threads_per_block, mem.shared_mem_bytes >>> (
+        mem.d_result_array, mem.d_result_count, mem.d_shared_mem_contents, mem.shared_mem_contents_length, offset
     );
 }} //namespace
 namespace kernel1 {
-void launch(
-    const uint32_t num_blocks, const uint32_t threads_per_block, const uint32_t shared_mem_bytes,
-    uint64_t* result_array, uint32_t* result_count,
-    uint32_t* shared_mem_contents, uint32_t shared_mem_contents_length, 
-    uint64_t offset) 
+void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
 {
-    naive_bruteforce<<< num_blocks, threads_per_block, shared_mem_bytes >>> (
-        result_array, result_count, shared_mem_contents, shared_mem_contents_length, offset
+    naive_bruteforce<<< num_blocks, lp.threads_per_block, mem.shared_mem_bytes >>> (
+        mem.d_result_array, mem.d_result_count, mem.d_shared_mem_contents, mem.shared_mem_contents_length, offset
     );
 }} //namespace
 namespace kernel2 {
-void launch(
-    const uint32_t num_blocks, const uint32_t threads_per_block, const uint32_t shared_mem_bytes,
-    uint64_t* result_array, uint32_t* result_count,
-    uint32_t* shared_mem_contents, uint32_t shared_mem_contents_length, 
-    uint64_t offset) 
+void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
 {
-    state_prediction_item<<< num_blocks, threads_per_block, shared_mem_bytes >>> (
-        result_array, result_count, shared_mem_contents, shared_mem_contents_length, offset
+    state_prediction_item<<< num_blocks, lp.threads_per_block, mem.shared_mem_bytes >>> (
+        mem.d_result_array, mem.d_result_count, mem.d_shared_mem_contents, mem.shared_mem_contents_length, offset
     );
 }} //namespace
 
-typedef void (*launch_function)(uint32_t, uint32_t, uint32_t, uint64_t*, uint32_t*, uint32_t*, uint32_t, uint64_t);
+typedef void (*launch_function)(const LaunchParameters&, const KernelMemory&, u32, u64);
+
+void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, const KernelMemory& mem, bool print_results) {
+    u64 h_result_array[16384];
+    const u32 num_blocks = lp.threads_per_batch / lp.threads_per_block;
+    for (u32 b = lp.start_batch; b < lp.end_batch; b++) {
+        u32 h_result_count = 0;
+        CUDA_CHECK(cudaMemcpy(mem.d_result_count, &h_result_count, sizeof(u32), cudaMemcpyHostToDevice));
+        lf(lp, mem, num_blocks, b*lp.threads_per_batch);
+        CUDA_CHECK(cudaDeviceSynchronize());
+
+        CUDA_CHECK(cudaMemcpy(&h_result_count, mem.d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(h_result_array, mem.d_result_array, h_result_count * sizeof(u64), cudaMemcpyDeviceToHost));
+        
+        if (!print_results) continue;
+        for (u32 i = 0; i < h_result_count; i++) {
+            std::cout << h_result_array[i] << '\n';
+        }
+        std::cout << std::flush;
+    }
+}
 
 int main() {
     std::vector<launch_function> launchers;
-    std::vector<std::vector<uint32_t>> shared_mems;
-    launchers.push_back(kernel0::launch); shared_mems.push_back(std::vector<uint32_t>());
-    launchers.push_back(kernel1::launch); shared_mems.push_back(std::vector<uint32_t>());
-    launchers.push_back(kernel2::launch); shared_mems.push_back(std::vector<uint32_t>());
-    {uint32_t shmem[] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5}; for (int k = 0; k < 28; k++) shared_mems[0].push_back(shmem[k]);}
-    {uint32_t shmem[] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5}; for (int k = 0; k < 28; k++) shared_mems[1].push_back(shmem[k]);}
-    {uint32_t shmem[] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5}; for (int k = 0; k < 28; k++) shared_mems[2].push_back(shmem[k]);}
+    std::vector<LaunchParameters> configs;
+    launchers.push_back(kernel0::launch);
+    configs.push_back({"state_prediction_rolls", std::vector<u32>(), 56294995342132ULL, 4294967296ULL, 256U, 0U, 0, 13108});
+    launchers.push_back(kernel1::launch);
+    configs.push_back({"naive_bruteforce", std::vector<u32>(), 281474976710656ULL, 4294967296ULL, 256U, 0U, 0, 65536});
+    launchers.push_back(kernel2::launch);
+    configs.push_back({"state_prediction_item", std::vector<u32>(), 10052677739667ULL, 4294967296ULL, 256U, 0U, 0, 2341});
+    {uint32_t shmem[] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5}; for (int k = 0; k < 28; k++) configs[0].kernel_shared_memory.push_back(shmem[k]);}
+    {uint32_t shmem[] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5}; for (int k = 0; k < 28; k++) configs[1].kernel_shared_memory.push_back(shmem[k]);}
+    {uint32_t shmem[] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5}; for (int k = 0; k < 28; k++) configs[2].kernel_shared_memory.push_back(shmem[k]);}
+
+    BenchmarkResults result_array[3];
+    for (int k = 0; k < 3; k++) {
+        const LaunchParameters& config = configs[k];
+        LaunchParameters work_config = config;
+        KernelMemory kernel_memory(config);
+        BenchmarkResults results{config.kernel_name, false, 0.0f, 0.0f};
+
+        const i32 middle_batch = (config.start_batch + config.end_batch) / 2;
+        work_config.threads_per_batch /= 4;
+
+        // warmup (to get more accurate measurements)
+        work_config.start_batch = middle_batch;
+        work_config.end_batch = middle_batch + 1;
+
+        CUDA_CHECK(cudaDeviceSynchronize());
+        for (u32 i = 0; i < 3; i++) {
+            launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
+        }
+
+        // benchmarking with auto-tuning
+        i32 batches = 1;
+        float elapsed_ms = 0.0f;
+        while (elapsed_ms < 100.0f) {
+            work_config.end_batch = work_config.start_batch + batches;
+
+            auto t0 = std::chrono::high_resolution_clock::now();
+            launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
+            auto t1 = std::chrono::high_resolution_clock::now();
+            elapsed_ms = (t1-t0).count() * 1e-6f;
+            if (elapsed_ms < 100.0f)
+                batches *= 2;
+        }
+
+        // results
+        results.success = true;
+        results.ms_per_batch = elapsed_ms * 4 / batches;
+        results.ms_total_estimate = results.ms_per_batch * (config.end_batch - config.start_batch);
+        result_array[k] = results;
+    }
     return 0;
 }

@@ -1,4 +1,4 @@
-#include "loot_table.h"
+#include "lootinator/loot_table.h"
 
 #include <fstream>
 

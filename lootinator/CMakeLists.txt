@@ -5,12 +5,14 @@ add_library(lootinator
     include/lootinator/template/helpers.h
     include/lootinator/template/kernel_template.h
     include/lootinator/template/template.h
+    include/lootinator/template/kernel/naive_bruteforce_template.h
     include/lootinator/utility/debug.h
     include/lootinator/utility/range.h
     src/lootinator.cpp
     src/constraint/constraint.cpp
     src/template/helpers.cpp
     src/template/kernel_template.cpp
+    src/template/kernel/naive_bruteforce_template.cpp
     src/template/template.cpp
     
     src/utility/debug.cpp

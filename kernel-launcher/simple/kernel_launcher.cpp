@@ -1,8 +1,8 @@
 /*
-This file will be compiled as a standalone application.
-It's going to be an executable that reads PTX code obtained using nvrtc
-and launches that as a kernel with additional (user-provided?)
-parameters, such as # of threads, device ID, etc.
+This file should be compiled as a standalone application.
+It's an executable that reads kernel source code, compiles it into
+PTX and launches it with user-provided parameters, such as 
+threads per block, device ID, threads per batch, etc.
 */
 
 #include <cuda.h>  // driver API

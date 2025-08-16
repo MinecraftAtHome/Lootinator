@@ -74,6 +74,28 @@ struct BenchmarkResults {
     float ms_total_estimate;
 };
 
+typedef void (*launch_function)(const LaunchParameters&, const KernelMemory&, u32, u64);
+
+void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, const KernelMemory& mem, bool print_results) {
+    u64 h_result_array[)" << launcher::RESULT_BUFFER_SIZE << R"(];
+    const u32 num_blocks = lp.threads_per_batch / lp.threads_per_block;
+    for (u32 b = lp.start_batch; b < lp.end_batch; b++) {
+        u32 h_result_count = 0;
+        CUDA_CHECK(cudaMemcpy(mem.d_result_count, &h_result_count, sizeof(u32), cudaMemcpyHostToDevice));
+        lf(lp, mem, num_blocks, b*lp.threads_per_batch);
+        CUDA_CHECK(cudaDeviceSynchronize());
+
+        CUDA_CHECK(cudaMemcpy(&h_result_count, mem.d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(h_result_array, mem.d_result_array, h_result_count * sizeof(u64), cudaMemcpyDeviceToHost));
+        
+        if (!print_results) continue;
+        for (u32 i = 0; i < h_result_count; i++) {
+            std::cout << h_result_array[i] << '\n';
+        }
+        std::cout << std::flush;
+    }
+}
+
 __device__ inline void setSeed(u64* rand, u64 value){ *rand = (value ^ JRAND_MULTIPLIER) & MASK_48; }
 __device__ inline int next(u64* rand, const int bits){ *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48; return (int)((i64)*rand >> (48 - bits)); }
 __device__ inline int nextInt(u64* rand, const int n){ if ((n-1 & n) == 0) {u64 x = n * (u64)next(rand, 31); return (int)((i64)x >> 31);} else {return (int)(next(rand, 31) % n);} }
@@ -120,28 +142,6 @@ void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks,
     void print_benchmarker(std::ostream& out, const std::vector<launcher::LaunchParameters>& kernel_configs) {
         out << 
 R"(
-typedef void (*launch_function)(const LaunchParameters&, const KernelMemory&, u32, u64);
-
-void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, const KernelMemory& mem, bool print_results) {
-    u64 h_result_array[)" << launcher::RESULT_BUFFER_SIZE << R"(];
-    const u32 num_blocks = lp.threads_per_batch / lp.threads_per_block;
-    for (u32 b = lp.start_batch; b < lp.end_batch; b++) {
-        u32 h_result_count = 0;
-        CUDA_CHECK(cudaMemcpy(mem.d_result_count, &h_result_count, sizeof(u32), cudaMemcpyHostToDevice));
-        lf(lp, mem, num_blocks, b*lp.threads_per_batch);
-        CUDA_CHECK(cudaDeviceSynchronize());
-
-        CUDA_CHECK(cudaMemcpy(&h_result_count, mem.d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
-        CUDA_CHECK(cudaMemcpy(h_result_array, mem.d_result_array, h_result_count * sizeof(u64), cudaMemcpyDeviceToHost));
-        
-        if (!print_results) continue;
-        for (u32 i = 0; i < h_result_count; i++) {
-            std::cout << h_result_array[i] << '\n';
-        }
-        std::cout << std::flush;
-    }
-}
-
 int main() {
     constexpr int num_kernels = )" << kernel_configs.size() << R"(;
     std::vector<launch_function> launchers;
@@ -163,15 +163,6 @@ int main() {
                 << "; k++) configs[" << i << "].kernel_shared_memory.push_back(shmem[k]);}\n";
         }
         out << "\n";
-
-        // TODO for each kernel do a full cuda device reset, synchronize.
-        // Then set up the result buffer, shared memory buffer, etc,
-        // launch the kernel repeatedly like the precompiled version of the
-        // benchmarker does.
-        // Store the estimated kernel performances, then find the kernel with
-        // best performance and launch it (informing the user which kernel
-        // was chosen!!!)
-
         out << "    BenchmarkResults result_array[num_kernels];\n";
         out << "    for (int k = 0; k < num_kernels; k++) {\n";
         out <<
@@ -245,16 +236,34 @@ R"(        const LaunchParameters& config = configs[k];
 )";
     }
 
-    int generate_runner_source(launcher::LaunchParameters& kernel_config) {
+    int generate_runner_source(launcher::LaunchParameters& lp) {
         std::vector<launcher::LaunchParameters> single_kernel;
-        single_kernel.push_back(kernel_config);
+        single_kernel.push_back(lp);
 
         std::ofstream fout(launcher::SOURCE_CODE_OUTPUT_FILE);
         print_preamble(fout);
         print_kernels(fout, single_kernel);
         print_kernel_launchers(fout, single_kernel);
 
-        fout << "int main() { return kernel0::launch(); }"; // TODO unfinished still, need to set up kernel data
+        fout << 
+R"(
+int main() {
+    LaunchParameters config = {")" << lp.kernel_name << "\", "
+        << "std::vector<u32>(), " << lp.threads_total << "ULL, " 
+        << lp.threads_per_batch << "ULL, " << lp.threads_per_block << "U, "
+        << lp.device_id << "U, " << lp.start_batch << ", " << lp.end_batch
+        << "};\n"; 
+
+        fout << "    {uint32_t shmem[] = ";
+        print_shared_mem(fout, lp);
+        fout << " for (int k = 0; k < " << lp.kernel_shared_memory.size() << "; k++) config.kernel_shared_memory.push_back(shmem[k]);}\n";
+
+        fout << 
+R"(    const KernelMemory mem(config);
+    launch_configured_kernel(kernel0::launch, config, mem, true);
+    return 0;
+}
+)";
         return 0;
     }
 

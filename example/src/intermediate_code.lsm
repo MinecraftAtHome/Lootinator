@@ -1,0 +1,15 @@
+// ruined portal with full set of gold armor, chestplate with protection
+
+using loot_pool_1;
+{
+    // c-style comments
+    roll natural;
+    {
+        count-items item_type(gold_helmet) item_type(gold_leggings) item_type(gold_boots);
+        count-enchant item_type(gold_chestplate);
+    }
+    assert-ge item_type(gold_helmet) item_count(1);
+    assert-ge item_type(gold_leggings) item_count(1);
+    assert-ge item_type(gold_boots) item_count(1);
+    assert-ge item_type(gold_chestplate) enchant_randomly_enchantment(protection) item_count(1);
+}

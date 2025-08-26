@@ -19,3 +19,18 @@ May only be defined inside a `pool` block. Declares that all instructions inside
 `lcg-fork-range [start_advancement:int32] [end_advancement:int32] [step_size:int32]; {...}`\
 Forks the current LCG state: declares that the sequence of instructions inside the block should be executed multiple times in a loop, starting with a copy of the previously used LCG advanced by `start_advancement` steps (inclusive), and ending with `end_advancement` steps (inclusive). Every consecutive iteration will start with an LCG advanced by `step_size` more states than the previous one.\
 For example, `lcg-fork-range -2 -10 -1; {...}` would make the first iteration of `{...}` start with an LCG advanced backwards by 2 states, the second one: by 3 states, and so on. The last iteration would start with a backward advancement of 10 states.
+
+## Named Values
+
+In LSM, values related directly with loot generation must be stored with additional context, as named values. Each named value follows the format: `name(value)`. Below is the list of all named values recognized by LSM:
+
+`item(type:string)`\
+Defines an item. `type` must be the full Minecraft item id, e.g. `minecraft:iron_ingot` and not the shortened form `iron_ingot`.
+
+`item_count(count:uint32)`\
+Defines an item count. Depending on the context, this can mean both an aggregated count, or the count in a single loot roll. `item_count(0)` denotes "no instance of the item" and can be used for negative filtering.
+
+`enchantment(type:string)`\
+Defines an enchantment. `type` must be the full Minecraft enchantment id, e.g. `minecraft:protection` and not the shortened form `protection`.
+
+`enchantment_level(level:uint32)`

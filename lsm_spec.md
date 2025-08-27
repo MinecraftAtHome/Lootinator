@@ -47,16 +47,22 @@ Defines an enchantment level. `enchantment_level(0)` denotes "no instance of an 
 Unlike block instructions, regular instructions always represent a single action or sequence of actions that will be performed by the kernel using data represented by the current context.
 Below is a list of all regular instructions allowed by LSM: (TODO organize, maybe group some of these?)
 
-`lcg-advance state_count:int32`\
+`lcg-advance state_count:int32;`\
 Advances the current context's LCG by `state_count` states.
 
-`count-items {item1:item(), item2:item(), ...}`\
+`lcg-reset;`\
+Resets the current context's LCG state to its initial state. 
+
+`succeed;`\
+Indicates that the current state of the current context's LCG satisfies all the requirements. This instruction will produce code that appends the corresponding 48-bit loot seed to a global result buffer. 
+
+`count-items [item1:item(), item2:item(), ...];`\
 May only be located inside a `roll` block. Instructs the LSM assembler to aggregate the item counts for the provided item types.
 
-`count-enchanted-items {item1:item(), item2:item(), ...}`\
+`count-enchanted-items [item1:item(), item2:item(), ...];`\
 May only be located inside a `roll` block. Instructs the LSM assembler to aggregate the item counts of distinct enchanted items for the provided item types.
 
-`assert properties:{[item() | enchantment() | enchantment_level()], ...} operator:['==' | '!=' | '>=' | '>' | '<=' | '<'] r_property:[item_count() | enchantment_level()]`\
+`assert properties:[[item() | enchantment() | enchantment_level()], ...] operator:['==' | '!=' | '>=' | '>' | '<=' | '<'] r_property:[item_count() | enchantment_level()];`\
 *NOTE: decided to drop the -eq, -ge, -le suffix from assert in favor of the operator argument, can change back if needed.*\
 Performs a context-based assertion that the `r_property` value(s) of the item(s) matching the specified `properties` satisfies the given `r_property` value when compared using `operator`. If the assertion fails, a context-based fail action is performed. In the default context, the fail action terminates the current thread. However, in `lcg-fork-range` blocks, the fail action is treated as an instruction to jump to the next iteration of the lcg advancement range (same effect `continue` has on a C `for` loop).\
 For clarification, below are some code examples of assertions and their effects:
@@ -69,6 +75,8 @@ pool 0;
         count-items item(minecraft:iron_ingot);
         assert item(minecraft:iron_ingot) >= item_count(14);
     }
+    lcg-reset;
+    succeed;
 }
 ```
 This simple example would produce code that generates the first loot pool of a loot table and checks if at least 14 iron ingot items were rolled in total.
@@ -85,6 +93,8 @@ pool 0;
         assert item(minecraft:iron_ingot) >= item_count(14);
         assert item(minecraft:iron_ingot) <= item_count(16);
     }
+    lcg-reset;
+    succeed;
 }
 ```
 In this example, apart from filtering for 14-16 iron ingots, the resulting code would also make sure no gold ingots or diamonds were generated. Note the use of assertions on item counts without the aggregating `count-items` statement - this would be reflected as a repeated assertion for each of the individual rolled entries. This is further illustrated in the example below.
@@ -97,7 +107,24 @@ pool 0;
         assert item(minecraft:gold_ingot) > item_count(10);
         assert item(minecraft:diamond) > item_count(4);
     }
+    lcg-reset;
+    succeed;
 }
 ```
 This largely impractical example would produce code searching for LCG states where **every single roll** of the first loot pool yields either more than 10 gold ingots, more than 4 diamonds, or any other item.\
 **TODO is this actually the behavior we want for these assert statements?**
+
+`test-layout [slot1:uint32, slot2:uint32, ..., slot27:uint32];`
+Generates the full contents of the chest loot table and tests whether the layout of item counts matches the one provided. This is a really slow operation and should only be executed once all other assertions have passed, or preferably not executed at all if the other assertions have sufficient filtering strength. For clarification, below is an example `test-layout` instruction along with the arrangement of items it would test for:
+```
+test-layout
+    0, 0, 3, 0, 0, 1, 1, 0, 0,
+    0, 0, 0, 2, 0, 0, 1, 0, 7, 
+    5, 1, 0, 2, 0, 0, 0, 0, 0;
+
+```
+|   |   |   |   |   |   |   |   |   |   
+|---|---|---|---|---|---|---|---|---|
+| - | - | 3 | - | - | 1 | 1 | - | - |
+| - | - | - | 2 | - | - | 1 | - | 7 |   
+| 5 | 1 | - | 2 | - | - | - | - | - |   

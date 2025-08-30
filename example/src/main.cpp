@@ -9,7 +9,7 @@ int main() {
 	loot::lsm::Parser *p = new loot::lsm::Parser();
 	loot::lsm::BlockInstruction block = loot::lsm::BlockInstruction();
 	
-	std::ifstream file("/home/scriptline/programming/Lootinator/example/src/test.lsm");
+	std::ifstream file("test.lsm");
 	if (!file) {
 
 	}

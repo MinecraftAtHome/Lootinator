@@ -7,12 +7,16 @@ add_library(lootinator
     include/lootinator/template/template.h
     include/lootinator/utility/debug.h
     include/lootinator/utility/range.h
+    include/lootinator/lsm/parser.hpp
+    include/lootinator/lsm/instructions.hpp
     src/lootinator.cpp
     src/constraint/constraint.cpp
     src/template/helpers.cpp
     src/template/kernel_template.cpp
     src/template/template.cpp
-    
+    src/lsm/instructions.cpp
+    src/lsm/parser.cpp
+
     src/utility/debug.cpp
 )
 

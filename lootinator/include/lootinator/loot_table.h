@@ -13,10 +13,10 @@ namespace loot {
         std::vector<int> total_weights;
 
         LootTable(const char* loot_table_json_filepath);
+        int find_item_name(const std::string& item_name) const;
 
     private:
         void add_item_name(const std::string& item_name);
-        int find_item_name(const std::string& item_name) const;
         void map_item_names();
         void precompute_entry_indices();
     };

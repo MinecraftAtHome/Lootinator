@@ -58,9 +58,15 @@ namespace loot {
         float filter_score = 0.0f;
 
         PoolConstraint(const Constraint& constraint);
+        PoolMatchType find_matching_loot_pool(const LootTable& loot_table);
+        void compute_filter_score(const LootTable& loot_table);
 
-        PoolMatchType find_matching_loot_pool(LootTable& loot_table);
-        void compute_filter_score(LootTable& loot_table);
+    private:
+        bool entry_attributes_match(const nlohmann::json& entry) const;
+        bool entry_item_matches(const LootTable& loot_table, const nlohmann::json& entry) const;
+
+        float compute_forward_filter_score(const LootTable& loot_table, const float item_rarity) const;
+        float compute_backward_filter_penalty(const LootTable& loot_table) const;
     };
 
     // stores lists of loot constraints grouped into constraints on single pools and

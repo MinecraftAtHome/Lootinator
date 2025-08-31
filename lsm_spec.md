@@ -19,7 +19,17 @@ Block instructions define special properties or structure of the code they wrap.
 Declares which pool of the loot table the sequence of code is targetting. `pool_idx` is a positive integer representing the loot pool's index in the loot table. For a loot table with N loot pools, the legal values of `pool_idx` are 0, 1, 2, ..., N-1. The first loot pool's index is 0.
 
 `roll roll_count:[uint32 | 'natural']; {...}`\
-May only be defined inside a `pool` block. Declares that all instructions inside the block aggregate the results of `roll_count` rolls of the corresponding loot pool, or the natural, potentially pseudo-random number of rolls specified in the loot pool if the `natural` keyword is provided instead. `natural` rolls use the LCG defined of the `roll` instruction's context.
+May only be defined inside a `pool` block. Declares that all instructions inside the block aggregate the results of `roll_count` rolls of the corresponding loot pool, or the natural, potentially pseudo-random number of rolls specified in the loot pool if the `natural` keyword is provided instead. `roll natural;` **does not advance the context's LCG state**; instead, a suitable `nextInt` output value is computed based on the **current LCG state**. To emulate regular generation of a loot pool, the following structure should be used:
+```
+pool 0;
+{
+    lcg-advance 1;
+    roll natural;
+    {
+        //...
+    }
+}
+```
 
 `lcg-fork-range start_advancement:int32 end_advancement:int32 step_size:int32; {...}`\
 Forks the current LCG state: declares that the sequence of instructions inside the block should be executed multiple times in a loop, starting with a copy of the previously used LCG advanced by `start_advancement` steps (inclusive), and ending with `end_advancement` steps (inclusive). Every consecutive iteration will start with an LCG advanced by `step_size` more states than the previous one.\
@@ -41,7 +51,20 @@ Defines an enchantment. `type` must be the full Minecraft enchantment id, e.g. `
 Defines an enchantment level. `enchantment_level(0)` denotes "no instance of an enchantment" and can be used for negative filtering.
 
 ## The `filter-on` instruction
-`filter-on` is an optional instruction that modifies the way the initial LCG state for the default context is calculated. It may only be declared once per LSM program, as the first instruction inside the first `pool` block in the code. TODO perhaps we should change this to be independent of pools and operate on raw PRNG functions?
+`filter-on` is an optional instruction that modifies the way the initial LCG state for the default context is calculated. It may only be declared once per LSM program, as the very first instruction. Other use of the instruction is not allowed and will result in compilation errors. 
+
+`filter-on` takes a list of range constraints
+on `nextInt(n)` calls, given as 3-element tuples as follows:\
+`filter-on [[bound1:uint32 min1:uint32 max1:uint32], [bound2:uint32 min2:uint32 max2:uint32], ...];`
+
+Each tuple `[bound min max]` represents the following constraint:\
+`min <= nextInt(bound) <= max`\
+If any given constraint is not satisfiable (i.e. `min > max` or `min >= bound`), the code will fail to compile.
+
+`filter-on` will always translate to exactly one specific LCG state reversal method, depending on the number of parameters:
+- state prediction if 1 range constraint with a non-power-of-two `bound` was provided,
+- advanced reversal if multiple such constraints were given.
+
 
 ## Regular Instructions
 Unlike block instructions, regular instructions always represent a single action or sequence of actions that will be performed by the kernel using data represented by the current context.
@@ -111,8 +134,7 @@ pool 0;
     succeed;
 }
 ```
-This largely impractical example would produce code searching for LCG states where **every single roll** of the first loot pool yields either more than 10 gold ingots, more than 4 diamonds, or any other item.\
-**TODO is this actually the behavior we want for these assert statements?**
+This largely impractical example would produce code searching for LCG states where **every single roll** of the first loot pool yields either more than 10 gold ingots, more than 4 diamonds, or any other item.
 
 `test-layout [slot1:uint32, slot2:uint32, ..., slot27:uint32];`
 Generates the full contents of the chest loot table and tests whether the layout of item counts matches the one provided. This is a really slow operation and should only be executed once all other assertions have passed, or preferably not executed at all if the other assertions have sufficient filtering strength. For clarification, below is an example `test-layout` instruction along with the arrangement of items it would test for:

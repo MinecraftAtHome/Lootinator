@@ -1,9 +1,10 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
-#include <nlohmann/json.hpp>
 #include "lootinator/constraint/constraint.h"
+
 
 namespace loot {
     // -------------------------------------------------------------------------------
@@ -122,5 +123,46 @@ namespace loot {
         }
         return constraints;
     }
-}
 
+    // ------------------------------------------------------------------------------------------------------
+    // the following section is for handling constraints satisfiable only by specific pools of the loot table
+
+    PoolConstraint::PoolConstraint(const Constraint &constraint) : Constraint(constraint) {}
+
+    PoolMatchType PoolConstraint::find_matching_loot_pool(LootTable &loot_table) {
+        // TODO
+        return PoolMatchType();
+    }
+
+    void PoolConstraint::compute_filter_score(LootTable &loot_table) {
+        // TODO
+    }
+
+    LootTableConstraintList::LootTableConstraintList(LootTable &loot_table) : loot_table(loot_table) {}
+    
+    bool LootTableConstraintList::initialize_constraints(const std::vector<loot::Constraint> &constraints) {
+        for (const auto& con : constraints) {
+            loot::PoolConstraint pool_con(con);
+            PoolMatchType match_result = pool_con.find_matching_loot_pool(loot_table);
+            if (match_result == PoolMatchType::NOT_FOUND) {
+                return false; // illegal constraint specified
+            }
+            else if (match_result == PoolMatchType::SINGLE_POOL) {
+                pool_con.compute_filter_score(loot_table);
+                per_pool_constraints.push_back(pool_con);
+            }
+            else {
+                global_constraints.push_back(con);
+            }
+        }
+
+        // sort the per-pool constraint vector in descending order using the computed heuristic score
+        std::sort(per_pool_constraints.begin(), per_pool_constraints.end(), 
+            [](const PoolConstraint& a, const PoolConstraint& b) {
+                return a.filter_score > b.filter_score;
+            }
+        );
+        
+        return true;
+    }
+}

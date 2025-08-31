@@ -3,8 +3,7 @@
 
 #include "lootinator/utility/range.h"
 #include "lootinator/utility/debug.h"
-
-#include <nlohmann/json.hpp>
+#include "lootinator/loot_table.h"
 
 #include <cstdint>
 
@@ -45,6 +44,35 @@ namespace loot {
 
     void merge_contraints(const std::vector<loot::Constraint>& src, std::vector<loot::Constraint>& dest);
     std::vector<loot::Constraint> parse_constraints_from_json(const char *filepath);
+
+    // ------------------------------------------------------------------------------------------------------
+    // the following section is for handling constraints satisfiable only by specific pools of the loot table
+    
+    enum PoolMatchType {
+        NOT_FOUND,
+        SINGLE_POOL,
+        MULTI_POOL
+    };
+    struct PoolConstraint : Constraint {
+        int pool_idx = -1;
+        float filter_score = 0.0f;
+
+        PoolConstraint(const Constraint& constraint);
+
+        PoolMatchType find_matching_loot_pool(LootTable& loot_table);
+        void compute_filter_score(LootTable& loot_table);
+    };
+
+    // stores lists of loot constraints grouped into constraints on single pools and
+    // global constraints (constraints depending on more than 1 loot pool).
+    struct LootTableConstraintList {
+        LootTable& loot_table;
+        std::vector<loot::PoolConstraint> per_pool_constraints;
+        std::vector<loot::Constraint> global_constraints;
+
+        LootTableConstraintList(LootTable& loot_table);
+        bool initialize_constraints(const std::vector<loot::Constraint>& constraints);
+    };
 }
 
 #endif

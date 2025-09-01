@@ -53,11 +53,11 @@ namespace loot {
         SINGLE_POOL,
         MULTI_POOL
     };
-    struct PoolConstraint : Constraint {
+    struct PoolFilter : Constraint {
         int pool_idx = -1;
         float filter_score = 0.0f;
 
-        PoolConstraint(const Constraint& constraint);
+        PoolFilter(const Constraint& constraint);
         PoolMatchType find_matching_loot_pool(const LootTable& loot_table);
         void compute_filter_score(const LootTable& loot_table);
 
@@ -73,7 +73,7 @@ namespace loot {
     // global constraints (constraints depending on more than 1 loot pool).
     struct LootTableConstraintList {
         LootTable& loot_table;
-        std::vector<loot::PoolConstraint> per_pool_constraints;
+        std::vector<loot::PoolFilter> per_pool_constraints;
         std::vector<loot::Constraint> global_constraints;
 
         LootTableConstraintList(LootTable& loot_table);

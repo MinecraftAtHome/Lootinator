@@ -16,8 +16,11 @@ namespace loot {
     };
 
     struct PoolFilter {
-        int pool_idx = -1;
-        float filter_score = 0.0f;
+        int pool_idx;
+        int item_idx;
+        int item_count;
+        std::vector<ItemAttribute> attributes;
+        float filter_score;
 
         PoolMatchType find_matching_loot_pool(const LootTable& loot_table);
         void compute_filter_score(const LootTable& loot_table);

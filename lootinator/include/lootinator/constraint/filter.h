@@ -47,6 +47,7 @@ namespace loot {
     private:
         void add_possible_filters(const std::vector<loot::Constraint>& constraints, const loot::Constraint& main_constraint, int pool_idx);
         loot::Constraint aggregate_constraints(const std::vector<loot::Constraint>& constraints, const loot::Constraint& main_constraint, loot::ReversalType type);
+        bool constraint_applicable(const loot::Constraint& constr, ReversalType type);
         bool constraints_match_for_reversal_type(const loot::Constraint& first, const loot::Constraint& second, loot::ReversalType type) const;
         RangeInclusive<int> get_roll_range(const nlohmann::json& pool, const loot::Constraint& aggregated_constraint) const;
         int find_matching_loot_pool(const loot::Constraint& constr) const;

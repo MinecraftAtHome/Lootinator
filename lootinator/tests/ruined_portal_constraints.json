@@ -2,8 +2,8 @@
     {
         "item": 2,
         "range": {
-            "min": 16,
-            "max": 20
+            "min": 56,
+            "max": 80
         },
         "slot": 1,
         "attributes": []

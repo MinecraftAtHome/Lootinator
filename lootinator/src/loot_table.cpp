@@ -29,7 +29,7 @@ namespace loot {
     void LootTable::map_item_names() {
         const auto& pools = data["pools"];
         for (const auto& loot_pool : pools) {
-            const auto& entries = data["entries"];
+            const auto& entries = loot_pool["entries"];
             for (const auto& entry : entries) {
                 if (entry["type"] == "minecraft:item") {
                     add_item_name(entry["name"]);
@@ -42,9 +42,9 @@ namespace loot {
         const auto& pools = data["pools"];
         int pool_id = 0;
         for (const auto& loot_pool : pools) {
+            precomputed_loot.push_back(std::vector<int>());
             int total_weight = 0;
-
-            const auto& entries = data["entries"];
+            const auto& entries = loot_pool["entries"];
             for (const auto& entry : entries) {
                 int entry_weight = 1;
                 if (entry.contains("weight")) {

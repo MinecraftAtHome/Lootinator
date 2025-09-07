@@ -1,6 +1,7 @@
 #include "lootinator/constraint/filter.h"
 #include "lootinator/utility/mth.h"
 #include <iostream>
+#include "filter.h"
 
 
 namespace loot {
@@ -74,10 +75,8 @@ namespace loot {
     LootTableConstraintList::LootTableConstraintList(LootTable &loot_table) : loot_table(loot_table) {}
     
     bool LootTableConstraintList::initialize_constraints(const std::vector<loot::Constraint> &constraints) {
-        std::cerr << "VASJHDFVSAKHJFVSAKJHF\n";
         for (const auto& constr : constraints) {
             int pool_idx = find_matching_loot_pool(constr);
-            std::cerr << "found pool_idx = " << pool_idx << '\n';
             if (pool_idx == loot::NO_POOL_MATCH) {
                 return false; // illegal constraint specified
             }
@@ -112,11 +111,13 @@ namespace loot {
 
         ReversalType rtypes[3] = {ReversalType::ITEM_ONLY, ReversalType::ITEM_AND_ATTRIBUTE, ReversalType::ITEM_AND_ATTRIBUTE_AND_LEVEL};
         for (auto reversal_type : rtypes) {
+            if (!constraint_applicable(main_constraint, reversal_type))
+                continue;
             loot::Constraint total = aggregate_constraints(constraints, main_constraint, reversal_type);
 
             // TODO count how many rolls min/max
             RangeInclusive<int> rolls_for_constraint = get_roll_range(pool, total);
-            std::cerr << ", rtype = " << reversal_type << "constraint: " << total << "\n";
+            std::cerr << ", rtype = " << reversal_type << " constraint: " << total << "\n";
             std::cerr << rolls_for_constraint;
             
             // assert within min/max of loot table
@@ -135,8 +136,11 @@ namespace loot {
         return aggregate;
     }
 
-    RangeInclusive<int> LootTableConstraintList::get_roll_range(const nlohmann::json& pool, const loot::Constraint &aggregated_constraint) const
-    {
+    bool LootTableConstraintList::constraint_applicable(const loot::Constraint &constr, ReversalType type) {
+        return type == ReversalType::ITEM_ONLY || !constr.attributes.empty();
+    }
+
+    RangeInclusive<int> LootTableConstraintList::get_roll_range(const nlohmann::json &pool, const loot::Constraint &aggregated_constraint) const {
         RangeInclusive<int> pool_rolls = RangeInclusive<int>::from_json(pool["rolls"]);
         RangeInclusive<int> items_per_roll(1, 1);
 
@@ -158,7 +162,8 @@ namespace loot {
         // min items per roll -> max rolls needed
         RangeInclusive<int> roll_range(1, 1);
         // TODO TEST!!!!!
-        roll_range.min = max(pool_rolls.min, floor_div(aggregated_constraint.count_range.min, items_per_roll.max));
+        std::cerr << aggregated_constraint.count_range.min << " " << aggregated_constraint.count_range.max << " " << items_per_roll.min << " " << items_per_roll.max << '\n';
+        roll_range.min = max(pool_rolls.min, ceil_div(aggregated_constraint.count_range.min, items_per_roll.max));
         roll_range.max = min(pool_rolls.max, ceil_div(aggregated_constraint.count_range.max, items_per_roll.min));
         return roll_range;
     }
@@ -166,23 +171,25 @@ namespace loot {
     // FIXME assumes the first constraint has only 1 relevant attribute and it's at index 0
     bool LootTableConstraintList::constraints_match_for_reversal_type(const loot::Constraint &main_constraint, const loot::Constraint &second, loot::ReversalType type) const
     {
-        auto& main_attr = main_constraint.attributes.at(0);
-
         switch (type) {
-        case ReversalType::ITEM_ONLY:
-            return main_constraint.item == second.item;
-        case ReversalType::ITEM_AND_ATTRIBUTE:
-            for (auto& attr : main_constraint.attributes) {
-                if (main_attr.type == attr.type)
-                    return true;
+            case ReversalType::ITEM_ONLY:
+                return main_constraint.item == second.item;
+            case ReversalType::ITEM_AND_ATTRIBUTE: {
+                auto& main_attr = main_constraint.attributes.at(0);
+                for (auto& attr : main_constraint.attributes) {
+                    if (main_attr.type == attr.type)
+                        return true;
+                }
+                return false;
             }
-            return false;
-        case ReversalType::ITEM_AND_ATTRIBUTE_AND_LEVEL:
-            for (auto& attr : main_constraint.attributes) {
-                if (main_attr.type == attr.type && main_attr.level_range == attr.level_range)
-                    return true;
+            case ReversalType::ITEM_AND_ATTRIBUTE_AND_LEVEL: {
+                auto& main_attr = main_constraint.attributes.at(0);
+                for (auto& attr : main_constraint.attributes) {
+                    if (main_attr.type == attr.type && main_attr.level_range == attr.level_range)
+                        return true;
+                }
+                return false;
             }
-            return false;
         }
     }
 }

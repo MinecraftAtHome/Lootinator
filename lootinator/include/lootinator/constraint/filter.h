@@ -37,7 +37,7 @@ namespace loot {
     // stores lists of loot constraints grouped into constraints on single pools and
     // global constraints (constraints depending on more than 1 loot pool).
     struct LootTableConstraintList {
-        LootTable& loot_table;
+        loot::LootTable& loot_table;
         std::vector<loot::PoolFilter> available_filters;
         std::vector<loot::Constraint> global_constraints;
 
@@ -45,10 +45,13 @@ namespace loot {
         bool initialize_constraints(const std::vector<loot::Constraint>& constraints);
 
     private:
-        void add_possible_filters(const std::vector<loot::Constraint>& constraints, const Constraint& main_constraint);
-        int find_matching_loot_pool(const Constraint& constr) const;
-        bool entry_attributes_match(const Constraint& constr, const nlohmann::json& entry) const;
-        bool entry_item_matches(const Constraint& constr, const nlohmann::json& entry) const;
+        void add_possible_filters(const std::vector<loot::Constraint>& constraints, const loot::Constraint& main_constraint, int pool_idx);
+        loot::Constraint aggregate_constraints(const std::vector<loot::Constraint>& constraints, const loot::Constraint& main_constraint, loot::ReversalType type);
+        bool constraints_match_for_reversal_type(const loot::Constraint& first, const loot::Constraint& second, loot::ReversalType type) const;
+        RangeInclusive<int> get_roll_range(const nlohmann::json& pool, const loot::Constraint& aggregated_constraint) const;
+        int find_matching_loot_pool(const loot::Constraint& constr) const;
+        bool entry_attributes_match(const loot::Constraint& constr, const nlohmann::json& entry) const;
+        bool entry_item_matches(const loot::Constraint& constr, const nlohmann::json& entry) const;
     };
 };
 

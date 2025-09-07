@@ -1,4 +1,7 @@
 #include "lootinator/constraint/filter.h"
+#include "lootinator/utility/mth.h"
+#include <iostream>
+
 
 namespace loot {
     // iterates over the entries for each loot pool and find one that matches
@@ -9,7 +12,7 @@ namespace loot {
 
         const auto& pools = loot_table.data["pools"];
         for (const auto& loot_pool : pools) {
-            const auto& entries = loot_table.data["entries"];
+            const auto& entries = loot_pool["entries"];
             for (const auto& entry : entries) {
                 if (entry_item_matches(constr, entry) && entry_attributes_match(constr, entry)) {
                     if (pool_match != loot::NO_POOL_MATCH) {
@@ -51,10 +54,12 @@ namespace loot {
     }
 
     bool LootTableConstraintList::entry_item_matches(const Constraint& constr, const nlohmann::json& entry) const {
+        std::cerr << entry["type"] << " " << entry["name"] << " ";
         if (entry["type"] != "minecraft:item") {
             return false;
         }
         int item_idx = loot_table.find_item_name(entry["name"]);
+        std::cerr << item_idx << '\n';
         return item_idx == constr.item;
     }
 
@@ -69,8 +74,10 @@ namespace loot {
     LootTableConstraintList::LootTableConstraintList(LootTable &loot_table) : loot_table(loot_table) {}
     
     bool LootTableConstraintList::initialize_constraints(const std::vector<loot::Constraint> &constraints) {
+        std::cerr << "VASJHDFVSAKHJFVSAKJHF\n";
         for (const auto& constr : constraints) {
             int pool_idx = find_matching_loot_pool(constr);
+            std::cerr << "found pool_idx = " << pool_idx << '\n';
             if (pool_idx == loot::NO_POOL_MATCH) {
                 return false; // illegal constraint specified
             }
@@ -78,7 +85,7 @@ namespace loot {
                 global_constraints.push_back(constr);
             }
             else {
-                add_possible_filters(constraints, constr);
+                add_possible_filters(constraints, constr, pool_idx);
             }
         }
 
@@ -92,8 +99,90 @@ namespace loot {
         return true;
     }
 
-    void add_possible_filters(const std::vector<loot::Constraint>& constraints, const Constraint& main_constraint) {
+    // {
+    //      >= 3 obsidian -> 2 obby every time = 2 rolls, 1 obby every time = 3 rolls
+    //      >= 2 fire_charge
+    //      == 1 golden_boots, protection >= 2
+    // }
+
+    void LootTableConstraintList::add_possible_filters(const std::vector<loot::Constraint>& constraints, const Constraint& main_constraint, int pool_idx) {
         // TODO
         // this will add unique filters to the possible filter list
+        const nlohmann::json& pool = loot_table.data["pools"][pool_idx];
+
+        ReversalType rtypes[3] = {ReversalType::ITEM_ONLY, ReversalType::ITEM_AND_ATTRIBUTE, ReversalType::ITEM_AND_ATTRIBUTE_AND_LEVEL};
+        for (auto reversal_type : rtypes) {
+            loot::Constraint total = aggregate_constraints(constraints, main_constraint, reversal_type);
+
+            // TODO count how many rolls min/max
+            RangeInclusive<int> rolls_for_constraint = get_roll_range(pool, total);
+            std::cerr << ", rtype = " << reversal_type << "constraint: " << total << "\n";
+            std::cerr << rolls_for_constraint;
+            
+            // assert within min/max of loot table
+            // add a pool filter based on the aggregated constraint
+        }
+    }
+
+    loot::Constraint LootTableConstraintList::aggregate_constraints(const std::vector<loot::Constraint> &constraints, const loot::Constraint &main_constraint, loot::ReversalType reversal_type)
+    {
+        loot::Constraint aggregate{main_constraint.item, {0,0}, loot::SLOT_NONE, main_constraint.attributes};
+        for (const auto& con : constraints) {
+            if (constraints_match_for_reversal_type(main_constraint, con, reversal_type)) {
+                aggregate.count_range = aggregate.count_range.merge(con.count_range);
+            }
+        }
+        return aggregate;
+    }
+
+    RangeInclusive<int> LootTableConstraintList::get_roll_range(const nlohmann::json& pool, const loot::Constraint &aggregated_constraint) const
+    {
+        RangeInclusive<int> pool_rolls = RangeInclusive<int>::from_json(pool["rolls"]);
+        RangeInclusive<int> items_per_roll(1, 1);
+
+        for (auto& entry: pool["entries"]) {
+            // FIXME attributes should match too!!!
+            if (entry["type"] != "minecraft:item") {
+                continue;
+            }
+            if (aggregated_constraint.item == loot_table.find_item_name(entry["name"])) {
+                for (auto& loot_fun : entry["functions"]) {
+                    if (loot_fun["function"] == "minecraft:set_count") {
+                        items_per_roll = RangeInclusive<int>::from_json(loot_fun["count"]);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // min items per roll -> max rolls needed
+        RangeInclusive<int> roll_range(1, 1);
+        // TODO TEST!!!!!
+        roll_range.min = max(pool_rolls.min, floor_div(aggregated_constraint.count_range.min, items_per_roll.max));
+        roll_range.max = min(pool_rolls.max, ceil_div(aggregated_constraint.count_range.max, items_per_roll.min));
+        return roll_range;
+    }
+
+    // FIXME assumes the first constraint has only 1 relevant attribute and it's at index 0
+    bool LootTableConstraintList::constraints_match_for_reversal_type(const loot::Constraint &main_constraint, const loot::Constraint &second, loot::ReversalType type) const
+    {
+        auto& main_attr = main_constraint.attributes.at(0);
+
+        switch (type) {
+        case ReversalType::ITEM_ONLY:
+            return main_constraint.item == second.item;
+        case ReversalType::ITEM_AND_ATTRIBUTE:
+            for (auto& attr : main_constraint.attributes) {
+                if (main_attr.type == attr.type)
+                    return true;
+            }
+            return false;
+        case ReversalType::ITEM_AND_ATTRIBUTE_AND_LEVEL:
+            for (auto& attr : main_constraint.attributes) {
+                if (main_attr.type == attr.type && main_attr.level_range == attr.level_range)
+                    return true;
+            }
+            return false;
+        }
     }
 }

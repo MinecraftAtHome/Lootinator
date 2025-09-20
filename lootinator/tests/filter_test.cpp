@@ -5,7 +5,7 @@
 #include "lootinator/constraint/filter.h"
 
 
-void smoke_test() {
+int smoke_test() {
     try {
         loot::LootTable lt("../../lootinator/tests/ruined_portal.json");
         loot::debug(std::cerr, lt.item_names);
@@ -15,10 +15,12 @@ void smoke_test() {
     } 
     catch (const std::exception& e) {
         std::cerr << "Caught exception: " << e.what() << std::endl;
+        return 1;
 	}
+    return 0;
 }
 
 int LOOTINATOR_EXTERN tests_filter_test(int argc, char** const argv) {
-    smoke_test();
-    return 1;
+    if (smoke_test()) return 1;
+    return 0;
 }

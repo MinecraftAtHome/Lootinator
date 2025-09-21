@@ -168,7 +168,8 @@ pool 0;
         case item(golden_pickaxe);
         {
             apply-function 0:5:0;
-            pool-assert enchantment(efficiency) enchantment_level(5) >= item_count(1);
+            pool-assert enchantment(efficiency) enchantment_level(5) >= 2;
+            pool-assert enchantment(efficiency) enchantment_level(3) >= 1;
         }
         case item(flint_and_steel);
         {
@@ -180,11 +181,11 @@ pool 0;
         }
         case item(golden_sword);
         {
-            skip-function 0:6:0;
+            apply-function 0:6:0;
         }
         case item(golden_axe);
         {
-            skip-function 0:7:0;
+            apply-function 0:7:0;
         }
         //...
         case item(gold_block) item(enchanted_golden_apple) item(bell);

@@ -167,7 +167,7 @@ test-layout
 pool 0
 {
     lcg-advance 1;
-    roll natural;
+    roll 0
     {
         case golden_pickaxe
         {

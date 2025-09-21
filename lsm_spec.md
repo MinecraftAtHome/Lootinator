@@ -161,12 +161,7 @@ test-layout
 | 5 | 1 | - | 2 | - | - | - | - | - |   
 
 
-## Concept to discuss
-move LSM down to individual loot function level,
-make roll blocks explicitly declare how each item will
-get processed.
-
-Example:
+## Code Examples
 
 ```
 pool 0
@@ -174,33 +169,35 @@ pool 0
     lcg-advance 1;
     roll natural;
     {
-        case item(golden_pickaxe)
+        case golden_pickaxe
         {
-            apply-function 0:5:0;
-            pool-assert enchantment(efficiency) enchantment_level(5) >= 2;
-            pool-assert enchantment(efficiency) enchantment_level(3) >= 1;
+            apply-function 0 5 0;
+            pool-assert efficiency 5 >= 2;
+            pool-assert efficiency 3 >= 1;
         }
-        case item(flint_and_steel)
+        case flint_and_steel
         {
-            pool-assert >= item_count(1); // would translate to boolean flag being set
+            pool-assert >= 1; // would translate to boolean flag being set
         }
-        case item(golden_nugget) item(iron_nugget) item(obsidian)
+        case golden_nugget iron_nugget obsidian
         {
             lcg-advance 1;
         }
-        case item(golden_sword)
+        case golden_sword
         {
-            apply-function 0:6:0;
+            apply-function 0 6 0;
         }
-        case item(golden_axe)
+        case golden_axe
         {
-            apply-function 0:7:0;
+            apply-function 0 7 0;
         }
         //...
-        case item(gold_block) item(enchanted_golden_apple) item(bell)
+        case gold_block enchanted_golden_apple bell
         {
             fail; // for lootseed cracking or specific kinds of lootseed finding
         }
     }
+    lcg-reset;
+    succeed;
 }
 ```

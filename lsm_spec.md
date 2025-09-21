@@ -12,43 +12,34 @@ Operations on the LCG state unrelated with loot generation are stated explicitly
 The default context of every LSM program contains the structure of the loot table for which constraints need to be satisfied. It also contains a single LCG state variable, initially set to the unique thread identifier of the CUDA kernel. The default context can be modified by **block instructions** and the `filter-on` **regular instruction**. Modifications of the context may include changes to the LCG state (`filter-on`, `lcg-fork-range`), or specification of additional properties (`pool`, `roll`).\
 Any operation that would implicitly use variables in the final CUDA kernel uses the current context in LSM. For example, `lcg-advance 2;` uses the LCG of the context defined for the point where the instruction is located.
 
-## Block Instructions
-Block instructions define special properties or structure of the code they wrap. The aggregated properties of all blocks wrapping an LSM instruction are always part of the context for that instruction. Each block instruction must be colon-terminated and followed by a C-style block of code wrapped in parentheses: `{}`. The available block instructions are:
+## The property syntax
+In LSM, every single item property such as an item name, an enchantment name, an enchantment level, or any other literal (constant value) gets stored directly, without any additional wrapping syntax. As an example, `protection 3` represents the protection III enchantment, and `diamond_pickaxe efficiency 5` represents a diamond pickaxe enchanted with efficiency V. 
 
-`pool pool_idx:uint32; {...}`\
+## Block Instructions
+Block instructions define special properties or structure of the code they wrap. The aggregated properties of all blocks wrapping an LSM instruction are always part of the context for that instruction. Each block instruction must be followed by a C-style block of code wrapped in curly parentheses: `{}`. The available block instructions are:
+
+`pool pool_idx:uint32 {...}`\
 Declares which pool of the loot table the sequence of code is targetting. `pool_idx` is a positive integer representing the loot pool's index in the loot table. For a loot table with N loot pools, the legal values of `pool_idx` are 0, 1, 2, ..., N-1. The first loot pool's index is 0.
 
-`roll roll_count:[uint32 | 'natural']; {...}`\
-May only be defined inside a `pool` block. Declares that all instructions inside the block aggregate the results of `roll_count` rolls of the corresponding loot pool, or the natural, potentially pseudo-random number of rolls specified in the loot pool if the `natural` keyword is provided instead. `roll natural;` **does not advance the context's LCG state**; instead, a suitable `nextInt` output value is computed based on the **current LCG state**. To emulate regular generation of a loot pool, the following structure should be used:
+`roll roll_count:[uint32] {...}`\
+May only be defined inside a `pool` block. Declares that all instructions inside the block aggregate the results of `roll_count` rolls of the corresponding loot pool, or the natural, potentially pseudo-random number of rolls specified in the loot pool if `0` is provided instead. `roll 0` **does not advance the context's LCG state**; instead, a suitable `nextInt` output value is computed based on the **current LCG state**. To emulate regular generation of a loot pool, the following structure should be used:
 ```
-pool 0;
+pool 0
 {
     lcg-advance 1;
-    roll natural;
+    roll 0
     {
         //...
     }
 }
 ```
 
-`lcg-fork-range start_advancement:int32 end_advancement:int32 step_size:int32; {...}`\
+`case item:[property] {...}`\
+Must be defined inside a `roll` block. `case` instructions are core building blocks of each LSM program, and contain instructions on how the final kernel should handle every single item type.   
+
+`lcg-fork-range start_advancement:int32 end_advancement:int32 step_size:int32 {...}`\
 Forks the current LCG state: declares that the sequence of instructions inside the block should be executed multiple times in a loop, starting with a copy of the previously used LCG advanced by `start_advancement` steps (inclusive), and ending with `end_advancement` steps (inclusive). Every consecutive iteration will start with an LCG advanced by `step_size` more states than the previous one.\
 For example, `lcg-fork-range -2 -10 -1; {...}` would make the first iteration of `{...}` start with an LCG advanced backwards by 2 states, the second one: by 3 states, and so on. The last iteration would start with a backward advancement of 10 states.
-
-## Named Values
-In LSM, values related directly with loot generation must be stored with additional context, as named values. Each named value follows the format: `name(value)`. Below is the list of all named values recognized by LSM:
-
-`item(type:string)`\
-Defines an item. `type` must be the full Minecraft item id, e.g. `minecraft:iron_ingot` and not the shortened form `iron_ingot`.
-
-`item_count(count:uint32)`\
-Defines an item count. Depending on the context, this can mean both an aggregated count, or the count in a single loot roll. `item_count(0)` denotes "no instance of an item" and can be used for negative filtering.
-
-`enchantment(type:string)`\
-Defines an enchantment. `type` must be the full Minecraft enchantment id, e.g. `minecraft:protection` and not the shortened form `protection`.
-
-`enchantment_level(level:uint32)`\
-Defines an enchantment level. `enchantment_level(0)` denotes "no instance of an enchantment" and can be used for negative filtering.
 
 ## The `filter-on` instruction
 `filter-on` is an optional instruction that modifies the way the initial LCG state for the default context is calculated. It may only be declared once per LSM program, as the very first instruction. Other use of the instruction is not allowed and will result in compilation errors. 
@@ -79,24 +70,31 @@ Resets the current context's LCG state to its initial state.
 `succeed;`\
 Indicates that the current state of the current context's LCG satisfies all the requirements. This instruction will produce code that appends the corresponding 48-bit loot seed to a global result buffer. 
 
-`count-items [item1:item(), item2:item(), ...];`\
-May only be located inside a `roll` block. Instructs the LSM assembler to aggregate the item counts for the provided item types.
+`fail;`\
+Indicates that the current state of the current context's LCG cannot produce the desired results. This will compile to an always-false assertion.
 
-`count-enchanted-items [item1:item(), item2:item(), ...];`\
-May only be located inside a `roll` block. Instructs the LSM assembler to aggregate the item counts of distinct enchanted items for the provided item types.
+`apply-function pool_id:[uint32] entry_id:[uint32] function_id:[uint32]`\
+Instructs the compiler to emit code to call a specific loot function. The loot function is defined objectively by the parameters. For example, `apply-function 0 1 1;` would call the second function of the second entry of the first loot pool. Whether to store the results of the loot function or not is left as a task for the compiler.
 
-`assert properties:[[item() | enchantment() | enchantment_level()], ...] operator:['==' | '!=' | '>=' | '>' | '<=' | '<'] r_property:[item_count() | enchantment_level()];`\
-*NOTE: decided to drop the -eq, -ge, -le suffix from assert in favor of the operator argument, can change back if needed.*\
-Performs a context-based assertion that the `r_property` value(s) of the item(s) matching the specified `properties` satisfies the given `r_property` value when compared using `operator`. If the assertion fails, a context-based fail action is performed. In the default context, the fail action terminates the current thread. However, in `lcg-fork-range` blocks, the fail action is treated as an instruction to jump to the next iteration of the lcg advancement range (same effect `continue` has on a C `for` loop).\
-For clarification, below are some code examples of assertions and their effects:
+`assert properties:[property, ...] operator:['==' | '!=' | '>=' | '>' | '<=' | '<'] item_count:[uint32_t];`\
+Must be placed inside a case block.
+Performs a context-based assertion that the number of items matches `item_count` using `operator`. If the assertion fails, a context-based fail action is performed. In the default context, the fail action terminates the current thread. However, in `lcg-fork-range` blocks, the fail action is treated as an instruction to jump to the next iteration of the lcg advancement range (same effect `continue` has on a C `for` loop).\
+
+`assert-pool properties:[property, ...] operator:['==' | '!=' | '>=' | '>' | '<=' | '<'] item_count:[uint32_t];`\
+Works the same as `assert` but treats the item count tested against the target value `item_count` as the final item count aggregated on a per-pool basis.
+
+For clarification, below are some code examples of assertions and their interpretation:
 
 ```
-pool 0;
+pool 0
 {
-    roll natural;
+    roll 0
     {
-        count-items item(minecraft:iron_ingot);
-        assert item(minecraft:iron_ingot) >= item_count(14);
+        case iron_ingot
+        {
+            assert-pool >= 14;  
+        }
+        //...
     }
     lcg-reset;
     succeed;
@@ -105,30 +103,41 @@ pool 0;
 This simple example would produce code that generates the first loot pool of a loot table and checks if at least 14 iron ingot items were rolled in total.
 
 ```
-pool 0;
+pool 0
 {
-    roll natural;
+    roll 0
     {
-        assert item(minecraft:gold_ingot) == item_count(0);
-        assert item(minecraft:diamond) == item_count(0);
-
-        count-items item(minecraft:iron_ingot);
-        assert item(minecraft:iron_ingot) >= item_count(14);
-        assert item(minecraft:iron_ingot) <= item_count(16);
+        case gold_ingot diamond
+        {
+            fail;
+        }
+        case iron_ingot
+        {
+            assert-pool >= 14;
+            assert-pool <= 16;
+        }
+        //...
     }
     lcg-reset;
     succeed;
 }
 ```
-In this example, apart from filtering for 14-16 iron ingots, the resulting code would also make sure no gold ingots or diamonds were generated. Note the use of assertions on item counts without the aggregating `count-items` statement - this would be reflected as a repeated assertion for each of the individual rolled entries. This is further illustrated in the example below.
+In this example, apart from filtering for 14-16 iron ingots, the resulting code would also make sure no gold ingots or diamonds were generated.
 
 ```
-pool 0;
+pool 0
 {
-    roll natural;
+    roll natural
     {
-        assert item(minecraft:gold_ingot) > item_count(10);
-        assert item(minecraft:diamond) > item_count(4);
+        case gold_ingot
+        {
+            assert > 10;
+        }
+        case diamond
+        {
+            assert > 4;
+        }
+        //...
     }
     lcg-reset;
     succeed;
@@ -160,35 +169,35 @@ get processed.
 Example:
 
 ```
-pool 0;
+pool 0
 {
     lcg-advance 1;
     roll natural;
     {
-        case item(golden_pickaxe);
+        case item(golden_pickaxe)
         {
             apply-function 0:5:0;
             pool-assert enchantment(efficiency) enchantment_level(5) >= 2;
             pool-assert enchantment(efficiency) enchantment_level(3) >= 1;
         }
-        case item(flint_and_steel);
+        case item(flint_and_steel)
         {
             pool-assert >= item_count(1); // would translate to boolean flag being set
         }
-        case item(golden_nugget) item(iron_nugget) item(obsidian);
+        case item(golden_nugget) item(iron_nugget) item(obsidian)
         {
             lcg-advance 1;
         }
-        case item(golden_sword);
+        case item(golden_sword)
         {
             apply-function 0:6:0;
         }
-        case item(golden_axe);
+        case item(golden_axe)
         {
             apply-function 0:7:0;
         }
         //...
-        case item(gold_block) item(enchanted_golden_apple) item(bell);
+        case item(gold_block) item(enchanted_golden_apple) item(bell)
         {
             fail; // for lootseed cracking or specific kinds of lootseed finding
         }

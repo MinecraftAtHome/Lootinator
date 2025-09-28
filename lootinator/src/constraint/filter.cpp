@@ -1,6 +1,7 @@
 #include "lootinator/constraint/filter.h"
 #include "lootinator/utility/mth.h"
 #include <iostream>
+#include "filter.h"
 
 
 namespace loot {
@@ -29,7 +30,11 @@ namespace loot {
         return pool_match;
     }
 
-    void PoolFilter::compute_filter_score(const LootTable &loot_table) {
+    PoolFilter::PoolFilter(ReversalType type, int pool_idx, int entry_idx, int entry_count, ItemAttribute attribute) 
+        : attribute(attribute), reversal_type(type), pool_idx(pool_idx), entry_idx(entry_idx), entry_count(entry_count), filter_score(0.0f) {}
+
+    void PoolFilter::compute_filter_score(const LootTable &loot_table)
+    {
         // calculate item weight reduction
         nlohmann::json entry = loot_table.data["pools"][pool_idx]["entries"][entry_idx];
         int w = entry.contains("weight") ? entry["weight"] : 1;
@@ -37,6 +42,8 @@ namespace loot {
         float weight_score = static_cast<float>(loot_table.total_weights[pool_idx]) / w;
 
         // calculate other stuff
+        // FIXME for now entry weight is the only factor
+        filter_score = weight_score;
     }
 
     float PoolFilter::compute_forward_filter_score(const LootTable &loot_table, const float item_rarity) const {
@@ -111,19 +118,61 @@ namespace loot {
         for (auto reversal_type : rtypes) {
             if (!constraint_applicable(main_constraint, reversal_type))
                 continue;
-            loot::Constraint aggregated = aggregate_constraints(constraints, main_constraint, reversal_type);
 
-            // count how many rolls min/max
-            RangeInclusive<uint32_t> rolls_for_constraint = get_roll_range(pool, pool_rolls, aggregated);
-            std::cerr << ", rtype = " << reversal_type << " constraint: " << aggregated << "\n";
-            std::cerr << rolls_for_constraint;
-            
-            // add all possible variants of pool filters based on the aggregated constraint
-            ItemAttribute filtered_attribute = aggregated.attributes.empty() ? ItemAttribute{0, {0, 0}} : aggregated.attributes.at(0);
-            // TODO implement pool filter variants:
-            // - one item filter, 
-            // - consecutive multi item filter,
-            // - non-consecutive multi item filter
+            loot::Constraint aggregated = aggregate_constraints(constraints, main_constraint, reversal_type);
+            loot::ItemAttribute filtered_attribute = aggregated.attributes.empty() ? loot::ItemAttribute{0, {0, 0}} : aggregated.attributes.at(0);
+            loot::PoolFilter base_filter(reversal_type, pool_idx, 0, 0, filtered_attribute);
+            add_all_filter_variants(pool, pool_rolls, base_filter, aggregated);
+        }
+    }
+
+    void LootTableConstraintList::add_all_filter_variants(const nlohmann::json& pool, const RangeInclusive<uint32_t>& pool_rolls, const loot::PoolFilter& base_filter, const loot::Constraint& aggregated_constraint)
+    {
+        // count how many rolls min/max
+        RangeInclusive<uint32_t> items_per_roll(1, 1);
+        int entry_idx = 0, e = 0;
+
+        for (auto& entry: pool["entries"]) {
+            // FIXME attributes should match too!!!
+            if (entry["type"] == "minecraft:item" && aggregated_constraint.item == loot_table.find_item_name(entry["name"])) {
+                entry_idx = e;
+                for (auto& loot_fun : entry["functions"]) {
+                    if (loot_fun["function"] == "minecraft:set_count") {
+                        items_per_roll = RangeInclusive<uint32_t>::from_json(loot_fun["count"]);
+                        break;
+                    }
+                }
+            }
+            e++;
+        }
+
+        // min items per roll -> max rolls needed
+        RangeInclusive<uint32_t> roll_range(1, 1);
+        roll_range.min = max(pool_rolls.min, ceil_div(aggregated_constraint.count_range.min, items_per_roll.max));
+        roll_range.max = min(pool_rolls.max, aggregated_constraint.count_range.max / items_per_roll.min);
+
+        loot::PoolFilter pool_filter(
+            base_filter.reversal_type,
+            base_filter.pool_idx,
+            entry_idx,
+            1,
+            base_filter.attribute
+        );
+        // always add simple, single-item filter
+        available_filters.push_back(pool_filter);
+
+        // try adding a consecutive multi-item filter (for 2 or 3 rolls)
+        if (roll_range.min > 1) {
+            // X - X - X - ...
+            if (roll_range.min > pool_rolls.max / 2) {
+                pool_filter.entry_count = 2;
+                available_filters.push_back(pool_filter);
+            }
+            // X X - X X - ...
+            if (roll_range.min > pool_rolls.max*2 / 3) {
+                pool_filter.entry_count = 3;
+                available_filters.push_back(pool_filter);
+            }
         }
     }
 

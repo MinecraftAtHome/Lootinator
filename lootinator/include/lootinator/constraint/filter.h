@@ -14,7 +14,7 @@ namespace loot {
     };
 
     /*
-    The following structure describes the actual data the kernel will use for the initial filter. Unlike constraints,
+    Describes the actual data the kernel will use for the initial filter. Unlike constraints,
     pool filters never define ranges of possible values, which includes both item counts and attributes.
     The item's properties will all be directly mapped to code filtering them.
     */
@@ -24,7 +24,7 @@ namespace loot {
         int entry_idx; // which entry the filter targets
         int entry_count; // how many instances of the entry are targetted
         ItemAttribute attribute; // required attributes of the entry
-        float filter_score = 0.0f; // heuristic performance estimate, bigger = faster
+        float filter_score; // heuristic performance estimate, bigger = faster
 
         PoolFilter(ReversalType type, int pool_idx, int entry_idx, int entry_count, ItemAttribute attribute);
         void compute_filter_score(const LootTable& loot_table);
@@ -46,7 +46,8 @@ namespace loot {
 
     private:
         void add_possible_filters(const std::vector<loot::Constraint>& constraints, const loot::Constraint& main_constraint, int pool_idx);
-        loot::Constraint aggregate_constraints(const std::vector<loot::Constraint>& constraints, const loot::Constraint& main_constraint, loot::ReversalType type);
+        void add_all_filter_variants(const nlohmann::json &pool, const RangeInclusive<uint32_t> &pool_rolls, const loot::PoolFilter &base_filter, const loot::Constraint &aggregated_constraint);
+        loot::Constraint aggregate_constraints(const std::vector<loot::Constraint> &constraints, const loot::Constraint &main_constraint, loot::ReversalType type);
         bool constraint_applicable(const loot::Constraint& constr, ReversalType type);
         bool constraints_match_for_reversal_type(const loot::Constraint& first, const loot::Constraint& second, loot::ReversalType type) const;
         RangeInclusive<uint32_t> get_roll_range(const nlohmann::json& pool, const RangeInclusive<uint32_t>& pool_rolls, const loot::Constraint& aggregated_constraint) const;

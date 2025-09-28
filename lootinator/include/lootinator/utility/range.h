@@ -28,10 +28,13 @@ namespace loot {
             return value >= min && value <= max;
         }
 
-        static RangeInclusive from_json(nlohmann::json json) {
-            T min = json["min"];
-            T max = json["max"];
-            return { min, max };
+        static RangeInclusive from_json(const nlohmann::json& json) {
+            if (json.is_number()) {
+                return {json, json};
+            }
+            else {
+                return {json["min"], json["max"]};
+            }
         }
             
         friend std::ostream& operator<<(std::ostream& os, const RangeInclusive& range) {

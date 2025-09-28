@@ -3,8 +3,7 @@
 
 #include "lootinator/utility/range.h"
 #include "lootinator/utility/debug.h"
-
-#include <nlohmann/json.hpp>
+#include "lootinator/loot_table.h"
 
 #include <cstdint>
 
@@ -45,6 +44,10 @@ namespace loot {
 
     void merge_contraints(const std::vector<loot::Constraint>& src, std::vector<loot::Constraint>& dest);
     std::vector<loot::Constraint> parse_constraints_from_json(const char *filepath);
+
+
+    
+    
 }
 
 #endif

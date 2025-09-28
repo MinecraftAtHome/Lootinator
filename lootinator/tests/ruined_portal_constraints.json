@@ -1,0 +1,29 @@
+[
+    {
+        "item": 2,
+        "range": {
+            "min": 56,
+            "max": 80
+        },
+        "slot": 0,
+        "attributes": []
+    },
+    {
+        "item": 2,
+        "range": {
+            "min": 4,
+            "max": 10
+        },
+        "slot": 0,
+        "attributes": []
+    },
+    {
+        "item": 2,
+        "range": {
+            "min": 14,
+            "max": 24
+        },
+        "slot": 0,
+        "attributes": []
+    }
+]

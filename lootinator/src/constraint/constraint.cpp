@@ -1,9 +1,10 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
-#include <nlohmann/json.hpp>
 #include "lootinator/constraint/constraint.h"
+
 
 namespace loot {
     // -------------------------------------------------------------------------------
@@ -123,4 +124,3 @@ namespace loot {
         return constraints;
     }
 }
-

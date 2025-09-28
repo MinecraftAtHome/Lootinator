@@ -9,14 +9,18 @@ namespace loot {
         };
 
         enum FunctionType {
-            FUNC_ASSERT, FUNC_FAIL,
+            FUNC_ASSERT, FUNC_FAIL, FUNC_LCG_ADVANCE,
+        };
+
+        enum Comparision {
+            COMP_EQUAL, COMP_LE, COMP_GE, COMP_G, COMP_L
         };
 
         class Instruction {
             public:
                 InstructionType tp;
                 Instruction *as_ins();
-                void debug(int indent_level);
+                virtual void debug(int indent_level);
                 virtual ~Instruction() {};
         };
 
@@ -25,7 +29,17 @@ namespace loot {
                 FunctionType func_tp;
                 std::vector<int> args;
                 FunctionInstruction(FunctionType func_tp);
-                FunctionInstruction(FunctionType func_tp, std::vector<int> &args);
+                FunctionInstruction(FunctionType func_tp, std::vector<int> args);
+                void debug(int indent_level) override;
+        };
+
+        class PoolAssertFunctionInstruction : public Instruction {
+            public:
+                std::vector<int> lvalues;
+                Comparision comp;
+                std::vector<int> rvalues;
+                PoolAssertFunctionInstruction(std::vector<int> lvalues, Comparision comp, std::vector<int> rvalues);
+                void debug(int indent_level) override;
         };
 
         class BlockInstruction : public Instruction {
@@ -34,6 +48,7 @@ namespace loot {
                 BlockInstruction();
                 void add_instruction(Instruction *ins);
                 virtual ~BlockInstruction() {};
+                void debug(int indent_level) override;
         };
 
         class PoolInstruction : public BlockInstruction {
@@ -47,12 +62,14 @@ namespace loot {
             public:
                 int item;
                 CaseInstruction(int item);
+                void debug(int indent_level) override;
         };
 
         class RollInstruction : public BlockInstruction {
             public:
                 int roll_count;
                 RollInstruction(int roll_count);
-        };
+                void debug(int indent_level) override;
+            };
     }
 }

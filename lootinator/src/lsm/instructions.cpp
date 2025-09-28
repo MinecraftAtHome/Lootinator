@@ -3,6 +3,19 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
+#include <numeric>
+#include <map>
+
+template<typename T>
+std::string join(const std::vector<T>& vec, const std::string& delimiter) {
+    if (vec.empty()) {
+        return "";
+    }
+    return std::accumulate(std::next(vec.begin()), vec.end(), std::to_string(vec[0]),
+            [&](const std::string& a, const T& b) {
+                return a + delimiter + std::to_string(b);
+            });
+}
 
 namespace loot {
     namespace lsm {
@@ -30,7 +43,20 @@ namespace loot {
             this->tp = loot::lsm::InstructionType::INS_FUNC;
         } 
 
-        loot::lsm::FunctionInstruction::FunctionInstruction(FunctionType func_tp, std::vector<int> &args) {
+        loot::lsm::PoolAssertFunctionInstruction::PoolAssertFunctionInstruction(std::vector<int> lvalues, Comparision comp, std::vector<int> rvalues) {
+            this->lvalues = lvalues;
+            this->comp = comp;
+            this->rvalues = rvalues;
+        }
+
+        void loot::lsm::PoolAssertFunctionInstruction::debug(int indent_level) {
+            std::map<Comparision, const char *> lookup = {
+                {COMP_EQUAL, "=="}, {COMP_LE, "<="}, {COMP_GE, ">="}, {COMP_G, ">"}, {COMP_L, "<"}
+            };
+            printf("%*s%s %s %s %s\n", indent_level, "", "POOL ASSERT", join(this->lvalues, ",").c_str(), lookup[this->comp], join(this->rvalues, ",").c_str());
+        }
+
+        loot::lsm::FunctionInstruction::FunctionInstruction(FunctionType func_tp, std::vector<int> args) {
             this->func_tp = func_tp;
             this->args = args;
             this->tp = loot::lsm::InstructionType::INS_FUNC;
@@ -44,57 +70,50 @@ namespace loot {
             return (Instruction *)this;
         }
 
+        void loot::lsm::CaseInstruction::debug(int indent_level) {
+            printf("%*s%s %d\n", indent_level, "", "CASE", this->item);   
+            for (auto child : this->children) {
+                child->debug(indent_level + 3);
+            }
+            printf("%*s%s\n", indent_level, "", "CASE END");     
+        }
+            
+        void loot::lsm::BlockInstruction::debug(int indent_level) {
+            printf("%*s%s\n", indent_level, "", "BLOCK START");   
+            for (auto child : this->children) {
+                child->debug(indent_level + 3);
+            }
+            printf("%*s%s\n", indent_level, "", "BLOCK END");        
+        }
 
-#define TODO(str) std::cout << "TODO: " << str << "\n";
-        void loot::lsm::Instruction::debug(int indent_level) {
-            switch (this->tp) {
-                case loot::lsm::INS_ROLL: {
-                    loot::lsm::RollInstruction *roll_ins = dynamic_cast<loot::lsm::RollInstruction *>(this);
-                    printf("%*s%s (%d)\n", indent_level, "", "ROLL START", roll_ins->roll_count);   
-                    for (auto child : roll_ins->children) {
-                        child->debug(indent_level + 3);
-                    }
-                    printf("%*s%s\n", indent_level, "", "ROLL END");          
+        void loot::lsm::RollInstruction::debug(int indent_level) {
+            printf("%*s%s (%d)\n", indent_level, "", "ROLL START", this->roll_count);   
+            for (auto child : this->children) {
+                child->debug(indent_level + 3);
+            }
+            printf("%*s%s\n", indent_level, "", "ROLL END");          
+        }
+
+        #define TODO(str) std::cout << "TODO: " << str << "\n";
+        void loot::lsm::FunctionInstruction::debug(int indent_level) {
+            switch (this->func_tp) {
+                case FUNC_FAIL: {
+                    printf("%*s%s\n", indent_level, "", "FAIL");   
                     break;
                 }
-                case INS_BLOCK: {
-                    loot::lsm::BlockInstruction *block = dynamic_cast<loot::lsm::BlockInstruction *>(this);
-                    printf("%*s%s\n", indent_level, "", "BLOCK START");   
-                    for (auto child : block->children) {
-                        child->debug(indent_level + 3);
-                    }
-                    printf("%*s%s\n", indent_level, "", "BLOCK END");        
-                    break;
-                } 
-                case INS_VALUE: {
-                    TODO("INS_VALUE");
-                    break;
-                }
-                case INS_POOL: {
-                    loot::lsm::PoolInstruction *pool_ins = dynamic_cast<loot::lsm::PoolInstruction *>(this);
-                    printf("%*s%s\n", indent_level, "", "POOL START");   
-                    for (auto child : pool_ins->children) {
-                        child->debug(indent_level + 3);
-                    }
-                    printf("%*s%s\n", indent_level, "", "POOL END");                    
-                    break;
-                }
-                case INS_CASE: {
-                    TODO("INS_CASE");
-                    break;
-                }
-                case INS_FUNC: {
-                    // loot::lsm::FunctionInstruction *func_ins = dynamic_cast<loot::lsm::FunctionInstruction *>(this);
-                    TODO("INS_CASE");
-                    
+                case FUNC_LCG_ADVANCE: {
+                    printf("%*s%s %d\n", indent_level, "", "LCG_ADVANCE", this->args[0]);   
                     break;
                 }
                 default: {
-                    std::cout << this->tp << "\n";
-                    assert(false && "instruction type is not accounted for");
+                    TODO("Function instruction not implemented yet!");
+                    break;
                 }
             }
-        }   
+        }
+
+        void loot::lsm::Instruction::debug(int indent_level) {
+            TODO("instruction not implemented yet!");
+        }
     }
-#undef TODO
 }

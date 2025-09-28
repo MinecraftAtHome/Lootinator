@@ -6,38 +6,35 @@
 #include "lootinator/lsm/instructions.hpp"
 
 /*
-pool 0 
-{
-	roll 0 
-	{
-		fail;
+pool 0  {
+	lcg-advance 1;
+	roll 0  {
+		case 0 {
+			pool-assert 0 5 >= 2;
+		}
 	}
 }
 */
 
-int main() {
-	// loot::lsm::Parser *p = new loot::lsm::Parser();
-	// loot::lsm::BlockInstruction block = loot::lsm::BlockInstruction();
-	
-	// std::ifstream file("test.lsm");
-	// if (!file) {
-
-	// }
-	// std::vector<loot::lsm::Instruction *> instructions = p->parse_from_file(file);
-	// loot::hello();
-	// std::vector<loot::lsm::Instruction *> instructions;
-	// instructions.push_back();
-
-	
-	
-	// printf("pool0 pointer: %p\n", i);
-	
+int main() {	
 	loot::lsm::BlockInstruction program = loot::lsm::BlockInstruction();
 	loot::lsm::PoolInstruction pool0 = loot::lsm::PoolInstruction(0);
 	loot::lsm::RollInstruction roll_ins = loot::lsm::RollInstruction(0);	
 	loot::lsm::FunctionInstruction f = loot::lsm::FunctionInstruction(loot::lsm::FunctionType::FUNC_FAIL);
-	
-	roll_ins.add_instruction(f.as_ins());
+	loot::lsm::FunctionInstruction advance = loot::lsm::FunctionInstruction(loot::lsm::FunctionType::FUNC_LCG_ADVANCE, {1});
+	loot::lsm::PoolAssertFunctionInstruction pool_assert0 = loot::lsm::PoolAssertFunctionInstruction({0, 5}, loot::lsm::Comparision::COMP_GE, {2});
+	loot::lsm::PoolAssertFunctionInstruction pool_assert1 = loot::lsm::PoolAssertFunctionInstruction({1, 1}, loot::lsm::Comparision::COMP_EQUAL, {3});
+
+	loot::lsm::CaseInstruction case0 = loot::lsm::CaseInstruction(0);
+	loot::lsm::CaseInstruction case1 = loot::lsm::CaseInstruction(1);
+
+	case0.add_instruction(pool_assert0.as_ins());
+	case1.add_instruction(pool_assert1.as_ins());
+
+	roll_ins.add_instruction(case0.as_ins());
+	roll_ins.add_instruction(case1.as_ins());
+
+	pool0.add_instruction(advance.as_ins());
 	pool0.add_instruction(roll_ins.as_ins());
 	program.add_instruction(pool0.as_ins());
 

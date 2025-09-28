@@ -28,6 +28,8 @@ namespace loot {
 
         PoolFilter(ReversalType type, int pool_idx, int entry_idx, int entry_count, ItemAttribute attribute);
         void compute_filter_score(const LootTable& loot_table);
+        bool operator==(const PoolFilter& other) const;
+        bool operator!=(const PoolFilter& other) const;
 
     private:
         float compute_forward_filter_score(const LootTable& loot_table, const float item_rarity) const;

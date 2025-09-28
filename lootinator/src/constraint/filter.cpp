@@ -46,6 +46,18 @@ namespace loot {
         filter_score = weight_score;
     }
 
+    bool PoolFilter::operator==(const PoolFilter &other) const {
+        return reversal_type == other.reversal_type
+            && pool_idx == other.pool_idx
+            && entry_idx == other.entry_idx
+            && entry_count == other.entry_count
+            && attribute == other.attribute;
+    }
+
+    bool PoolFilter::operator!=(const PoolFilter &other) const {
+        return !(*this == other);
+    }
+
     float PoolFilter::compute_forward_filter_score(const LootTable &loot_table, const float item_rarity) const {
         // TODO
         // compute an approximate performance boost the kernel would get due to 
@@ -61,12 +73,12 @@ namespace loot {
     }
 
     bool LootTableConstraintList::entry_item_matches(const Constraint& constr, const nlohmann::json& entry) const {
-        std::cerr << entry["type"] << " " << entry["name"] << " ";
+        //std::cerr << entry["type"] << " " << entry["name"] << " ";
         if (entry["type"] != "minecraft:item") {
             return false;
         }
         int item_idx = loot_table.find_item_name(entry["name"]);
-        std::cerr << item_idx << '\n';
+        //std::cerr << item_idx << '\n';
         return item_idx == constr.item;
     }
 
@@ -93,6 +105,9 @@ namespace loot {
                 add_possible_filters(constraints, constr, pool_idx);
             }
         }
+        if (available_filters.empty()) {
+            return false;
+        }
 
         // sort the per-pool constraint vector in descending order using the computed heuristic score
         std::sort(available_filters.begin(), available_filters.end(), 
@@ -100,6 +115,18 @@ namespace loot {
                 return a.filter_score > b.filter_score;
             }
         );
+
+        // deduplicate in O(n^3) cause why not
+        for (int i = 0; i < available_filters.size(); i++) {
+            for (int j = 0; j < i; j++) {
+                if (i == j) continue;
+                if (available_filters.at(i) == available_filters.at(j)) {
+                    available_filters.erase(available_filters.begin() + i);
+                    i--;
+                    j--;
+                }
+            }
+        }
         
         return true;
     }
@@ -159,21 +186,23 @@ namespace loot {
             base_filter.attribute
         );
         // always add simple, single-item filter
-        available_filters.push_back(pool_filter);
+        available_filters.push_back(pool_filter); // state prediction
 
         // try adding a consecutive multi-item filter (for 2 or 3 rolls)
         if (roll_range.min > 1) {
             // X - X - X - ...
             if (roll_range.min > pool_rolls.max / 2) {
                 pool_filter.entry_count = 2;
-                available_filters.push_back(pool_filter);
+                available_filters.push_back(pool_filter); // advanced reversal on 2 items
             }
             // X X - X X - ...
             if (roll_range.min > pool_rolls.max*2 / 3) {
                 pool_filter.entry_count = 3;
-                available_filters.push_back(pool_filter);
+                available_filters.push_back(pool_filter); // advanced reversal on 3 items
             }
         }
+
+        // TODO add epic's thing
     }
 
     loot::Constraint LootTableConstraintList::aggregate_constraints(const std::vector<loot::Constraint> &constraints, const loot::Constraint &main_constraint, loot::ReversalType reversal_type)

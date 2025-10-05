@@ -80,7 +80,7 @@ Instructs the compiler to emit code to call a specific loot function. The loot f
 Must be placed inside a case block.
 Performs a context-based assertion that the number of items matches `item_count` using `operator`. If the assertion fails, a context-based fail action is performed. In the default context, the fail action terminates the current thread. However, in `lcg-fork-range` blocks, the fail action is treated as an instruction to jump to the next iteration of the lcg advancement range (same effect `continue` has on a C `for` loop).\
 
-`assert-pool properties:[property, ...] operator:['==' | '!=' | '>=' | '>' | '<=' | '<'] item_count:[uint32_t];`\
+`pool-assert properties:[property, ...] operator:['==' | '!=' | '>=' | '>' | '<=' | '<'] item_count:[uint32_t];`\
 Works the same as `assert` but treats the item count tested against the target value `item_count` as the final item count aggregated on a per-pool basis.
 
 For clarification, below are some code examples of assertions and their interpretation:

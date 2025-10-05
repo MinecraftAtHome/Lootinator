@@ -2,21 +2,57 @@
 #include <fstream>
 
 #include "lootinator/lootinator.h"
+#include "lootinator/loot_table.h"
+#include "lootinator/utility/debug.h"
+#include "lootinator/constraint/filter.h"
 #include "lootinator/lsm/parser.hpp"
 #include "lootinator/lsm/instructions.hpp"
 
 /*
+loot table: ruined portal
+constraints:
+[
+	{
+		"item": 4,
+		"range": {
+            "min": 20,
+            "max": 100000
+        }
+	}
+]
+
 pool 0  {
 	lcg-advance 1;
-	roll 0  {
-		case 0 {
-			pool-assert 0 5 >= 2;
+	roll 0 {
+		//...
+		case 4 {
+			pool-assert >= 20;
 		}
+		//...
 	}
 }
 */
 
-int main() {	
+int main() {
+	try {
+        loot::LootTable lt("../../example/src/ruined_portal.json");
+        loot::debug(std::cerr, lt.item_names);
+        loot::LootTableConstraintList ltcl(lt);
+        std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
+        ltcl.initialize_constraints(constr);
+
+		std::vector<loot::Constraint> constr_merged;
+		//loot::merge_contraints(constr, constr_merged);
+
+
+    } 
+    catch (const std::exception& e) {
+        std::cerr << "Caught exception: " << e.what() << std::endl;
+        return 1;
+	}
+}
+
+int main2() {	
 	loot::lsm::BlockInstruction program = loot::lsm::BlockInstruction();
 	loot::lsm::PoolInstruction pool0 = loot::lsm::PoolInstruction(0);
 	loot::lsm::RollInstruction roll_ins = loot::lsm::RollInstruction(0);	

@@ -2,6 +2,7 @@ add_library(lootinator
     include/lootinator/assertions.h
     include/lootinator/loot_table.h
     include/lootinator/lootinator.h
+    include/lootinator/minecraft.hpp
     include/lootinator/constraint/constraint.h
     include/lootinator/template/helpers.h
     include/lootinator/template/kernel_template.h
@@ -11,17 +12,20 @@ add_library(lootinator
     include/lootinator/utility/mth.h
     include/lootinator/lsm/parser.hpp
     include/lootinator/lsm/instructions.hpp
+    include/lootinator/lsm/constraints_to_lsm.hpp
     include/lootinator/constraint/filter.h
     include/lootinator/template/template.h
     
     src/loot_table.cpp
     src/lootinator.cpp
+    src/minecraft.cpp
     src/constraint/constraint.cpp
     src/template/helpers.cpp
     src/template/kernel_template.cpp
     src/template/template.cpp
     src/lsm/instructions.cpp
     src/lsm/parser.cpp
+    src/lsm/constraints_to_lsm.cpp
     src/utility/debug.cpp
 )
 

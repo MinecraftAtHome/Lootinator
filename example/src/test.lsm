@@ -1,8 +1,14 @@
-pool 0;
+pool 0
 {
-    roll natural;
+    lcg-advance 1;
+    roll 0
     {
-        count-items item(minecraft:iron_ingot);
+        //...
+        case 3
+        {
+            
+        }
+        //...
     }
     assert item(minecraft:iron_ingot) >= item-count(14);
     lcg-reset;

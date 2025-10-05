@@ -104,7 +104,7 @@ namespace loot {
             //TODO
     });
 
-    std::unordered_map<ItemType, RangeInclusive<uint32_t>> ENCHANTMENT_LEVEL_RANGES({
+    std::unordered_map<Enchantment, RangeInclusive<uint32_t>> ENCHANTMENT_LEVEL_RANGES({
             //TODO
     });
 

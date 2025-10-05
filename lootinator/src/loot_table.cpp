@@ -3,7 +3,9 @@
 #include <fstream>
 
 namespace loot {
-    LootTable::LootTable(const char* loot_table_json_filepath) {
+    LootTable::LootTable(const char* loot_table_json_filepath, const loot::MCVersionRange version_range) {
+        this->version_range = version_range;
+
         std::ifstream fin(loot_table_json_filepath);
         data = nlohmann::json::parse(fin);
         map_item_names();

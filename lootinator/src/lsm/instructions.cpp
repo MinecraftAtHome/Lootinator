@@ -4,6 +4,7 @@
 #include <vector>
 #include <cassert>
 #include <numeric>
+#include <string>
 #include <map>
 
 template<typename T>

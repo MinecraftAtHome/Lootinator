@@ -9,7 +9,7 @@ namespace loot {
         };
 
         enum FunctionType {
-            FUNC_ASSERT, FUNC_FAIL, FUNC_LCG_ADVANCE,
+            FUNC_ASSERT, FUNC_FAIL, FUNC_LCG_ADVANCE, FUNC_FUNC
         };
 
         enum Comparision {

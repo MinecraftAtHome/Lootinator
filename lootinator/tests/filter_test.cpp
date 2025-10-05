@@ -7,7 +7,7 @@
 
 int smoke_test() {
     try {
-        loot::LootTable lt("../../lootinator/tests/ruined_portal.json");
+        loot::LootTable lt("../../lootinator/tests/ruined_portal.json", loot::MC_1_16_TO_1_20);
         loot::debug(std::cerr, lt.item_names);
         loot::LootTableConstraintList ltcl(lt);
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../lootinator/tests/ruined_portal_constraints.json");
@@ -22,7 +22,7 @@ int smoke_test() {
 
 int correctness_test() {
     try {
-        loot::LootTable lt("../../lootinator/tests/ruined_portal.json");
+        loot::LootTable lt("../../lootinator/tests/ruined_portal.json", loot::MC_1_16_TO_1_20);
         loot::debug(std::cerr, lt.item_names);
         loot::LootTableConstraintList ltcl(lt);
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../lootinator/tests/ruined_portal_constraints.json");

@@ -96,36 +96,10 @@ namespace loot {
         BOOK
     };
 
-    std::unordered_map<ItemType, std::vector<Enchantment>> ITEM_ENCHANTMENTS({
-            {CHESTPLATE, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,THORNS,CURSE_OF_BINDING}},
-            {HELMET, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,RESPIRATION,AQUA_AFFINITY,CURSE_OF_BINDING}},
-            {LEGGINGS, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,CURSE_OF_BINDING,SWIFT_SNEAK}},
-            {BOOTS, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,FEATHER_FALLING,DEPTH_STRIDER,FROST_WALKER,SOUL_SPEED,CURSE_OF_BINDING}},
-            //TODO
-    });
-
-    std::unordered_map<Enchantment, RangeInclusive<uint32_t>> ENCHANTMENT_LEVEL_RANGES({
-            //TODO
-    });
-
     // ---------------------------------------------------------------------------------------
-    // string -> enum & enum -> string lookups
-
-    std::unordered_map<ItemType, std::string> ITEM_TYPE_TO_NAME({
-            //TODO
-    });
-    std::unordered_map<std::string, ItemType> NAME_TO_ITEM_TYPE({
-            //TODO
-    });
+    
     std::string item_type_to_string(const ItemType type);
     ItemType string_to_item_type(const std::string& item_type_string);
-
-    std::unordered_map<Enchantment, std::string> ENCHANTMENT_TO_NAME({
-            //TODO
-    });
-    std::unordered_map<std::string, Enchantment> NAME_TO_ENCHANTMENT({
-            //TODO
-    });
     std::string enchantment_to_string(const Enchantment type);
     Enchantment string_to_enchantment(const std::string& enchantment_string);
 }

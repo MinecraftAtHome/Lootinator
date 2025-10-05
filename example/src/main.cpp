@@ -7,6 +7,7 @@
 #include "lootinator/constraint/filter.h"
 #include "lootinator/lsm/parser.hpp"
 #include "lootinator/lsm/instructions.hpp"
+#include "lootinator/lsm/constraints_to_lsm.hpp"
 
 /*
 loot table: ruined portal
@@ -35,16 +36,18 @@ pool 0  {
 
 int main() {
 	try {
-        loot::LootTable lt("../../example/src/ruined_portal.json");
+        loot::LootTable lt("../../example/src/ruined_portal.json", loot::MC_1_16_TO_1_20);
         loot::debug(std::cerr, lt.item_names);
         loot::LootTableConstraintList ltcl(lt);
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
         ltcl.initialize_constraints(constr);
 
-		std::vector<loot::Constraint> constr_merged;
-		//loot::merge_contraints(constr, constr_merged);
-
-
+		std::vector<loot::lsm::BlockInstruction> programs = loot::lsm::get_lsm_representations(ltcl, constr);
+		
+		for (auto& prog : programs)
+		{
+			prog.debug(0);
+		}
     } 
     catch (const std::exception& e) {
         std::cerr << "Caught exception: " << e.what() << std::endl;

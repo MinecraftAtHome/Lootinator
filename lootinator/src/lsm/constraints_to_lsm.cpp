@@ -1,10 +1,12 @@
 #include "lootinator/lsm/constraints_to_lsm.hpp"
+#include <iostream>
 
 namespace loot { namespace lsm {
-    std::vector<loot::lsm::BlockInstruction>&& get_lsm_representations(const LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints)
+    std::vector<loot::lsm::BlockInstruction> get_lsm_representations(const LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints)
     {
         std::vector<loot::Constraint> merged_constraints;
         loot::merge_contraints(constraints, merged_constraints);
+        std::cerr << "4.1\n";
 
         std::vector<loot::lsm::BlockInstruction> programs;
         for (auto& pool_filter : ltcl.available_filters) {
@@ -13,8 +15,9 @@ namespace loot { namespace lsm {
             add_pool_forward_filters(ltcl, constraints, merged_constraints, main_block);
             programs.push_back(main_block);
         }
+        std::cerr << "4.2\n";
 
-        return std::move(programs);
+        return programs;
     }
 
     void loot::lsm::add_filter_on(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, loot::lsm::BlockInstruction &main_block)

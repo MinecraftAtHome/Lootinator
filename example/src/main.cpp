@@ -37,14 +37,10 @@ pool 0  {
 int main() {
 	try {
         loot::LootTable lt("../../../example/src/ruined_portal.json", loot::MC_1_16_TO_1_20);
-        //loot::debug(std::cerr, lt.item_names);
-		std::cerr << "1\n";
+
         loot::LootTableConstraintList ltcl(lt);
-		std::cerr << "2\n";
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../../example/src/example_constraints.json");
-        std::cerr << "3\n";
 		ltcl.initialize_constraints(constr);
-		std::cerr << "4\n";
 
 		std::vector<loot::lsm::BlockInstruction> programs = loot::lsm::get_lsm_representations(ltcl, constr);
 		std::cerr << "5\n";

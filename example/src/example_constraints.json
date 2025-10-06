@@ -4,6 +4,8 @@
 		"range": {
             "min": 20,
             "max": 100000
-        }
+        },
+		"slot": 0,
+        "attributes": []
 	}
 ]

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LOOTINATOR_LSM_INSTRUCTIONS_H
+#define LOOTINATOR_LSM_INSTRUCTIONS_H
 
 #include <vector>
 
@@ -73,3 +74,5 @@ namespace loot {
             };
     }
 }
+
+#endif

@@ -1,5 +1,5 @@
-#ifndef LOOTINATOR_LSM_CONSTRAINTS_TO_LSM
-#define LOOTINATOR_LSM_CONSTRAINTS_TO_LSM
+#ifndef LOOTINATOR_LSM_CONSTRAINTS_TO_LSM_H
+#define LOOTINATOR_LSM_CONSTRAINTS_TO_LSM_H
 
 #include "lootinator/lsm/instructions.hpp"
 #include "lootinator/constraint/filter.h"

@@ -149,6 +149,7 @@ namespace loot {
             loot::Constraint aggregated = aggregate_constraints(constraints, main_constraint, reversal_type);
             loot::ItemAttribute filtered_attribute = aggregated.attributes.empty() ? loot::ItemAttribute{0, {0, 0}} : aggregated.attributes.at(0);
             loot::PoolFilter base_filter(reversal_type, pool_idx, 0, 0, filtered_attribute);
+            
             add_all_filter_variants(pool, pool_rolls, base_filter, aggregated);
         }
     }
@@ -163,6 +164,8 @@ namespace loot {
             // FIXME attributes should match too!!!
             if (entry["type"] == "minecraft:item" && aggregated_constraint.item == loot_table.find_item_name(entry["name"])) {
                 entry_idx = e;
+                if (!entry.contains("functions"))
+                    continue;
                 for (auto& loot_fun : entry["functions"]) {
                     if (loot_fun["function"] == "minecraft:set_count") {
                         items_per_roll = RangeInclusive<uint32_t>::from_json(loot_fun["count"]);

@@ -36,13 +36,18 @@ pool 0  {
 
 int main() {
 	try {
-        loot::LootTable lt("../../example/src/ruined_portal.json", loot::MC_1_16_TO_1_20);
-        loot::debug(std::cerr, lt.item_names);
+        loot::LootTable lt("../../../example/src/ruined_portal.json", loot::MC_1_16_TO_1_20);
+        //loot::debug(std::cerr, lt.item_names);
+		std::cerr << "1\n";
         loot::LootTableConstraintList ltcl(lt);
-        std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
-        ltcl.initialize_constraints(constr);
+		std::cerr << "2\n";
+        std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../../example/src/example_constraints.json");
+        std::cerr << "3\n";
+		ltcl.initialize_constraints(constr);
+		std::cerr << "4\n";
 
 		std::vector<loot::lsm::BlockInstruction> programs = loot::lsm::get_lsm_representations(ltcl, constr);
+		std::cerr << "5\n";
 		
 		for (auto& prog : programs)
 		{
@@ -55,7 +60,7 @@ int main() {
 	}
 }
 
-int main2() {	
+int main_lsmtest() {	
 	loot::lsm::BlockInstruction program = loot::lsm::BlockInstruction();
 	loot::lsm::PoolInstruction pool0 = loot::lsm::PoolInstruction(0);
 	loot::lsm::RollInstruction roll_ins = loot::lsm::RollInstruction(0);	

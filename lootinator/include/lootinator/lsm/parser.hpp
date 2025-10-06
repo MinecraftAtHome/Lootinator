@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LOOTINATOR_LSM_PARSER_H
+#define LOOTINATOR_LSM_PARSER_H
 
 #include <iostream>
 
@@ -40,3 +41,5 @@ namespace loot {
         };
     }
 }
+
+#endif

@@ -48,15 +48,14 @@ namespace loot {
                 std::vector<Instruction *> children;
                 BlockInstruction();
                 void add_instruction(Instruction *ins);
-                virtual ~BlockInstruction() {};
+                virtual ~BlockInstruction() override;
                 void debug(int indent_level) override;
         };
 
         class PoolInstruction : public BlockInstruction {
             public:
                 int id;
-                PoolInstruction(int id);       
-                virtual ~PoolInstruction() {};
+                PoolInstruction(int id);
         };
 
         class CaseInstruction : public BlockInstruction {

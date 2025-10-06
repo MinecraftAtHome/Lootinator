@@ -67,7 +67,16 @@ namespace loot {
             this->children.push_back(ins);
         }
 
-        loot::lsm::Instruction *loot::lsm::Instruction::as_ins() {
+        BlockInstruction::~BlockInstruction()
+        {
+            for (auto ins : children)
+            {
+                delete ins;
+            }
+        }
+
+        loot::lsm::Instruction *loot::lsm::Instruction::as_ins()
+        {
             return (Instruction *)this;
         }
 

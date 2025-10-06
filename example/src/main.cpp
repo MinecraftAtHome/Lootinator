@@ -42,12 +42,12 @@ int main() {
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../../example/src/example_constraints.json");
 		ltcl.initialize_constraints(constr);
 
-		std::vector<loot::lsm::BlockInstruction> programs = loot::lsm::get_lsm_representations(ltcl, constr);
-		std::cerr << "5\n";
+		std::vector<loot::lsm::BlockInstruction*> programs = loot::lsm::get_lsm_representations(ltcl, constr);
 		
 		for (auto& prog : programs)
 		{
-			prog.debug(0);
+			prog->debug(0);
+			delete prog;
 		}
     } 
     catch (const std::exception& e) {

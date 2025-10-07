@@ -25,6 +25,7 @@ __device__ inline float nextFloat(uint64_t* rand){ return next(rand, 24) / (floa
     }
 
     void KernelTemplate::generate_loot_processors(std::ostream& out) const {
+        (void)out;
         // TODO
         // Based on the loot functions listed in the computed loot table, generate CUDA
         // __device__ function representations of all the functions.

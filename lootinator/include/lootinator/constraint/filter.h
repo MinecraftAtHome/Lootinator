@@ -54,8 +54,8 @@ namespace loot {
         bool constraints_match_for_reversal_type(const loot::Constraint& first, const loot::Constraint& second, loot::ReversalType type) const;
         RangeInclusive<uint32_t> get_roll_range(const nlohmann::json& pool, const RangeInclusive<uint32_t>& pool_rolls, const loot::Constraint& aggregated_constraint) const;
         int find_matching_loot_pool(const loot::Constraint& constr) const;
-        bool entry_attributes_match(const loot::Constraint& constr, const nlohmann::json& entry) const;
-        bool entry_item_matches(const loot::Constraint& constr, const nlohmann::json& entry) const;
+        //bool entry_attributes_match(const loot::Constraint& constr, const nlohmann::json& entry) const;
+        //bool entry_item_matches(const loot::Constraint& constr, const nlohmann::json& entry) const;
     };
 };
 

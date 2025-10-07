@@ -1,7 +1,6 @@
 #include "lootinator/constraint/filter.h"
 #include "lootinator/utility/mth.h"
 #include <iostream>
-#include "filter.h"
 
 
 namespace loot {
@@ -15,7 +14,7 @@ namespace loot {
         for (const auto& loot_pool : pools) {
             const auto& entries = loot_pool["entries"];
             for (const auto& entry : entries) {
-                if (entry_item_matches(constr, entry) && entry_attributes_match(constr, entry)) {
+                if (constr.matches_entry(loot_table, entry)) {
                     if (pool_match != loot::NO_POOL_MATCH) {
                         pool_match = loot::MULTI_POOL_MATCH;
                     }
@@ -59,6 +58,8 @@ namespace loot {
     }
 
     float PoolFilter::compute_forward_filter_score(const LootTable &loot_table, const float item_rarity) const {
+        (void)loot_table;
+        (void)item_rarity;
         // TODO
         // compute an approximate performance boost the kernel would get due to 
         // multiple rolls of the same item being required.
@@ -66,26 +67,11 @@ namespace loot {
     }
 
     float PoolFilter::compute_backward_filter_penalty(const LootTable &loot_table) const {
+        (void)loot_table;
         // TODO
         // compute an approximate performance loss the kernel suffers due to
         // checking multiple backward state advancement options
         return 1.0f;
-    }
-
-    bool LootTableConstraintList::entry_item_matches(const Constraint& constr, const nlohmann::json& entry) const {
-        //std::cerr << entry["type"] << " " << entry["name"] << " ";
-        if (entry["type"] != "minecraft:item") {
-            return false;
-        }
-        int item_idx = loot_table.find_item_name(entry["name"]);
-        //std::cerr << item_idx << '\n';
-        return item_idx == constr.item;
-    }
-
-    bool LootTableConstraintList::entry_attributes_match(const Constraint& constr, const nlohmann::json& entry) const {
-        // FIXME for now this is sufficient but if user wanted to filter e.g. bastion crossbows
-        // they would be classified as multi-pool and thus couldn't be used as a pool constraint
-        return true; 
     }
 
     // -------------------------------------------------------------------------------------------------------
@@ -161,8 +147,7 @@ namespace loot {
         int entry_idx = 0, e = 0;
 
         for (auto& entry: pool["entries"]) {
-            // FIXME attributes should match too!!!
-            if (entry["type"] == "minecraft:item" && aggregated_constraint.item == loot_table.find_item_name(entry["name"])) {
+            if (aggregated_constraint.matches_entry(loot_table, entry)) {
                 entry_idx = e;
                 if (!entry.contains("functions"))
                     continue;
@@ -227,11 +212,7 @@ namespace loot {
         RangeInclusive<uint32_t> items_per_roll(1, 1);
 
         for (auto& entry: pool["entries"]) {
-            // FIXME attributes should match too!!!
-            if (entry["type"] != "minecraft:item") {
-                continue;
-            }
-            if (aggregated_constraint.item == loot_table.find_item_name(entry["name"])) {
+            if (aggregated_constraint.matches_entry(loot_table, entry)) {
                 for (auto& loot_fun : entry["functions"]) {
                     if (loot_fun["function"] == "minecraft:set_count") {
                         items_per_roll = RangeInclusive<uint32_t>::from_json(loot_fun["count"]);
@@ -271,5 +252,7 @@ namespace loot {
                 return false;
             }
         }
+        std::cerr << "LootTableConstraintList::constraints_match_for_reversal_type: Unknown reversal type: " << type << '\n';
+        return false;
     }
 }

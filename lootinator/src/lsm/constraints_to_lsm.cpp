@@ -20,6 +20,9 @@ namespace loot { namespace lsm {
 
     void loot::lsm::add_filter_on(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, loot::lsm::BlockInstruction *main_block)
     {
+        (void)ltcl;
+        (void)pool_filter;
+        (void)main_block;
         // (big) TODO
     }
 
@@ -38,19 +41,31 @@ namespace loot { namespace lsm {
             {
                 // FIXME this could break if multiple entries have same item
                 CaseInstruction* case_ins = new CaseInstruction(entry_idx);
-                for (int func_idx = 0; func_idx < entry["functions"].size(); func_idx++) 
+                for (int func_idx = 0; func_idx < entry["functions"].size(); func_idx++)
                 {
                     FunctionInstruction* func_ins = new FunctionInstruction(FunctionType::FUNC_FUNC, {pool_idx, entry_idx, func_idx});
                     case_ins->add_instruction(func_ins);
                 }
-                roll_block->add_instruction(case_ins);
+                add_loot_assertions(ltcl, entry, merged_constraints, case_ins);
 
+                roll_block->add_instruction(case_ins);
                 entry_idx++;
             }
 
             pool_block->add_instruction(roll_block);
             main_block->add_instruction(pool_block);
             pool_idx++;
+        }
+    }
+
+    void add_loot_assertions(const loot::LootTableConstraintList &ltcl, const nlohmann::json& entry, const std::vector<loot::Constraint> &merged_constraints, loot::lsm::CaseInstruction *case_ins)
+    {
+        for (auto& constraint : merged_constraints)
+        {
+            if (constraint.matches_entry(ltcl.loot_table, entry))
+            {
+                // add assertions here
+            }
         }
     }
 }}

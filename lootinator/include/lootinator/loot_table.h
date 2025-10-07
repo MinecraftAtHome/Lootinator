@@ -22,6 +22,8 @@ namespace loot {
         void map_item_names();
         void precompute_entry_indices();
     };
+
+    AttributeCategory get_loot_function_attribute_category(const std::string& function_name);
 }
 
 #endif

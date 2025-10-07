@@ -1,5 +1,4 @@
 #include "lootinator/loot_table.h"
-
 #include <fstream>
 
 namespace loot {
@@ -63,5 +62,18 @@ namespace loot {
 
             pool_id++;
         }
+    }
+
+    AttributeCategory get_loot_function_attribute_category(const std::string &function_name) {
+        if (function_name.find("enchant") != std::string::npos) {
+            return AttributeCategory::ENCHANTMENT_ATTRIBUTE;
+        }
+        else if (function_name.find("effect") != std::string::npos) {
+            return AttributeCategory::POTION_EFFECT_ATTRIBUTE;
+        }
+        else if (function_name.find("damage") != std::string::npos) {
+            return AttributeCategory::DURABILITY_ATTRIBUTE;
+        }
+        return AttributeCategory::NO_ATTRIBUTE;
     }
 }

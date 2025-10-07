@@ -21,6 +21,8 @@ namespace loot {
             loot::RangeInclusive<std::uint32_t> level_range = RangeInclusive<std::uint32_t>::from_json(json["level_range"]);
             return {type, level_range};
         }
+
+        AttributeCategory get_category() const;
         bool operator==(const ItemAttribute& other) const;
         bool operator!=(const ItemAttribute& other) const;
         friend std::ostream& operator<<(std::ostream& os, const ItemAttribute& attribute);
@@ -33,20 +35,21 @@ namespace loot {
         std::uint32_t item;
         RangeInclusive<std::uint32_t> count_range;
         std::int32_t slot_id; // contraints are shared by cracking and finding kernels, finding won't use this
-
         std::vector<ItemAttribute> attributes;
 
         bool item_equal(const Constraint& other) const;
+        bool matches_entry(const LootTable& loot_table, const nlohmann::json& entry) const;
+
         bool operator==(const Constraint& other) const;
         bool operator!=(const Constraint& other) const;
+        
         friend std::ostream& operator<<(std::ostream& os, const Constraint& constraint);
     };
 
     void merge_contraints(const std::vector<loot::Constraint>& src, std::vector<loot::Constraint>& dest);
     std::vector<loot::Constraint> parse_constraints_from_json(const char *filepath);
 
-
-    
+    AttributeCategory get_loot_function_attribute_category(const std::string& function_name);
     
 }
 

@@ -96,6 +96,13 @@ namespace loot {
         BOOK
     };
 
+    enum AttributeCategory {
+        NO_ATTRIBUTE,
+        ENCHANTMENT_ATTRIBUTE,
+        DURABILITY_ATTRIBUTE,
+        POTION_EFFECT_ATTRIBUTE,
+    };
+    
     // ---------------------------------------------------------------------------------------
     
     std::string item_type_to_string(const ItemType type);

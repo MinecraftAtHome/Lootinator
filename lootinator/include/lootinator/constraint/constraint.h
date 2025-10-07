@@ -9,6 +9,8 @@
 
 namespace loot {
     constexpr int32_t SLOT_NONE = -1;
+    constexpr uint32_t COUNT_NONE = 0;
+    constexpr uint32_t COUNT_INFINITE = 10000;
 
     // represents an additional attribute of an item, such as an enchantment
     // or type of music disc

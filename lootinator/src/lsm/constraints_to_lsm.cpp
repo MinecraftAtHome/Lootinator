@@ -58,13 +58,48 @@ namespace loot { namespace lsm {
         }
     }
 
+    static std::vector<int> vectorize_attributes(const loot::LootTableConstraintList &ltcl, const loot::Constraint& constraint)
+    {
+        (void)ltcl;
+        (void)constraint;
+        // TODO combine numeric values of all attributes that are represented
+        // by a single point (ranges should get ignored)
+        return std::vector<int>();
+    }
+
     void add_loot_assertions(const loot::LootTableConstraintList &ltcl, const nlohmann::json& entry, const std::vector<loot::Constraint> &merged_constraints, loot::lsm::CaseInstruction *case_ins)
     {
         for (auto& constraint : merged_constraints)
         {
             if (constraint.matches_entry(ltcl.loot_table, entry))
             {
-                // add assertions here
+                std::vector<int> attribute_vector = vectorize_attributes(ltcl, constraint);
+                if (constraint.count_range.min == constraint.count_range.max)
+                {
+                    // '==' comparator, need a single assertion
+                    PoolAssertFunctionInstruction* pool_assert_ins = new PoolAssertFunctionInstruction(
+                        attribute_vector, Comparision::COMP_EQUAL, {static_cast<int>(constraint.count_range.min)}
+                    );
+                    case_ins->add_instruction(pool_assert_ins);
+                    continue;
+                }
+
+                if (constraint.count_range.min != COUNT_NONE)
+                {
+                    // min count is bounded, need a '>=' assertion
+                    PoolAssertFunctionInstruction* pool_assert_ins = new PoolAssertFunctionInstruction(
+                        attribute_vector, Comparision::COMP_GE, {static_cast<int>(constraint.count_range.min)}
+                    );
+                    case_ins->add_instruction(pool_assert_ins);
+                }
+                if (constraint.count_range.max < COUNT_INFINITE)
+                {
+                    // max count is bounded, need a '<=' assertion
+                    PoolAssertFunctionInstruction* pool_assert_ins = new PoolAssertFunctionInstruction(
+                        attribute_vector, Comparision::COMP_LE, {static_cast<int>(constraint.count_range.max)}
+                    );
+                    case_ins->add_instruction(pool_assert_ins);
+                }
             }
         }
     }

@@ -47,6 +47,7 @@ int correctness_test() {
         std::cerr << "Caught exception: " << e.what() << std::endl;
         return 1;
 	}
+    return 0;
 }
 
 int LOOTINATOR_EXTERN tests_filter_test(int argc, char** const argv) {

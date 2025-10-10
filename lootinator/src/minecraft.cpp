@@ -1,4 +1,5 @@
 #include "lootinator/minecraft.hpp"
+#include "lootinator/utility/enum_bimap.hpp"
 
 namespace loot {
     std::unordered_map<ItemType, std::vector<Enchantment>> ITEM_ENCHANTMENTS({
@@ -32,6 +33,8 @@ namespace loot {
             {INFINITY_ENCHANTMENT, 1}, {FLAME, 1}, {CHANNELING, 1}, {AQUA_AFFINITY, 1},
     });
 
+    // item name to enum translation (and reverse for debugging purposes)
+
     std::unordered_map<ItemType, std::string> ITEM_TYPE_TO_NAME({
             {CHESTPLATE, "chestplate"}, {HELMET, "helmet"}, {LEGGINGS, "leggings"}, {BOOTS, "boots"},
             {SWORD, "sword"}, {MACE, "mace"}, {BOW, "bow"}, {CROSSBOW, "crossbow"}, {TRIDENT, "trident"},
@@ -45,7 +48,7 @@ namespace loot {
 
         {"helmet", HELMET}, {"leather_helmet", HELMET}, {"chainmail_helmet", HELMET},
         {"copper_helmet", HELMET}, {"iron_helmet", HELMET}, {"golden_helmet", HELMET},
-        {"diamond_helmet", HELMET}, {"netherite_helmet", HELMET},
+        {"diamond_helmet", HELMET}, {"netherite_helmet", HELMET}, {"turtle_helmet", HELMET},
 
         {"leggings", LEGGINGS}, {"leather_leggings", LEGGINGS}, {"chainmail_leggings", LEGGINGS},
         {"copper_leggings", LEGGINGS}, {"iron_leggings", LEGGINGS}, {"golden_leggings", LEGGINGS},
@@ -79,50 +82,71 @@ namespace loot {
 
         {"fishing_rod", FISHING_ROD}, {"book", BOOK}, {"enchanted_book", BOOK}
     });
+
+    // enchantability data
+
+    constexpr uint32_t BASE_ENCHANTABILITY = 1;
+    constexpr uint32_t STONE_ENCHANTABILITY = 5;
+    constexpr uint32_t TURTLE_ENCHANTABILITY = 9;
+    constexpr uint32_t DIAMOND_ENCHANTABILITY = 10;
+    constexpr uint32_t CHAINMAIL_ENCHANTABILITY = 12;
+    constexpr uint32_t WOOD_ENCHANTABILITY = 15;
+    constexpr uint32_t LEATHER_ENCHANTABILITY = 15;
+    constexpr uint32_t NETHERITE_ENCHANTABILITY = 15;
+    constexpr uint32_t MACE_ENCHANTABILITY = 15;
+
+    constexpr uint32_t COPPER_ENCHANTABILITY_TOOLS = 13;
+    constexpr uint32_t COPPER_ENCHANTABILITY_ARMOR = 8;
+    constexpr uint32_t IRON_ENCHANTABILITY_TOOLS = 14;
+    constexpr uint32_t IRON_ENCHANTABILITY_ARMOR = 9;
+    constexpr uint32_t GOLD_ENCHANTABILITY_TOOLS = 22;
+    constexpr uint32_t GOLD_ENCHANTABILITY_ARMOR = 25;
+    
     std::unordered_map<std::string, uint32_t> ITEM_NAME_TO_ENCHANTABILITY({
-        // TODO add enchantability for all the items
-        {"leather_chestplate", CHESTPLATE}, {"chainmail_chestplate", CHESTPLATE},
-        {"copper_chestplate", CHESTPLATE}, {"iron_chestplate", CHESTPLATE}, {"golden_chestplate", CHESTPLATE},
-        {"diamond_chestplate", CHESTPLATE}, {"netherite_chestplate", CHESTPLATE},
+        {"leather_chestplate", LEATHER_ENCHANTABILITY}, {"chainmail_chestplate", CHAINMAIL_ENCHANTABILITY},
+        {"copper_chestplate", COPPER_ENCHANTABILITY_ARMOR}, {"iron_chestplate", IRON_ENCHANTABILITY_ARMOR}, {"golden_chestplate", GOLD_ENCHANTABILITY_ARMOR},
+        {"diamond_chestplate", DIAMOND_ENCHANTABILITY}, {"netherite_chestplate", NETHERITE_ENCHANTABILITY},
 
-        {"leather_helmet", HELMET}, {"chainmail_helmet", HELMET},
-        {"copper_helmet", HELMET}, {"iron_helmet", HELMET}, {"golden_helmet", HELMET},
-        {"diamond_helmet", HELMET}, {"netherite_helmet", HELMET},
+        {"leather_helmet", LEATHER_ENCHANTABILITY}, {"chainmail_helmet", CHAINMAIL_ENCHANTABILITY},
+        {"copper_helmet", COPPER_ENCHANTABILITY_ARMOR}, {"iron_helmet", IRON_ENCHANTABILITY_ARMOR}, {"golden_helmet", GOLD_ENCHANTABILITY_ARMOR},
+        {"diamond_helmet", DIAMOND_ENCHANTABILITY}, {"netherite_helmet", NETHERITE_ENCHANTABILITY}, {"turtle_helmet", TURTLE_ENCHANTABILITY},
 
-        {"leather_leggings", LEGGINGS}, {"chainmail_leggings", LEGGINGS},
-        {"copper_leggings", LEGGINGS}, {"iron_leggings", LEGGINGS}, {"golden_leggings", LEGGINGS},
-        {"diamond_leggings", LEGGINGS}, {"netherite_leggings", LEGGINGS},
+        {"leather_leggings", LEATHER_ENCHANTABILITY}, {"chainmail_leggings", CHAINMAIL_ENCHANTABILITY},
+        {"copper_leggings", COPPER_ENCHANTABILITY_ARMOR}, {"iron_leggings", IRON_ENCHANTABILITY_ARMOR}, {"golden_leggings", GOLD_ENCHANTABILITY_ARMOR},
+        {"diamond_leggings", DIAMOND_ENCHANTABILITY}, {"netherite_leggings", NETHERITE_ENCHANTABILITY},
 
-        {"leather_boots", BOOTS}, {"chainmail_boots", BOOTS},
-        {"copper_boots", BOOTS}, {"iron_boots", BOOTS}, {"golden_boots", BOOTS},
-        {"diamond_boots", BOOTS}, {"netherite_boots", BOOTS},
+        {"leather_boots", LEATHER_ENCHANTABILITY}, {"chainmail_boots", CHAINMAIL_ENCHANTABILITY},
+        {"copper_boots", COPPER_ENCHANTABILITY_ARMOR}, {"iron_boots", IRON_ENCHANTABILITY_ARMOR}, {"golden_boots", GOLD_ENCHANTABILITY_ARMOR},
+        {"diamond_boots", DIAMOND_ENCHANTABILITY}, {"netherite_boots", NETHERITE_ENCHANTABILITY},
 
-        {"wooden_sword", SWORD}, {"stone_sword", SWORD},
-        {"copper_sword", SWORD}, {"iron_sword", SWORD}, {"golden_sword", SWORD},
-        {"diamond_sword", SWORD}, {"netherite_sword", SWORD},
+        {"wooden_sword", WOOD_ENCHANTABILITY}, {"stone_sword", STONE_ENCHANTABILITY},
+        {"copper_sword", COPPER_ENCHANTABILITY_TOOLS}, {"iron_sword", IRON_ENCHANTABILITY_TOOLS}, {"golden_sword", GOLD_ENCHANTABILITY_TOOLS},
+        {"diamond_sword", DIAMOND_ENCHANTABILITY}, {"netherite_sword", NETHERITE_ENCHANTABILITY},
 
-        {"mace", MACE}, {"bow", BOW}, {"crossbow", CROSSBOW}, {"trident", TRIDENT},
+        {"mace", MACE_ENCHANTABILITY}, {"bow", BASE_ENCHANTABILITY}, {"crossbow", BASE_ENCHANTABILITY}, {"trident", BASE_ENCHANTABILITY},
 
-        {"wooden_pickaxe", PICKAXE}, {"stone_pickaxe", PICKAXE},
-        {"copper_pickaxe", PICKAXE}, {"iron_pickaxe", PICKAXE}, {"golden_pickaxe", PICKAXE},
-        {"diamond_pickaxe", PICKAXE}, {"netherite_pickaxe", PICKAXE},
+        {"wooden_pickaxe", WOOD_ENCHANTABILITY}, {"stone_pickaxe", STONE_ENCHANTABILITY},
+        {"copper_pickaxe", COPPER_ENCHANTABILITY_TOOLS}, {"iron_pickaxe", IRON_ENCHANTABILITY_TOOLS}, {"golden_pickaxe", GOLD_ENCHANTABILITY_TOOLS},
+        {"diamond_pickaxe", DIAMOND_ENCHANTABILITY}, {"netherite_pickaxe", NETHERITE_ENCHANTABILITY},
 
-        {"wooden_axe", AXE}, {"stone_axe", AXE},
-        {"copper_axe", AXE}, {"iron_axe", AXE}, {"golden_axe", AXE},
-        {"diamond_axe", AXE}, {"netherite_axe", AXE},
+        {"wooden_axe", WOOD_ENCHANTABILITY}, {"stone_axe", STONE_ENCHANTABILITY},
+        {"copper_axe", COPPER_ENCHANTABILITY_TOOLS}, {"iron_axe", IRON_ENCHANTABILITY_TOOLS}, {"golden_axe", GOLD_ENCHANTABILITY_TOOLS},
+        {"diamond_axe", DIAMOND_ENCHANTABILITY}, {"netherite_axe", NETHERITE_ENCHANTABILITY},
 
-        {"wooden_shovel", SHOVEL}, {"stone_shovel", SHOVEL},
-        {"copper_shovel", SHOVEL}, {"iron_shovel", SHOVEL}, {"golden_shovel", SHOVEL},
-        {"diamond_shovel", SHOVEL}, {"netherite_shovel", SHOVEL},
+        {"wooden_shovel", WOOD_ENCHANTABILITY}, {"stone_shovel", STONE_ENCHANTABILITY},
+        {"copper_shovel", COPPER_ENCHANTABILITY_TOOLS}, {"iron_shovel", IRON_ENCHANTABILITY_TOOLS}, {"golden_shovel", GOLD_ENCHANTABILITY_TOOLS},
+        {"diamond_shovel", DIAMOND_ENCHANTABILITY}, {"netherite_shovel", NETHERITE_ENCHANTABILITY},
 
-        {"wooden_hoe", HOE}, {"stone_hoe", HOE},
-        {"copper_hoe", HOE}, {"iron_hoe", HOE}, {"golden_hoe", HOE},
-        {"diamond_hoe", HOE}, {"netherite_hoe", HOE},
+        {"wooden_hoe", WOOD_ENCHANTABILITY}, {"stone_hoe", STONE_ENCHANTABILITY},
+        {"copper_hoe", COPPER_ENCHANTABILITY_TOOLS}, {"iron_hoe", IRON_ENCHANTABILITY_TOOLS}, {"golden_hoe", GOLD_ENCHANTABILITY_TOOLS},
+        {"diamond_hoe", DIAMOND_ENCHANTABILITY}, {"netherite_hoe", NETHERITE_ENCHANTABILITY},
 
-        {"fishing_rod", FISHING_ROD}, {"book", 1}, {"enchanted_book", 1}
+        {"fishing_rod", BASE_ENCHANTABILITY}, {"book", BASE_ENCHANTABILITY}, {"enchanted_book", BASE_ENCHANTABILITY}
     });
 
-    std::unordered_map<Enchantment, std::string> ENCHANTMENT_TO_NAME({
+    // bidirectional map for enchantment name <-> enum translation
+
+    EnumToStringBimap<Enchantment> ENCHANTMENT_TO_NAME({
         {EFFICIENCY, "efficiency"},
         {SHARPNESS, "sharpness"},
         {SMITE, "smite"},
@@ -168,54 +192,42 @@ namespace loot {
         {NO_ENCHANTMENT, "no_enchantment"}
     });
 
-    std::unordered_map<std::string, Enchantment> NAME_TO_ENCHANTMENT({
-        {"efficiency", EFFICIENCY},
-        {"sharpness", SHARPNESS},
-        {"smite", SMITE},
-        {"bane_of_arthropods", BANE_OF_ARTHROPODS},
-        {"power", POWER},
-        {"impaling", IMPALING},
-        {"density", DENSITY},
-        {"protection", PROTECTION},
-        {"fire_protection", FIRE_PROTECTION},
-        {"projectile_protection", PROJECTILE_PROTECTION},
-        {"blast_protection", BLAST_PROTECTION},
-        {"feather_falling", FEATHER_FALLING},
-        {"breach", BREACH},
-        {"piercing", PIERCING},
-        {"fortune", FORTUNE},
-        {"luck_of_the_sea", LUCK_OF_THE_SEA},
-        {"lure", LURE},
-        {"unbreaking", UNBREAKING},
-        {"loyalty", LOYALTY},
-        {"thorns", THORNS},
-        {"wind_burst", WIND_BURST},
-        {"looting", LOOTING},
-        {"respiration", RESPIRATION},
-        {"quick_charge", QUICK_CHARGE},
-        {"riptide", RIPTIDE},
-        {"swift_sneak", SWIFT_SNEAK},
-        {"depth_strider", DEPTH_STRIDER},
-        {"soul_speed", SOUL_SPEED},
-        {"sweeping_edge", SWEEPING_EDGE},
-        {"frost_walker", FROST_WALKER},
-        {"punch", PUNCH},
-        {"knockback", KNOCKBACK},
-        {"fire_aspect", FIRE_ASPECT},
-        {"mending", MENDING},
-        {"curse_of_binding", CURSE_OF_BINDING},
-        {"curse_of_vanishing", CURSE_OF_VANISHING},
-        {"multishot", MULTISHOT},
-        {"silk_touch", SILK_TOUCH},
-        {"infinity", INFINITY_ENCHANTMENT},
-        {"flame", FLAME},
-        {"channeling", CHANNELING},
-        {"aqua_affinity", AQUA_AFFINITY}
-    });
+    // public api
 
-    // string -> enum & enum -> string lookups
+    /**
+     * Returns whether the provided enchantment can be obtained for the given item type
+     * in an enchanting table. When extra_enchants=true, the applicability is extended to
+     * all anvil-placeable enchantments for the given item type (thorns for all armor 
+     * pieces, sharpness & smite & bane of arth. for axes)
+     */
+    bool is_enchantment_applicable(Enchantment enchantment, ItemType item_type, bool extra_enchants) 
+    {
+        if (item_type == ItemType::NO_ITEM || enchantment == NO_ENCHANTMENT) {
+            return false; // safeguard
+        }
+        if (item_type == ItemType::BOOK || enchantment == MENDING || enchantment == UNBREAKING || enchantment == CURSE_OF_VANISHING) {
+            return true;
+        }
 
-    std::string loot::item_type_to_string(const ItemType type)
+        const auto& enchant_vec = ITEM_ENCHANTMENTS.at(item_type);
+        for (const auto& ench : enchant_vec) {
+            if (ench == enchantment) {
+                return true;
+            }
+        }
+
+        if (extra_enchants) {
+            if (enchantment == THORNS && (item_type == HELMET || item_type == LEGGINGS || item_type == BOOTS)) {
+                return true;
+            }
+            if (item_type == AXE && (enchantment == SHARPNESS || enchantment == SMITE || enchantment == BANE_OF_ARTHROPODS)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::string item_type_to_string(const ItemType type)
     {
         if (ITEM_TYPE_TO_NAME.find(type) != ITEM_TYPE_TO_NAME.end())
         {
@@ -227,7 +239,7 @@ namespace loot {
         }
     }
 
-    ItemType loot::string_to_item_type(const std::string &item_type_string)
+    ItemType string_to_item_type(const std::string &item_type_string)
     {
         if (ITEM_NAME_TO_ITEM_TYPE.find(item_type_string) != ITEM_NAME_TO_ITEM_TYPE.end()) 
         {
@@ -239,11 +251,11 @@ namespace loot {
         }
     }
 
-    std::string loot::enchantment_to_string(const Enchantment type)
+    std::string enchantment_to_string(const Enchantment type)
     {
-        if (ENCHANTMENT_TO_NAME.find(type) != ENCHANTMENT_TO_NAME.end())
+        if (ENCHANTMENT_TO_NAME.contains_enum(type))
         {
-            return ENCHANTMENT_TO_NAME.at(type); // TODO
+            return ENCHANTMENT_TO_NAME.lookup_enum(type); // TODO
         }
         else 
         {
@@ -251,11 +263,11 @@ namespace loot {
         }
     }
 
-    Enchantment loot::string_to_enchantment(const std::string &enchantment_string)
+    Enchantment string_to_enchantment(const std::string &enchantment_string)
     {
-        if (NAME_TO_ENCHANTMENT.find(enchantment_string) != NAME_TO_ENCHANTMENT.end()) 
+        if (ENCHANTMENT_TO_NAME.contains_string(enchantment_string)) 
         {
-            return NAME_TO_ENCHANTMENT.at(enchantment_string); // TODO
+            return ENCHANTMENT_TO_NAME.lookup_string(enchantment_string); // TODO
         }
         else 
         {

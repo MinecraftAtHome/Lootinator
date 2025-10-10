@@ -9,6 +9,7 @@ add_library(lootinator
     include/lootinator/template/kernel_template.h
     include/lootinator/template/template.h
     include/lootinator/utility/debug.h
+    include/lootinator/utility/enum_bimap.hpp
     include/lootinator/utility/range.h
     include/lootinator/utility/mth.h
     include/lootinator/lsm/parser.hpp

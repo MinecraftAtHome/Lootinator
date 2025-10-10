@@ -33,56 +33,6 @@ namespace loot {
             {INFINITY_ENCHANTMENT, 1}, {FLAME, 1}, {CHANNELING, 1}, {AQUA_AFFINITY, 1},
     });
 
-    // item name to enum translation (and reverse for debugging purposes)
-
-    std::unordered_map<ItemType, std::string> ITEM_TYPE_TO_NAME({
-            {CHESTPLATE, "chestplate"}, {HELMET, "helmet"}, {LEGGINGS, "leggings"}, {BOOTS, "boots"},
-            {SWORD, "sword"}, {MACE, "mace"}, {BOW, "bow"}, {CROSSBOW, "crossbow"}, {TRIDENT, "trident"},
-            {PICKAXE, "pickaxe"}, {AXE, "axe"}, {SHOVEL, "shovel"}, {HOE, "hoe"},
-            {FISHING_ROD, "fishing_rod"}, {BOOK, "book"}
-    });
-    std::unordered_map<std::string, ItemType> ITEM_NAME_TO_ITEM_TYPE({
-        {"chestplate", CHESTPLATE}, {"leather_chestplate", CHESTPLATE}, {"chainmail_chestplate", CHESTPLATE},
-        {"copper_chestplate", CHESTPLATE}, {"iron_chestplate", CHESTPLATE}, {"golden_chestplate", CHESTPLATE},
-        {"diamond_chestplate", CHESTPLATE}, {"netherite_chestplate", CHESTPLATE},
-
-        {"helmet", HELMET}, {"leather_helmet", HELMET}, {"chainmail_helmet", HELMET},
-        {"copper_helmet", HELMET}, {"iron_helmet", HELMET}, {"golden_helmet", HELMET},
-        {"diamond_helmet", HELMET}, {"netherite_helmet", HELMET}, {"turtle_helmet", HELMET},
-
-        {"leggings", LEGGINGS}, {"leather_leggings", LEGGINGS}, {"chainmail_leggings", LEGGINGS},
-        {"copper_leggings", LEGGINGS}, {"iron_leggings", LEGGINGS}, {"golden_leggings", LEGGINGS},
-        {"diamond_leggings", LEGGINGS}, {"netherite_leggings", LEGGINGS},
-
-        {"boots", BOOTS}, {"leather_boots", BOOTS}, {"chainmail_boots", BOOTS},
-        {"copper_boots", BOOTS}, {"iron_boots", BOOTS}, {"golden_boots", BOOTS},
-        {"diamond_boots", BOOTS}, {"netherite_boots", BOOTS},
-
-        {"sword", SWORD}, {"wooden_sword", SWORD}, {"stone_sword", SWORD},
-        {"copper_sword", SWORD}, {"iron_sword", SWORD}, {"golden_sword", SWORD},
-        {"diamond_sword", SWORD}, {"netherite_sword", SWORD},
-
-        {"mace", MACE}, {"bow", BOW}, {"crossbow", CROSSBOW}, {"trident", TRIDENT},
-
-        {"pickaxe", PICKAXE}, {"wooden_pickaxe", PICKAXE}, {"stone_pickaxe", PICKAXE},
-        {"copper_pickaxe", PICKAXE}, {"iron_pickaxe", PICKAXE}, {"golden_pickaxe", PICKAXE},
-        {"diamond_pickaxe", PICKAXE}, {"netherite_pickaxe", PICKAXE},
-
-        {"axe", AXE}, {"wooden_axe", AXE}, {"stone_axe", AXE},
-        {"copper_axe", AXE}, {"iron_axe", AXE}, {"golden_axe", AXE},
-        {"diamond_axe", AXE}, {"netherite_axe", AXE},
-
-        {"shovel", SHOVEL}, {"wooden_shovel", SHOVEL}, {"stone_shovel", SHOVEL},
-        {"copper_shovel", SHOVEL}, {"iron_shovel", SHOVEL}, {"golden_shovel", SHOVEL},
-        {"diamond_shovel", SHOVEL}, {"netherite_shovel", SHOVEL},
-
-        {"hoe", HOE}, {"wooden_hoe", HOE}, {"stone_hoe", HOE},
-        {"copper_hoe", HOE}, {"iron_hoe", HOE}, {"golden_hoe", HOE},
-        {"diamond_hoe", HOE}, {"netherite_hoe", HOE},
-
-        {"fishing_rod", FISHING_ROD}, {"book", BOOK}, {"enchanted_book", BOOK}
-    });
-
     // enchantability data
 
     constexpr uint32_t BASE_ENCHANTABILITY = 1;
@@ -142,6 +92,56 @@ namespace loot {
         {"diamond_hoe", DIAMOND_ENCHANTABILITY}, {"netherite_hoe", NETHERITE_ENCHANTABILITY},
 
         {"fishing_rod", BASE_ENCHANTABILITY}, {"book", BASE_ENCHANTABILITY}, {"enchanted_book", BASE_ENCHANTABILITY}
+    });
+
+    // item name to enum translation (and reverse for debugging purposes)
+
+    std::unordered_map<ItemType, std::string> ITEM_TYPE_TO_NAME({
+            {CHESTPLATE, "chestplate"}, {HELMET, "helmet"}, {LEGGINGS, "leggings"}, {BOOTS, "boots"},
+            {SWORD, "sword"}, {MACE, "mace"}, {BOW, "bow"}, {CROSSBOW, "crossbow"}, {TRIDENT, "trident"},
+            {PICKAXE, "pickaxe"}, {AXE, "axe"}, {SHOVEL, "shovel"}, {HOE, "hoe"},
+            {FISHING_ROD, "fishing_rod"}, {BOOK, "book"}
+    });
+    std::unordered_map<std::string, ItemType> ITEM_NAME_TO_ITEM_TYPE({
+        {"chestplate", CHESTPLATE}, {"leather_chestplate", CHESTPLATE}, {"chainmail_chestplate", CHESTPLATE},
+        {"copper_chestplate", CHESTPLATE}, {"iron_chestplate", CHESTPLATE}, {"golden_chestplate", CHESTPLATE},
+        {"diamond_chestplate", CHESTPLATE}, {"netherite_chestplate", CHESTPLATE},
+
+        {"helmet", HELMET}, {"leather_helmet", HELMET}, {"chainmail_helmet", HELMET},
+        {"copper_helmet", HELMET}, {"iron_helmet", HELMET}, {"golden_helmet", HELMET},
+        {"diamond_helmet", HELMET}, {"netherite_helmet", HELMET}, {"turtle_helmet", HELMET},
+
+        {"leggings", LEGGINGS}, {"leather_leggings", LEGGINGS}, {"chainmail_leggings", LEGGINGS},
+        {"copper_leggings", LEGGINGS}, {"iron_leggings", LEGGINGS}, {"golden_leggings", LEGGINGS},
+        {"diamond_leggings", LEGGINGS}, {"netherite_leggings", LEGGINGS},
+
+        {"boots", BOOTS}, {"leather_boots", BOOTS}, {"chainmail_boots", BOOTS},
+        {"copper_boots", BOOTS}, {"iron_boots", BOOTS}, {"golden_boots", BOOTS},
+        {"diamond_boots", BOOTS}, {"netherite_boots", BOOTS},
+
+        {"sword", SWORD}, {"wooden_sword", SWORD}, {"stone_sword", SWORD},
+        {"copper_sword", SWORD}, {"iron_sword", SWORD}, {"golden_sword", SWORD},
+        {"diamond_sword", SWORD}, {"netherite_sword", SWORD},
+
+        {"mace", MACE}, {"bow", BOW}, {"crossbow", CROSSBOW}, {"trident", TRIDENT},
+
+        {"pickaxe", PICKAXE}, {"wooden_pickaxe", PICKAXE}, {"stone_pickaxe", PICKAXE},
+        {"copper_pickaxe", PICKAXE}, {"iron_pickaxe", PICKAXE}, {"golden_pickaxe", PICKAXE},
+        {"diamond_pickaxe", PICKAXE}, {"netherite_pickaxe", PICKAXE},
+
+        {"axe", AXE}, {"wooden_axe", AXE}, {"stone_axe", AXE},
+        {"copper_axe", AXE}, {"iron_axe", AXE}, {"golden_axe", AXE},
+        {"diamond_axe", AXE}, {"netherite_axe", AXE},
+
+        {"shovel", SHOVEL}, {"wooden_shovel", SHOVEL}, {"stone_shovel", SHOVEL},
+        {"copper_shovel", SHOVEL}, {"iron_shovel", SHOVEL}, {"golden_shovel", SHOVEL},
+        {"diamond_shovel", SHOVEL}, {"netherite_shovel", SHOVEL},
+
+        {"hoe", HOE}, {"wooden_hoe", HOE}, {"stone_hoe", HOE},
+        {"copper_hoe", HOE}, {"iron_hoe", HOE}, {"golden_hoe", HOE},
+        {"diamond_hoe", HOE}, {"netherite_hoe", HOE},
+
+        {"fishing_rod", FISHING_ROD}, {"book", BOOK}, {"enchanted_book", BOOK}
     });
 
     // bidirectional map for enchantment name <-> enum translation
@@ -226,6 +226,38 @@ namespace loot {
         }
         return false;
     }
+
+    /**
+     * Returns the maximum level of the provided enchantment or 0 if the enchantment is invalid
+     */
+    uint32_t get_max_level(Enchantment enchantment)
+    {
+        if (ENCHANTMENT_MAX_LEVEL.find(enchantment) != ENCHANTMENT_MAX_LEVEL.end())
+        {
+            return ENCHANTMENT_MAX_LEVEL.at(enchantment);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /**
+     * Returns the enchantability for the provided item name or 0 if the item is invalid
+     */
+    uint32_t get_enchantability(const std::string& item_name)
+    {
+        if (ITEM_NAME_TO_ENCHANTABILITY.find(item_name) != ITEM_NAME_TO_ENCHANTABILITY.end())
+        {
+            return ITEM_NAME_TO_ENCHANTABILITY.at(item_name);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    // -----------------------------------------------------------------------------------
 
     std::string item_type_to_string(const ItemType type)
     {

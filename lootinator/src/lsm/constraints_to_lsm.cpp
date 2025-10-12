@@ -40,10 +40,10 @@ namespace loot { namespace lsm {
             for (auto& entry : pool["entries"])
             {
                 // FIXME this could break if multiple entries have same item
-                std::unique_ptr<CaseInstruction> case_ins = std::make_unique<CaseInstruction>(entry_idx);
+                CaseInstruction* case_ins = new CaseInstruction(entry_idx);
                 for (int func_idx = 0; func_idx < entry["functions"].size(); func_idx++)
                 {
-                    std::unique_ptr<FunctionInstruction> func_ins = std::make_unique<FunctionInstruction>(FunctionType::FUNC_FUNC, std::vector<int>{pool_idx, entry_idx, func_idx});
+                    FunctionInstruction* func_ins = new FunctionInstruction(FunctionType::FUNC_FUNC, {pool_idx, entry_idx, func_idx});
                     case_ins->add_instruction(func_ins);
                 }
                 add_loot_assertions(ltcl, entry, merged_constraints, case_ins);

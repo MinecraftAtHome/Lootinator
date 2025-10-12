@@ -14,7 +14,7 @@ namespace loot {
     };
 
     enum Enchantment {
-        NO_ENCHANTMENT = 0,
+        NO_ENCHANTMENT,
 
         // armor
         PROTECTION,

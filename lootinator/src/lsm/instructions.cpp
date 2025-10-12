@@ -63,7 +63,7 @@ namespace loot {
             this->tp = loot::lsm::InstructionType::INS_FUNC;
         }
                 
-        void loot::lsm::BlockInstruction::add_instruction(std::unique_ptr<Instruction> ins) {
+        void loot::lsm::BlockInstruction::add_instruction(Instruction *ins) {
             this->children.push_back(ins);
         }
 
@@ -73,6 +73,11 @@ namespace loot {
             {
                 delete ins;
             }
+        }
+
+        loot::lsm::Instruction *loot::lsm::Instruction::as_ins()
+        {
+            return (Instruction *)this;
         }
 
         void loot::lsm::CaseInstruction::debug(int indent_level) {

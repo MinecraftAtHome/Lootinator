@@ -56,7 +56,7 @@ namespace loot { namespace lsm {
             //std::cerr << "poolidx = " << pool_filter.pool_idx << " vecsize = " << ltcl.loot_table.total_weights.size() << "\n";
             int total_weight = ltcl.loot_table.total_weights[pool_filter.pool_idx];
             RangeInclusive<uint32_t> weight_range = get_weight_range_for_item(ltcl, pool_filter);
-            for (int i = 0; pool_filter.entry_count; i++)
+            for (int i = 0; i < pool_filter.entry_count; i++)
             {
                 add_next_int(total_weight, weight_range.min, weight_range.max, next_int_vector);
                 if (entry_set_count_advancement) {

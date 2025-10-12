@@ -165,6 +165,7 @@ namespace loot {
         RangeInclusive<uint32_t> roll_range(1, 1);
         roll_range.min = max(pool_rolls.min, ceil_div(aggregated_constraint.count_range.min, items_per_roll.max));
         roll_range.max = min(pool_rolls.max, aggregated_constraint.count_range.max / items_per_roll.min);
+        std::cerr << "rollmin = " << roll_range.min << " rollmax = " << roll_range.max << '\n';
 
         loot::PoolFilter pool_filter(
             base_filter.reversal_type,

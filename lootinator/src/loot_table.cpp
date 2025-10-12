@@ -60,6 +60,7 @@ namespace loot {
                 }
             }
 
+            total_weights.push_back(total_weight);
             pool_id++;
         }
     }

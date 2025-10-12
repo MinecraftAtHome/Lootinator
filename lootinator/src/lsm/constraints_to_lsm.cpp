@@ -1,6 +1,7 @@
 #include "lootinator/lsm/constraints_to_lsm.hpp"
 #include <iostream>
 
+
 namespace loot { namespace lsm {
     std::vector<loot::lsm::BlockInstruction*> get_lsm_representations(const LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints)
     {
@@ -18,12 +19,77 @@ namespace loot { namespace lsm {
         return programs;
     }
 
+    static void add_next_int(int bound, int min_incl, int max_incl, std::vector<int>& out)
+    {
+        out.push_back(bound);
+        out.push_back(min_incl);
+        out.push_back(max_incl);
+    }
+
     void add_filter_on(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, loot::lsm::BlockInstruction *main_block)
     {
-        (void)ltcl;
-        (void)pool_filter;
-        (void)main_block;
-        // (big) TODO
+        // TODO
+
+        //filter-on (bound1 min1 max1) (bound2 min2 max2) ...
+        // - enchant_randomly enchant id -> enchant index for the loot function ()
+        // - set_count item count -> nextInt output that generates that item count (~)
+
+        // for enchant randomly:
+        // - version range -> enchantment order mapping (V)
+        // - check which enchantment can go on item (V)
+
+        bool entry_set_count_advancement = false;
+        auto& entry = ltcl.loot_table.data["pools"][pool_filter.pool_idx]["entries"][pool_filter.entry_idx];
+        if (entry.contains("functions")) {
+            for (auto& func : entry["functions"]) {
+                if (func["function"] == "minecraft:set_count") {
+                    RangeInclusive<uint32_t> count_range = RangeInclusive<uint32_t>::from_json(func["count"]);
+                    entry_set_count_advancement = count_range.min != count_range.max;
+                    break;
+                }
+            }
+        }
+
+        std::vector<int> next_int_vector;
+        if (pool_filter.reversal_type == ReversalType::ITEM_ONLY)
+        {
+            //std::cerr << "poolidx = " << pool_filter.pool_idx << " vecsize = " << ltcl.loot_table.total_weights.size() << "\n";
+            int total_weight = ltcl.loot_table.total_weights[pool_filter.pool_idx];
+            RangeInclusive<uint32_t> weight_range = get_weight_range_for_item(ltcl, pool_filter);
+            for (int i = 0; pool_filter.entry_count; i++)
+            {
+                add_next_int(total_weight, weight_range.min, weight_range.max, next_int_vector);
+                if (entry_set_count_advancement) {
+                    add_next_int(0, 1, 1, next_int_vector); // skip 1 lcg state
+                }
+            }
+        }
+
+        main_block->add_instruction(new FunctionInstruction(FunctionType::FUNC_FILTER_ON, next_int_vector));
+    }
+
+    RangeInclusive<uint32_t> get_weight_range_for_item(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter)
+    {
+        int pool_idx = pool_filter.pool_idx;
+        const auto& entries = ltcl.loot_table.data["pools"][pool_idx]["entries"];
+
+        uint32_t current_weight = 0;
+        int eid = 0;
+        for (const auto& entry : entries) {
+            int entry_weight = 1;
+            if (entry.contains("weight")) {
+                entry_weight = entry["weight"];
+            }
+            if (eid == pool_filter.entry_idx) {
+                return RangeInclusive<uint32_t>(current_weight, current_weight+entry_weight-1);
+            }
+            current_weight += entry_weight;
+            eid++;
+        }
+
+        std::cerr << "constraints_to_lsm.cpp: get_weight_range_for_item: failed to find entry" 
+                     "matching the specified pool filter, pool_filter.entry_idx = " << pool_filter.entry_idx << '\n';
+        return RangeInclusive<uint32_t>(0,0);
     }
 
     void add_pool_forward_filters(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const std::vector<loot::Constraint> &merged_constraints, loot::lsm::BlockInstruction *main_block)

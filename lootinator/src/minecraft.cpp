@@ -1,6 +1,8 @@
 #include "lootinator/minecraft.hpp"
 #include "lootinator/utility/enum_bimap.hpp"
 
+#include <iostream>
+
 namespace loot {
     std::unordered_map<ItemType, std::vector<Enchantment>> ITEM_ENCHANTMENTS({
             {CHESTPLATE, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,THORNS,CURSE_OF_BINDING}},
@@ -254,6 +256,55 @@ namespace loot {
         else
         {
             return 0;
+        }
+    }
+
+    /**
+     * Returns the order of enchantments for a provided version range (as a std::vector)
+     */
+    std::vector<int> get_enchantments_for_version(const MCVersionRange version_range)
+    {
+        if (version_range == MCVersionRange::MC_1_13)
+        {
+            return std::vector<int>({{ 
+                PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
+                RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER, FROST_WALKER, CURSE_OF_BINDING,
+                SHARPNESS, SMITE, BANE_OF_ARTHROPODS, KNOCKBACK, FIRE_ASPECT, LOOTING, SWEEPING_EDGE,
+                EFFICIENCY, SILK_TOUCH, UNBREAKING, FORTUNE, 
+                POWER, PUNCH, FLAME, INFINITY_ENCHANTMENT,
+                LUCK_OF_THE_SEA, LURE, LOYALTY, IMPALING, RIPTIDE, CHANNELING, 
+                MENDING, CURSE_OF_VANISHING
+            }});
+        }
+        else if (version_range == MCVersionRange::MC_1_14_TO_1_15 || version_range == MCVersionRange::MC_1_16_TO_1_20)
+        {
+            return std::vector<int>({{
+                PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
+                RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER, FROST_WALKER, CURSE_OF_BINDING,
+                SHARPNESS, SMITE, BANE_OF_ARTHROPODS, KNOCKBACK, FIRE_ASPECT, LOOTING, SWEEPING_EDGE,
+                EFFICIENCY, SILK_TOUCH, UNBREAKING, FORTUNE, 
+                POWER, PUNCH, FLAME, INFINITY_ENCHANTMENT,
+                LUCK_OF_THE_SEA, LURE, LOYALTY, IMPALING, RIPTIDE, CHANNELING, 
+                MULTISHOT, QUICK_CHARGE, PIERCING, MENDING, CURSE_OF_VANISHING
+            }});
+        }
+        else if (version_range == MCVersionRange::MC_1_21_TO_1_21_9)
+        {
+            return std::vector<int>({{
+                PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
+                RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER, 
+                SHARPNESS, SMITE, BANE_OF_ARTHROPODS, KNOCKBACK, FIRE_ASPECT, LOOTING, SWEEPING_EDGE,
+                EFFICIENCY, SILK_TOUCH, UNBREAKING, FORTUNE, 
+                POWER, PUNCH, FLAME, INFINITY_ENCHANTMENT,
+                LUCK_OF_THE_SEA, LURE, LOYALTY, IMPALING, RIPTIDE, CHANNELING,
+                MULTISHOT, QUICK_CHARGE, PIERCING, DENSITY, BREACH,
+                CURSE_OF_BINDING, CURSE_OF_VANISHING, FROST_WALKER, MENDING
+            }});
+        }
+        else
+        {
+            std::cerr << "minecraft.cpp: get_enchantments_for_version(): Bad version range: " << version_range << '\n';
+            return std::vector<int>();
         }
     }
 

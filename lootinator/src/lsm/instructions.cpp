@@ -106,28 +106,15 @@ namespace loot {
 
         #define TODO(str) std::cout << "TODO: " << str << "\n";
         void loot::lsm::FunctionInstruction::debug(int indent_level) {
-            switch (this->func_tp) {
-                case FUNC_FAIL: {
-                    printf("%*s%s\n", indent_level, "", "FAIL");   
-                    break;
-                }
-                case FUNC_LCG_ADVANCE: {
-                    printf("%*s%s %d\n", indent_level, "", "LCG_ADVANCE", this->args[0]);   
-                    break;
-                }
-                case FUNC_FUNC: {
-                    printf("%*s%s ", indent_level, "", "FUNC_FUNC", this->args[0]);   
-                    for (auto &arg : this->args) {
-                        printf("%d ", arg);
-                    }
-                    puts("");
-                    break;
-                }
-                default: {
-                    TODO("Function instruction not implemented yet!");
-                    break;
-                }
+            static const char* func_names[] = {
+                "", "FAIL", "FUNC_FILTER_ON", "LCG_ADVANCE", "FUNC_FUNC"
+            };
+
+            printf("%*s%s ", indent_level, "", func_names[func_tp]);   
+            for (auto &arg : this->args) {
+                printf("%d ", arg);
             }
+            puts("");
         }
 
         void loot::lsm::Instruction::debug(int indent_level) {

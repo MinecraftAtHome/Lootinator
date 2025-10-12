@@ -18,7 +18,7 @@ namespace loot { namespace lsm {
         return programs;
     }
 
-    void loot::lsm::add_filter_on(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, loot::lsm::BlockInstruction *main_block)
+    void add_filter_on(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, loot::lsm::BlockInstruction *main_block)
     {
         (void)ltcl;
         (void)pool_filter;
@@ -26,7 +26,7 @@ namespace loot { namespace lsm {
         // (big) TODO
     }
 
-    void loot::lsm::add_pool_forward_filters(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const std::vector<loot::Constraint> &merged_constraints, loot::lsm::BlockInstruction *main_block)
+    void add_pool_forward_filters(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const std::vector<loot::Constraint> &merged_constraints, loot::lsm::BlockInstruction *main_block)
     {
         int pool_idx = 0;
         for (auto& pool : ltcl.loot_table.data["pools"])

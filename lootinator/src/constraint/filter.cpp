@@ -36,7 +36,7 @@ namespace loot {
     {
         // calculate item weight reduction
         nlohmann::json entry = loot_table.data["pools"][pool_idx]["entries"][entry_idx];
-        int w = entry.contains("weight") ? entry["weight"] : 1;
+        int w = entry.contains("weight") ? (int)entry["weight"] : 1;
         assert(w != 0);
         float weight_score = static_cast<float>(loot_table.total_weights[pool_idx]) / w;
 

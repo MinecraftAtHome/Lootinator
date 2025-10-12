@@ -115,6 +115,14 @@ namespace loot {
                     printf("%*s%s %d\n", indent_level, "", "LCG_ADVANCE", this->args[0]);   
                     break;
                 }
+                case FUNC_FUNC: {
+                    printf("%*s%s ", indent_level, "", "FUNC_FUNC", this->args[0]);   
+                    for (auto &arg : this->args) {
+                        printf("%d ", arg);
+                    }
+                    puts("");
+                    break;
+                }
                 default: {
                     TODO("Function instruction not implemented yet!");
                     break;

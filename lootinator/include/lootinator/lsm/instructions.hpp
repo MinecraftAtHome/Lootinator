@@ -20,7 +20,6 @@ namespace loot {
         class Instruction {
             public:
                 InstructionType tp;
-                Instruction *as_ins();
                 virtual void debug(int indent_level);
                 virtual ~Instruction() {};
         };
@@ -45,9 +44,9 @@ namespace loot {
 
         class BlockInstruction : public Instruction {
             public:
-                std::vector<Instruction *> children;
+                std::vector<std::unique_ptr<Instruction>> children;
                 BlockInstruction();
-                void add_instruction(Instruction *ins);
+                void add_instruction(std::unique_ptr<Instruction> ins);
                 virtual ~BlockInstruction() override;
                 void debug(int indent_level) override;
         };

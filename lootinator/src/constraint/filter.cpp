@@ -149,11 +149,13 @@ namespace loot {
         for (auto& entry: pool["entries"]) {
             if (aggregated_constraint.matches_entry(loot_table, entry)) {
                 entry_idx = e;
+                //std::cerr << "entry = " << entry_idx << '\n';
                 if (!entry.contains("functions"))
                     continue;
                 for (auto& loot_fun : entry["functions"]) {
                     if (loot_fun["function"] == "minecraft:set_count") {
                         items_per_roll = RangeInclusive<uint32_t>::from_json(loot_fun["count"]);
+                        //std::cerr << "setcount: min = " << items_per_roll.min << " max = " << items_per_roll.max << '\n';
                         break;
                     }
                 }
@@ -165,7 +167,7 @@ namespace loot {
         RangeInclusive<uint32_t> roll_range(1, 1);
         roll_range.min = max(pool_rolls.min, ceil_div(aggregated_constraint.count_range.min, items_per_roll.max));
         roll_range.max = min(pool_rolls.max, aggregated_constraint.count_range.max / items_per_roll.min);
-        std::cerr << "rollmin = " << roll_range.min << " rollmax = " << roll_range.max << '\n';
+        //std::cerr << "rollmin = " << roll_range.min << " rollmax = " << roll_range.max << '\n';
 
         loot::PoolFilter pool_filter(
             base_filter.reversal_type,

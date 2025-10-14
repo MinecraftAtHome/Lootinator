@@ -71,10 +71,10 @@ namespace loot {
 
             // check item type match
             int item_idx = loot_table.find_item_name(entry["name"]);
-            if (item_idx != item) {
+            if (item_idx == -1 || static_cast<uint32_t>(item_idx) != item) {
                 return false;
             }
-
+            
             // check attribute match by comparing categories of loot functions
             // with categories of attributes
             for (auto& constraint_attr : attributes) {

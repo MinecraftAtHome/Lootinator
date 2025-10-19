@@ -15,7 +15,10 @@ add_library(lootinator
     include/lootinator/lsm/parser.hpp
     include/lootinator/lsm/instructions.hpp
     include/lootinator/lsm/constraints_to_lsm.hpp
+    include/lootinator/lsm/cuda/lsm_to_cuda.hpp
     include/lootinator/template/template.h
+    include/lootinator/template/template.h
+
     
     src/loot_table.cpp
     src/lootinator.cpp
@@ -26,6 +29,7 @@ add_library(lootinator
     src/template/kernel_template.cpp
     src/template/template.cpp
     src/lsm/instructions.cpp
+    src/lsm/cuda/lsm_to_cuda.cpp
     src/lsm/parser.cpp
     src/lsm/constraints_to_lsm.cpp
     src/utility/debug.cpp
@@ -38,6 +42,8 @@ set(TEST_FILES
     tests/constraint_json_test.cpp
     tests/filter_test.cpp
 )
+
+# TODO: compiler flags, (-O3, warnings, etc)
 
 # Create test driver and test source list
 create_test_sourcelist(TEST_SOURCELIST CommonCxxTests.cxx ${TEST_FILES})

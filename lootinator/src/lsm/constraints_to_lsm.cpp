@@ -98,7 +98,8 @@ namespace loot { namespace lsm {
         for (auto& pool : ltcl.loot_table.data["pools"])
         {
             PoolInstruction* pool_block = new PoolInstruction(pool_idx);
-            FunctionInstruction* advance = new FunctionInstruction(FunctionType::FUNC_LCG_ADVANCE, {1});
+            RangeInclusive<std::uint32_t> roll_range = RangeInclusive<std::uint32_t>::from_json(pool["rolls"]);     
+            FunctionInstruction* advance = new FunctionInstruction(FunctionType::FUNC_LCG_ADVANCE, {roll_range.min != roll_range.max ? 1 : 0}); 
             RollInstruction* roll_block = new RollInstruction(0/*TODO use actual data*/);
             pool_block->add_instruction(advance);
             

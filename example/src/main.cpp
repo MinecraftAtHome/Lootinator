@@ -8,6 +8,7 @@
 #include "lootinator/lsm/parser.hpp"
 #include "lootinator/lsm/instructions.hpp"
 #include "lootinator/lsm/constraints_to_lsm.hpp"
+#include "lootinator/lsm/cuda/lsm_to_cuda.hpp"
 
 /*
 loot table: ruined portal
@@ -44,10 +45,12 @@ int main() {
 
 		std::vector<loot::lsm::BlockInstruction*> programs = loot::lsm::get_lsm_representations(ltcl, constr);
 		
+		int prog_idx = 0;
 		for (auto& prog : programs)
-		{
-			prog->debug(0);
+		{	
+			lsm_to_cuda(ltcl, prog, "output_" + std::to_string(prog_idx));
 			delete prog;
+			prog_idx++;
 		}
     } 
     catch (const std::exception& e) {

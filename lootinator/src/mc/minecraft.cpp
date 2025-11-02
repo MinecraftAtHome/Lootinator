@@ -2,6 +2,7 @@
 #include "lootinator/utility/enum_bimap.hpp"
 
 #include <iostream>
+#include <vector>
 
 namespace mc {
     std::unordered_map<mc::ItemType, std::vector<Enchantment>> ITEM_ENCHANTMENTS({

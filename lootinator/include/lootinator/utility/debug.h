@@ -15,7 +15,7 @@ namespace util {
         std::ostream* os;
         const char* delim = "";
 
-        util::DebugArray(std::ostream& os);
+        DebugArray(std::ostream& os);
         
         template <class T>
         util::DebugArray& add(const T& value) {
@@ -31,7 +31,7 @@ namespace util {
         std::ostream* os;
         const char* delim = "";
 
-        util::DebugStruct(std::ostream& os, const char* name);
+        DebugStruct(std::ostream& os, const char* name);
 
         template <class T>
         util::DebugStruct& add(const char* field, const T& value) {

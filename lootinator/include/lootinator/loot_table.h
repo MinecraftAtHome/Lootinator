@@ -2,7 +2,7 @@
 #define LOOTINATOR_LOOT_TABLE_H
 
 #include "nlohmann/json.hpp"
-#include "lootinator/minecraft.hpp"
+#include "lootinator/mc/minecraft.hpp"
 #include <vector>
 #include <string>
 

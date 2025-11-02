@@ -1,4 +1,4 @@
-#include "lootinator/minecraft.hpp"
+#include "lootinator/mc/minecraft.hpp"
 #include "lootinator/utility/enum_bimap.hpp"
 
 #include <iostream>

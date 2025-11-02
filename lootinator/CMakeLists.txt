@@ -2,7 +2,7 @@ add_library(lootinator
     include/lootinator/assertions.h
     include/lootinator/loot_table.h
     include/lootinator/lootinator.h
-    include/lootinator/minecraft.hpp
+    include/lootinator/mc/minecraft.hpp
     include/lootinator/constraint/constraint.h
     include/lootinator/constraint/filter.h
     include/lootinator/template/helpers.h
@@ -22,7 +22,7 @@ add_library(lootinator
     
     src/loot_table.cpp
     src/lootinator.cpp
-    src/minecraft.cpp
+    src/mc/minecraft.cpp
     src/constraint/constraint.cpp
     src/constraint/filter.cpp
     src/template/helpers.cpp

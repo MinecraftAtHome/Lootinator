@@ -72,7 +72,8 @@ namespace loot { namespace lsm {
         create_shared_memory(ltcl, program);
         
         program->debug(0);
-        PoolInstruction *instruction = dynamic_cast<PoolInstruction *>(program->children[1]);
-        compile_roll(ltcl, instruction);
+        program->compile(0);
+        // PoolInstruction *instruction = dynamic_cast<PoolInstruction *>(program->children[1]);
+        // compile_roll(ltcl, instruction);
     }
 }}

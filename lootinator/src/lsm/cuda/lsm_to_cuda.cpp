@@ -4,6 +4,7 @@
 #include "lootinator/lsm/instructions.hpp"
 #include "lootinator/lsm/constraints_to_lsm.hpp"
 #include "lootinator/template/kernel_template.h"
+#include "lootinator/lsm/cuda/lsm_to_cuda.hpp"
 #include "nlohmann/json.hpp"
 
 namespace loot { namespace lsm {
@@ -15,20 +16,22 @@ namespace loot { namespace lsm {
         }
     }
 
-    void add_function(Function function_ref, std::vector<int> &function) {
-        Chunk c = {this->shared.size(), function.size()};
-        function_offset[function_ref] = c;
+    void SharedMem::add_function(const Function function_ref, std::vector<int> &function) {
+        Chunk c = {
+            this->shared.size(), function.size()
+        };
+        this->function_offset[function_ref] = c;
         for (auto &i : function) {
             this->shared.push_back(i);
         }
     }
 
-    int get_pool_start(int pool_idx) {
-        Chunk chunk = this->pool_offset.get(pool_idx);
+    int SharedMem::get_pool_start(int pool_idx) {
+        Chunk chunk = this->pool_offset[pool_idx];
         return chunk.offset;
     }
 
-    int get_function_start(Function function_ref) {
+    int SharedMem::get_function_start(Function function_ref) {
         Chunk chunk = this->function_offset[function_ref];
         return chunk.offset;
     }                
@@ -66,7 +69,7 @@ namespace loot { namespace lsm {
     }                   
 
     void lsm_to_cuda(LootTableConstraintList &ltcl, BlockInstruction *program, std::string output_file) {
-        create_shared_memory(ltcl);
+        create_shared_memory(ltcl, program);
         
         program->debug(0);
         PoolInstruction *instruction = dynamic_cast<PoolInstruction *>(program->children[1]);

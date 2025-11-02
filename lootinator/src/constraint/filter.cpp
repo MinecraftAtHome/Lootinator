@@ -125,7 +125,7 @@ namespace loot {
 
     void LootTableConstraintList::add_possible_filters(const std::vector<loot::Constraint>& constraints, const Constraint& main_constraint, int pool_idx) {
         const nlohmann::json& pool = loot_table.data["pools"][pool_idx];
-        const RangeInclusive<uint32_t> pool_rolls = RangeInclusive<uint32_t>::from_json(pool["rolls"]);
+        const util::RangeInclusive<uint32_t> pool_rolls = util::RangeInclusive<uint32_t>::from_json(pool["rolls"]);
 
         ReversalType rtypes[3] = {ReversalType::ITEM_ONLY, ReversalType::ITEM_AND_ATTRIBUTE, ReversalType::ITEM_AND_ATTRIBUTE_AND_LEVEL};
         for (auto reversal_type : rtypes) {
@@ -140,10 +140,10 @@ namespace loot {
         }
     }
 
-    void LootTableConstraintList::add_all_filter_variants(const nlohmann::json& pool, const RangeInclusive<uint32_t>& pool_rolls, const loot::PoolFilter& base_filter, const loot::Constraint& aggregated_constraint)
+    void LootTableConstraintList::add_all_filter_variants(const nlohmann::json& pool, const util::RangeInclusive<uint32_t>& pool_rolls, const loot::PoolFilter& base_filter, const loot::Constraint& aggregated_constraint)
     {
         // count how many rolls min/max
-        RangeInclusive<uint32_t> items_per_roll(1, 1);
+        util::RangeInclusive<uint32_t> items_per_roll(1, 1);
         int entry_idx = 0, e = 0;
 
         for (auto& entry: pool["entries"]) {
@@ -154,7 +154,7 @@ namespace loot {
                     continue;
                 for (auto& loot_fun : entry["functions"]) {
                     if (loot_fun["function"] == "minecraft:set_count") {
-                        items_per_roll = RangeInclusive<uint32_t>::from_json(loot_fun["count"]);
+                        items_per_roll = util::RangeInclusive<uint32_t>::from_json(loot_fun["count"]);
                         //std::cerr << "setcount: min = " << items_per_roll.min << " max = " << items_per_roll.max << '\n';
                         break;
                     }
@@ -164,7 +164,7 @@ namespace loot {
         }
 
         // min items per roll -> max rolls needed
-        RangeInclusive<uint32_t> roll_range(1, 1);
+        util::RangeInclusive<uint32_t> roll_range(1, 1);
         roll_range.min = max(pool_rolls.min, ceil_div(aggregated_constraint.count_range.min, items_per_roll.max));
         roll_range.max = min(pool_rolls.max, aggregated_constraint.count_range.max / items_per_roll.min);
         //std::cerr << "rollmin = " << roll_range.min << " rollmax = " << roll_range.max << '\n';
@@ -211,14 +211,14 @@ namespace loot {
         return type == ReversalType::ITEM_ONLY || !constr.attributes.empty();
     }
 
-    RangeInclusive<uint32_t> LootTableConstraintList::get_roll_range(const nlohmann::json &pool, const RangeInclusive<uint32_t>& pool_rolls, const loot::Constraint &aggregated_constraint) const {
-        RangeInclusive<uint32_t> items_per_roll(1, 1);
+    util::RangeInclusive<uint32_t> LootTableConstraintList::get_roll_range(const nlohmann::json &pool, const util::RangeInclusive<uint32_t>& pool_rolls, const loot::Constraint &aggregated_constraint) const {
+        util::RangeInclusive<uint32_t> items_per_roll(1, 1);
 
         for (auto& entry: pool["entries"]) {
             if (aggregated_constraint.matches_entry(loot_table, entry)) {
                 for (auto& loot_fun : entry["functions"]) {
                     if (loot_fun["function"] == "minecraft:set_count") {
-                        items_per_roll = RangeInclusive<uint32_t>::from_json(loot_fun["count"]);
+                        items_per_roll = util::RangeInclusive<uint32_t>::from_json(loot_fun["count"]);
                         break;
                     }
                 }
@@ -226,7 +226,7 @@ namespace loot {
         }
 
         // min items per roll -> max rolls needed
-        RangeInclusive<uint32_t> roll_range(1, 1);
+        util::RangeInclusive<uint32_t> roll_range(1, 1);
         roll_range.min = max(pool_rolls.min, ceil_div(aggregated_constraint.count_range.min, items_per_roll.max));
         roll_range.max = min(pool_rolls.max, aggregated_constraint.count_range.max / items_per_roll.min);
         return roll_range;

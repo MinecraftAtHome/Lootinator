@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-namespace loot {
-    std::unordered_map<ItemType, std::vector<Enchantment>> ITEM_ENCHANTMENTS({
+namespace mc {
+    std::unordered_map<mc::ItemType, std::vector<Enchantment>> ITEM_ENCHANTMENTS({
             {CHESTPLATE, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,THORNS,CURSE_OF_BINDING}},
             {HELMET, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,RESPIRATION,AQUA_AFFINITY,CURSE_OF_BINDING}},
             {LEGGINGS, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,CURSE_OF_BINDING,SWIFT_SNEAK}},
@@ -98,13 +98,13 @@ namespace loot {
 
     // item name to enum translation (and reverse for debugging purposes)
 
-    std::unordered_map<ItemType, std::string> ITEM_TYPE_TO_NAME({
+    std::unordered_map<mc::ItemType, std::string> ITEM_TYPE_TO_NAME({
             {CHESTPLATE, "chestplate"}, {HELMET, "helmet"}, {LEGGINGS, "leggings"}, {BOOTS, "boots"},
             {SWORD, "sword"}, {MACE, "mace"}, {BOW, "bow"}, {CROSSBOW, "crossbow"}, {TRIDENT, "trident"},
             {PICKAXE, "pickaxe"}, {AXE, "axe"}, {SHOVEL, "shovel"}, {HOE, "hoe"},
             {FISHING_ROD, "fishing_rod"}, {BOOK, "book"}
     });
-    std::unordered_map<std::string, ItemType> ITEM_NAME_TO_ITEM_TYPE({
+    std::unordered_map<std::string, mc::ItemType> ITEM_NAME_TO_ITEM_TYPE({
         {"chestplate", CHESTPLATE}, {"leather_chestplate", CHESTPLATE}, {"chainmail_chestplate", CHESTPLATE},
         {"copper_chestplate", CHESTPLATE}, {"iron_chestplate", CHESTPLATE}, {"golden_chestplate", CHESTPLATE},
         {"diamond_chestplate", CHESTPLATE}, {"netherite_chestplate", CHESTPLATE},
@@ -148,7 +148,7 @@ namespace loot {
 
     // bidirectional map for enchantment name <-> enum translation
 
-    EnumToStringBimap<Enchantment> ENCHANTMENT_TO_NAME({
+    util::EnumToStringBimap<mc::Enchantment> ENCHANTMENT_TO_NAME({
         {EFFICIENCY, "efficiency"},
         {SHARPNESS, "sharpness"},
         {SMITE, "smite"},
@@ -202,7 +202,7 @@ namespace loot {
      * all anvil-placeable enchantments for the given item type (thorns for all armor 
      * pieces, sharpness & smite & bane of arth. for axes)
      */
-    bool is_enchantment_applicable(Enchantment enchantment, ItemType item_type, bool extra_enchants) 
+    bool is_enchantment_applicable(mc::Enchantment enchantment, mc::ItemType item_type, bool extra_enchants) 
     {
         if (item_type == ItemType::NO_ITEM || enchantment == NO_ENCHANTMENT) {
             return false; // safeguard
@@ -232,7 +232,7 @@ namespace loot {
     /**
      * Returns the maximum level of the provided enchantment or 0 if the enchantment is invalid
      */
-    uint32_t get_max_level(Enchantment enchantment)
+    uint32_t get_max_level(mc::Enchantment enchantment)
     {
         if (ENCHANTMENT_MAX_LEVEL.find(enchantment) != ENCHANTMENT_MAX_LEVEL.end())
         {
@@ -262,9 +262,9 @@ namespace loot {
     /**
      * Returns the order of enchantments for a provided version range (as a std::vector)
      */
-    std::vector<int> get_enchantments_for_version(const MCVersionRange version_range)
+    std::vector<int> get_enchantments_for_version(const mc::VersionRange version_range)
     {
-        if (version_range == MCVersionRange::MC_1_13)
+        if (version_range == mc::VersionRange::MC_1_13)
         {
             return std::vector<int>({{ 
                 PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
@@ -276,7 +276,7 @@ namespace loot {
                 MENDING, CURSE_OF_VANISHING
             }});
         }
-        else if (version_range == MCVersionRange::MC_1_14_TO_1_15 || version_range == MCVersionRange::MC_1_16_TO_1_20)
+        else if (version_range == mc::VersionRange::MC_1_14_TO_1_15 || version_range == mc::VersionRange::MC_1_16_TO_1_20)
         {
             return std::vector<int>({{
                 PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
@@ -288,7 +288,7 @@ namespace loot {
                 MULTISHOT, QUICK_CHARGE, PIERCING, MENDING, CURSE_OF_VANISHING
             }});
         }
-        else if (version_range == MCVersionRange::MC_1_21_TO_1_21_9)
+        else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_9)
         {
             return std::vector<int>({{
                 PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
@@ -310,7 +310,7 @@ namespace loot {
 
     // -----------------------------------------------------------------------------------
 
-    std::string item_type_to_string(const ItemType type)
+    std::string item_type_to_string(const mc::ItemType type)
     {
         if (ITEM_TYPE_TO_NAME.find(type) != ITEM_TYPE_TO_NAME.end())
         {
@@ -322,7 +322,7 @@ namespace loot {
         }
     }
 
-    ItemType string_to_item_type(const std::string &item_type_string)
+    mc::ItemType string_to_item_type(const std::string &item_type_string)
     {
         if (ITEM_NAME_TO_ITEM_TYPE.find(item_type_string) != ITEM_NAME_TO_ITEM_TYPE.end()) 
         {
@@ -330,11 +330,11 @@ namespace loot {
         }
         else 
         {
-            return ItemType::NO_ITEM;
+            return mc::ItemType::NO_ITEM;
         }
     }
 
-    std::string enchantment_to_string(const Enchantment type)
+    std::string enchantment_to_string(const mc::Enchantment type)
     {
         if (ENCHANTMENT_TO_NAME.contains_enum(type))
         {
@@ -346,7 +346,7 @@ namespace loot {
         }
     }
 
-    Enchantment string_to_enchantment(const std::string &enchantment_string)
+    mc::Enchantment string_to_enchantment(const std::string &enchantment_string)
     {
         if (ENCHANTMENT_TO_NAME.contains_string(enchantment_string)) 
         {
@@ -354,7 +354,7 @@ namespace loot {
         }
         else 
         {
-            return Enchantment::NO_ENCHANTMENT;
+            return mc::Enchantment::NO_ENCHANTMENT;
         }
     }
 }

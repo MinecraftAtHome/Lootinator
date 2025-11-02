@@ -37,7 +37,7 @@ pool 0  {
 
 int main() {
 	try {
-        loot::LootTable lt("../../example/src/ruined_portal.json", loot::MC_1_16_TO_1_20);
+        loot::LootTable lt("../../example/src/ruined_portal.json", mc::VersionRange::MC_1_16_TO_1_20);
 
         loot::LootTableConstraintList ltcl(lt);
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");

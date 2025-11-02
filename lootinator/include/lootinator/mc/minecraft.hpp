@@ -3,10 +3,9 @@
 
 #include <unordered_map>
 #include <string>
-#include "lootinator/utility/range.h"
 
-namespace loot {
-    enum MCVersionRange {
+namespace mc {
+    enum VersionRange {
         MC_1_13,
         MC_1_14_TO_1_15,
         MC_1_16_TO_1_20,

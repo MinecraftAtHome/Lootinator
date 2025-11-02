@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <string>
 
-namespace loot {
+namespace util {
     template<typename T>
     class EnumToStringBimap {
         std::unordered_map<T, std::string> enum_to_string;

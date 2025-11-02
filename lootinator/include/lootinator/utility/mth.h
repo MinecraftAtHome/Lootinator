@@ -1,6 +1,8 @@
 #ifndef LOOTINATOR_UTILITY_MTH_H
 #define LOOTINATOR_UTILITY_MTH_H
 
+#include <cinttypes>
+
 template<typename T>
 constexpr T min(T a, T b) {
     return a < b ? a : b;

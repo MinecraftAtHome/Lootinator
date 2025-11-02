@@ -1,6 +1,6 @@
 #include "lootinator/utility/debug.h"
 
-namespace loot {
+namespace util {
     DebugArray::DebugArray(std::ostream& os) : os(&os) {
         os << "[";
     }

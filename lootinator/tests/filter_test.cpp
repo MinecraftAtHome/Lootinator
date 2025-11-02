@@ -7,8 +7,8 @@
 
 int smoke_test() {
     try {
-        loot::LootTable lt("../../lootinator/tests/ruined_portal.json", loot::MC_1_16_TO_1_20);
-        loot::debug(std::cerr, lt.item_names);
+        loot::LootTable lt("../../lootinator/tests/ruined_portal.json", mc::VersionRange::MC_1_16_TO_1_20);
+        util::debug(std::cerr, lt.item_names);
         loot::LootTableConstraintList ltcl(lt);
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../lootinator/tests/ruined_portal_constraints.json");
         ASSERT_EQ(ltcl.initialize_constraints(constr), true);
@@ -22,15 +22,15 @@ int smoke_test() {
 
 int correctness_test() {
     try {
-        loot::LootTable lt("../../lootinator/tests/ruined_portal.json", loot::MC_1_16_TO_1_20);
-        loot::debug(std::cerr, lt.item_names);
+        loot::LootTable lt("../../lootinator/tests/ruined_portal.json", mc::VersionRange::MC_1_16_TO_1_20);
+        util::debug(std::cerr, lt.item_names);
         loot::LootTableConstraintList ltcl(lt);
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../lootinator/tests/ruined_portal_constraints.json");
         ASSERT_EQ(ltcl.initialize_constraints(constr), true);
         std::cerr << "\n\n";
 
         for (auto& filter : ltcl.available_filters) {
-            loot::DebugStruct(std::cerr, "PoolFilter")
+            util::DebugStruct(std::cerr, "PoolFilter")
                 .add("attribute.type", filter.attribute.type)
                 .add("attribute.min_level", filter.attribute.level_range.min)
                 .add("attribute.max_level", filter.attribute.level_range.max)

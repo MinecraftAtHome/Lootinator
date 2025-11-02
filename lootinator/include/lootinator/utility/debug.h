@@ -4,7 +4,7 @@
 #include <ostream>
 #include <vector>
 
-namespace loot {
+namespace util {
     template <class T>
     std::ostream& debug(std::ostream& os, const T& value);
 
@@ -15,10 +15,10 @@ namespace loot {
         std::ostream* os;
         const char* delim = "";
 
-        DebugArray(std::ostream& os);
+        util::DebugArray(std::ostream& os);
         
         template <class T>
-        DebugArray& add(const T& value) {
+        util::DebugArray& add(const T& value) {
             debug(*os << delim, value);
             delim = ", ";
             return *this;
@@ -31,10 +31,10 @@ namespace loot {
         std::ostream* os;
         const char* delim = "";
 
-        DebugStruct(std::ostream& os, const char* name);
+        util::DebugStruct(std::ostream& os, const char* name);
 
         template <class T>
-        DebugStruct& add(const char* field, const T& value) {
+        util::DebugStruct& add(const char* field, const T& value) {
             debug(*os << delim << field << "=", value);
             delim = ", ";
             return *this;
@@ -50,7 +50,7 @@ namespace loot {
 
     template <class T>
     std::ostream& debug(std::ostream& os, const std::vector<T>& vector) {
-        DebugArray debug_array(os);
+        util::DebugArray debug_array(os);
 
         for (const T& value : vector) {
             debug_array.add(value);

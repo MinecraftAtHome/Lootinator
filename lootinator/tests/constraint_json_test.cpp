@@ -13,7 +13,7 @@ void test_json_parse() {
         attributes.push_back({2, {21, 60}});
         
         loot::Constraint test_constraint = {10, {0, 15}, 1, attributes};
-        loot::debug(std::cerr, attributes);
+        util::debug(std::cerr, attributes);
 
         ASSERT_EQ(cons[0], test_constraint);        
     } catch (const std::exception& e) {

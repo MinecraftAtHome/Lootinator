@@ -4,7 +4,7 @@
 #include <nlohmann/json.hpp>
 #include "lootinator/utility/debug.h"
 
-namespace loot {
+namespace util {
     template <class T>
     struct RangeInclusive {
         T min;

@@ -14,8 +14,8 @@ namespace loot {
     template <class T, class U>
     void assert_compare_fail(const char* file, int line, const char* operator_symbol, const T& first, const U& second, const char* first_string, const char* second_string) {
         std::cerr << file << ":" << line << "\nAssertion \'" << operator_symbol << "\' failed!\n";
-        debug(std::cerr << first_string << " : ", first) << "\n";
-        debug(std::cerr << second_string << " : ", second) << "\n";
+        util::debug(std::cerr << first_string << " : ", first) << "\n";
+        util::debug(std::cerr << second_string << " : ", second) << "\n";
         std::terminate();
     }
 

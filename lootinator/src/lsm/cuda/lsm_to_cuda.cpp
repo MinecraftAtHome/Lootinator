@@ -47,7 +47,7 @@ namespace loot { namespace lsm {
     void compile_roll(LootTableConstraintList &ltcl, PoolInstruction *instruction) {
         int pool_idx = instruction->id;
         const nlohmann::json &pool = ltcl.loot_table.data["pools"][pool_idx];
-        RangeInclusive<std::uint32_t> roll_range = RangeInclusive<std::uint32_t>::from_json(pool["rolls"]);     
+        util::RangeInclusive<std::uint32_t> roll_range = util::RangeInclusive<std::uint32_t>::from_json(pool["rolls"]);     
 
         // NOTE: in the future we will probably want to factor this out into a function that automatically computes the lcg values needed for the advancement
         FunctionInstruction *lcg_advance = dynamic_cast<FunctionInstruction *>(instruction->children[0]);

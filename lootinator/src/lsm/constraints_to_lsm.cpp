@@ -43,7 +43,7 @@ namespace loot { namespace lsm {
         if (entry.contains("functions")) {
             for (auto& func : entry["functions"]) {
                 if (func["function"] == "minecraft:set_count") {
-                    RangeInclusive<uint32_t> count_range = RangeInclusive<uint32_t>::from_json(func["count"]);
+                    util::RangeInclusive<uint32_t> count_range = util::RangeInclusive<uint32_t>::from_json(func["count"]);
                     entry_set_count_advancement = count_range.min != count_range.max;
                     break;
                 }
@@ -55,7 +55,7 @@ namespace loot { namespace lsm {
         {
             //std::cerr << "poolidx = " << pool_filter.pool_idx << " vecsize = " << ltcl.loot_table.total_weights.size() << "\n";
             int total_weight = ltcl.loot_table.total_weights[pool_filter.pool_idx];
-            RangeInclusive<uint32_t> weight_range = get_weight_range_for_item(ltcl, pool_filter);
+            util::RangeInclusive<uint32_t> weight_range = get_weight_range_for_item(ltcl, pool_filter);
             for (int i = 0; i < pool_filter.entry_count; i++)
             {
                 add_next_int(total_weight, weight_range.min, weight_range.max, next_int_vector);
@@ -68,7 +68,7 @@ namespace loot { namespace lsm {
         main_block->add_instruction(new FunctionInstruction(FunctionType::FUNC_FILTER_ON, next_int_vector));
     }
 
-    RangeInclusive<uint32_t> get_weight_range_for_item(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter)
+    util::RangeInclusive<uint32_t> get_weight_range_for_item(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter)
     {
         int pool_idx = pool_filter.pool_idx;
         const auto& entries = ltcl.loot_table.data["pools"][pool_idx]["entries"];
@@ -81,7 +81,7 @@ namespace loot { namespace lsm {
                 entry_weight = entry["weight"];
             }
             if (eid == pool_filter.entry_idx) {
-                return RangeInclusive<uint32_t>(current_weight, current_weight+entry_weight-1);
+                return util::RangeInclusive<uint32_t>(current_weight, current_weight+entry_weight-1);
             }
             current_weight += entry_weight;
             eid++;
@@ -89,7 +89,7 @@ namespace loot { namespace lsm {
 
         std::cerr << "constraints_to_lsm.cpp: get_weight_range_for_item: failed to find entry" 
                      "matching the specified pool filter, pool_filter.entry_idx = " << pool_filter.entry_idx << '\n';
-        return RangeInclusive<uint32_t>(0,0);
+        return util::RangeInclusive<uint32_t>(0,0);
     }
 
     void add_pool_forward_filters(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const std::vector<loot::Constraint> &merged_constraints, loot::lsm::BlockInstruction *main_block)
@@ -98,7 +98,7 @@ namespace loot { namespace lsm {
         for (auto& pool : ltcl.loot_table.data["pools"])
         {
             PoolInstruction* pool_block = new PoolInstruction(pool_idx);
-            RangeInclusive<std::uint32_t> roll_range = RangeInclusive<std::uint32_t>::from_json(pool["rolls"]);     
+            util::RangeInclusive<std::uint32_t> roll_range = util::RangeInclusive<std::uint32_t>::from_json(pool["rolls"]);     
             FunctionInstruction* advance = new FunctionInstruction(FunctionType::FUNC_LCG_ADVANCE, {roll_range.min != roll_range.max ? 1 : 0}); 
             RollInstruction* roll_block = new RollInstruction(0/*TODO use actual data*/);
             pool_block->add_instruction(advance);

@@ -2,7 +2,7 @@
 #include <fstream>
 
 namespace loot {
-    LootTable::LootTable(const char* loot_table_json_filepath, const loot::MCVersionRange version_range) {
+    LootTable::LootTable(const char* loot_table_json_filepath, const mc::VersionRange version_range) {
         this->version_range = version_range;
 
         std::ifstream fin(loot_table_json_filepath);
@@ -65,16 +65,16 @@ namespace loot {
         }
     }
 
-    AttributeCategory get_loot_function_attribute_category(const std::string &function_name) {
+    mc::AttributeCategory get_loot_function_attribute_category(const std::string &function_name) {
         if (function_name.find("enchant") != std::string::npos) {
-            return AttributeCategory::ENCHANTMENT_ATTRIBUTE;
+            return mc::AttributeCategory::ENCHANTMENT_ATTRIBUTE;
         }
         else if (function_name.find("effect") != std::string::npos) {
-            return AttributeCategory::POTION_EFFECT_ATTRIBUTE;
+            return mc::AttributeCategory::POTION_EFFECT_ATTRIBUTE;
         }
         else if (function_name.find("damage") != std::string::npos) {
-            return AttributeCategory::DURABILITY_ATTRIBUTE;
+            return mc::AttributeCategory::DURABILITY_ATTRIBUTE;
         }
-        return AttributeCategory::NO_ATTRIBUTE;
+        return mc::AttributeCategory::NO_ATTRIBUTE;
     }
 }

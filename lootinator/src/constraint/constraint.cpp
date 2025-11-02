@@ -20,12 +20,12 @@ namespace loot {
 
     // TODO FIXME !!! USES HUGE SIMPLIFICATION
     // should only be used for testing
-    AttributeCategory ItemAttribute::get_category() const {
-        return AttributeCategory::ENCHANTMENT_ATTRIBUTE;
+    mc::AttributeCategory ItemAttribute::get_category() const {
+        return mc::AttributeCategory::ENCHANTMENT_ATTRIBUTE;
     }
 
     std::ostream& operator<<(std::ostream& os, const ItemAttribute& attribute) {
-        return DebugStruct(os, "ItemAttribute")
+        return util::DebugStruct(os, "ItemAttribute")
             .add("type", attribute.type)
             .add("level_range", attribute.level_range)
             .finish();
@@ -78,7 +78,7 @@ namespace loot {
             // check attribute match by comparing categories of loot functions
             // with categories of attributes
             for (auto& constraint_attr : attributes) {
-                AttributeCategory target_category = constraint_attr.get_category();
+                mc::AttributeCategory target_category = constraint_attr.get_category();
 
                 bool found_match = false;
                 for (auto& func : entry["functions"]) {
@@ -108,7 +108,7 @@ namespace loot {
     }
 
     std::ostream& operator<<(std::ostream& os, const Constraint& constraint) {
-        return DebugStruct(os, "Constraint")
+        return util::DebugStruct(os, "Constraint")
             .add("item", constraint.item)
             .add("count_range", constraint.count_range)
             .add("slot_id", constraint.slot_id)
@@ -161,7 +161,7 @@ namespace loot {
         for (auto con : data) {
             std::uint32_t item = con["item"];
             std::int32_t slot_id = con["slot"];
-            loot::RangeInclusive<std::uint32_t> count_range = RangeInclusive<std::uint32_t>::from_json(con["range"]); 
+            util::RangeInclusive<std::uint32_t> count_range = util::RangeInclusive<std::uint32_t>::from_json(con["range"]); 
             std::vector<loot::ItemAttribute> attributes = parse_attribute_json(con["attributes"]);
             constraints.push_back({item, count_range, slot_id, attributes});
         }

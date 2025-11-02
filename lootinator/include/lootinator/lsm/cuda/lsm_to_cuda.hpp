@@ -1,3 +1,6 @@
+#ifndef LOOTINATOR_LSM_CUDA_LSM_TO_CUDA_H
+#define LOOTINATOR_LSM_CUDA_LSM_TO_CUDA_H
+
 #include <unordered_map>
 
 #include "lootinator/lsm/instructions.hpp"
@@ -44,7 +47,9 @@ namespace loot { namespace lsm {
                 int get_function_start(Function function_ref);                
         };
 
-        void lsm_to_cuda(loot::LootTableConstraintList &ltcl, loot::lsm::BlockInstruction *program, std::string output_file);
+        void lsm_to_cuda(loot::LootTableConstraintList &ltcl, loot::lsm::BlockInstruction *program, std::string filename);
         void compile_roll(loot::LootTableConstraintList &ltcl, PoolInstruction *instruction);
     }
 }
+
+#endif

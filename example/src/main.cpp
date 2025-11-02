@@ -48,7 +48,7 @@ int main() {
 		int prog_idx = 0;
 		for (auto& prog : programs)
 		{	
-			lsm_to_cuda(ltcl, prog, "output_" + std::to_string(prog_idx));
+			loot::lsm::lsm_to_cuda(ltcl, prog, "output_" + std::to_string(prog_idx));
 			delete prog;
 			prog_idx++;
 		}

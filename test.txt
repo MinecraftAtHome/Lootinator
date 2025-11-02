@@ -1,0 +1,106 @@
+case 1:
+case 2:
+case 3:
+    do_stuff()
+
+BLOCK START
+   FUNC_FILTER_ON 398 80 119 0 1 1 
+   BLOCK START
+      LCG_ADVANCE 1 
+      ROLL START (0)
+         CASE 0
+            FUNC_FUNC 0 0 0 
+         CASE END
+         CASE 1
+            FUNC_FUNC 0 1 0 
+         CASE END
+         CASE 2
+            FUNC_FUNC 0 2 0 
+            POOL ASSERT  >= 20
+         CASE END
+         CASE 3
+         CASE END
+         CASE 4
+         CASE END
+         CASE 5
+         CASE END
+         CASE 6
+            FUNC_FUNC 0 6 0 
+         CASE END
+         CASE 7
+            FUNC_FUNC 0 7 0
+         CASE END
+         CASE 8
+            FUNC_FUNC 0 8 0
+         CASE END
+         CASE 9
+            FUNC_FUNC 0 9 0
+         CASE END
+         CASE 10
+            FUNC_FUNC 0 10 0
+         CASE END
+         CASE 11
+            FUNC_FUNC 0 11 0
+         CASE END
+         CASE 12
+            FUNC_FUNC 0 12 0
+         CASE END
+         CASE 13
+            FUNC_FUNC 0 13 0
+         CASE END
+         CASE 14
+            FUNC_FUNC 0 14 0
+         CASE END
+         CASE 15
+            FUNC_FUNC 0 15 0
+         CASE END
+         CASE 16
+            FUNC_FUNC 0 16 0
+         CASE END
+         CASE 17
+         CASE END
+         CASE 18
+         CASE END
+         CASE 19
+            FUNC_FUNC 0 19 0
+         CASE END
+         CASE 20
+         CASE END
+         CASE 21
+            FUNC_FUNC 0 21 0
+         CASE END
+         CASE 22
+         CASE END
+         CASE 23
+         CASE END
+         CASE 24
+            FUNC_FUNC 0 24 0
+         CASE END
+      ROLL END
+   BLOCK END
+BLOCK END
+
+lsm_to_cuda, rough steps:
+1. Determine whether we are using state prediction or advanced reversal
+2. Calculate and generate shared memory array, calculate offsets
+3. Emit standard RNG and loot functions
+4. Emit check_loot_seed, this will be generated from the case list
+5. Gather all cases that make the same number of lcg calls and do not have pool asserts together, for optimal switch case generation
+6. Find all pool asserts, create structure for holding counts and other data of all items that we care about
+7.  
+
+int counts[3] = {0};
+
+case 2: {
+    int amount = loot_function_uniform(state); // func_func
+    counts[0] += amount; // pool_assert part 1
+}
+...
+
+// pool assert part 2:
+if (!(4 <= counts[0] <= 9)) {
+    fail seed
+}
+...
+pass the seed
+ 

@@ -22,6 +22,7 @@ namespace loot {
                 InstructionType tp;
                 Instruction *as_ins();
                 virtual void debug(int indent_level);
+                virtual void compile(int indent_level);
                 virtual ~Instruction() {};
         };
 
@@ -32,6 +33,7 @@ namespace loot {
                 FunctionInstruction(FunctionType func_tp);
                 FunctionInstruction(FunctionType func_tp, std::vector<int> args);
                 void debug(int indent_level) override;
+                // void compile(int indent_level) override;
         };
 
         class PoolAssertFunctionInstruction : public Instruction {
@@ -41,6 +43,7 @@ namespace loot {
                 std::vector<int> rvalues;
                 PoolAssertFunctionInstruction(std::vector<int> lvalues, Comparision comp, std::vector<int> rvalues);
                 void debug(int indent_level) override;
+                // void compile(int indent_level) override;
         };
 
         class BlockInstruction : public Instruction {
@@ -50,6 +53,7 @@ namespace loot {
                 void add_instruction(Instruction *ins);
                 virtual ~BlockInstruction() override;
                 void debug(int indent_level) override;
+                // void compile(int indent_level) override;
         };
 
         class PoolInstruction : public BlockInstruction {
@@ -63,6 +67,7 @@ namespace loot {
                 int item;
                 CaseInstruction(int item);
                 void debug(int indent_level) override;
+                // void compile(int indent_level) override;
         };
 
         class RollInstruction : public BlockInstruction {
@@ -70,7 +75,8 @@ namespace loot {
                 int roll_count;
                 RollInstruction(int roll_count);
                 void debug(int indent_level) override;
-            };
+                // void compile(int indent_level) override;
+        };
     }
 }
 

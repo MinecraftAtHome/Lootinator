@@ -120,5 +120,9 @@ namespace loot {
         void loot::lsm::Instruction::debug(int indent_level) {
             TODO("instruction not implemented yet!");
         }
+
+        void loot::lsm::Instruction::compile(int indent_level) {
+            TODO("instruction not implemented yet!");
+        } 
     }
 }

@@ -1,6 +1,7 @@
 #include "lootinator/mc/minecraft.hpp"
 #include "lootinator/utility/enum_bimap.hpp"
 
+#include <functional>
 #include <iostream>
 #include <vector>
 
@@ -195,6 +196,52 @@ namespace mc {
         {NO_ENCHANTMENT, "no_enchantment"}
     });
 
+    // validation of enchantment level i and effective level n for enchant_with_levels
+    std::unordered_map<mc::Enchantment, std::function<bool(int, int)>> ENCHANT_LEVEL_VALIDATORS({
+        { NO_ENCHANTMENT,        [](int i, int n){ return false; } },
+        { PROTECTION,            [](int i, int n){ return n >= 1 + (i-1)*11 && n <= 1 + (i-1)*11 + 11; } },
+        { FIRE_PROTECTION,       [](int i, int n){ return n >= 10 + (i-1)*8 && n <= 10 + (i-1)*8 + 8; } },
+        { FEATHER_FALLING,       [](int i, int n){ return n >= 5 + (i-1)*6 && n <= 5 + (i-1)*6 + 6; } },
+        { BLAST_PROTECTION,      [](int i, int n){ return n >= 5 + (i-1)*8 && n <= 5 + (i-1)*8 + 8; } },
+        { PROJECTILE_PROTECTION, [](int i, int n){ return n >= 3 + (i-1)*6 && n <= 3 + (i-1)*6 + 6; } },
+        { RESPIRATION,           [](int i, int n){ return n >= 10*i && n <= 10*i + 30; } },
+        { AQUA_AFFINITY,         [](int i, int n){ return n >= 1 && n <= 41; } },
+        { THORNS,                [](int i, int n){ return n >= 10 + 20*(i-1) && n <= 10 + 20*(i-1) + 50; } },
+        { DEPTH_STRIDER,         [](int i, int n){ return n >= i*10 && n <= i*10 + 15; } },
+        { FROST_WALKER,          [](int i, int n){ return n >= i*10 && n <= i*10 + 15; } },
+        { CURSE_OF_BINDING,      [](int i, int n){ return n >= 25 && n <= 50; } },
+        { SOUL_SPEED,            [](int i, int n){ return n >= i*10 && n <= i*10 + 15; } },
+        { SHARPNESS,             [](int i, int n){ return n >= 1 + (i-1)*11 && n <= 1 + (i-1)*11 + 20; } },
+        { SMITE,                 [](int i, int n){ return n >= 5 + (i-1)*8 && n <= 5 + (i-1)*8 + 20; } },
+        { BANE_OF_ARTHROPODS,    [](int i, int n){ return n >= 5 + (i-1)*8 && n <= 5 + (i-1)*8 + 20; } },
+        { KNOCKBACK,             [](int i, int n){ return n >= 5 + 20*(i-1) && n <= 1 + i*10 + 50; } },
+        { FIRE_ASPECT,           [](int i, int n){ return n >= 10 + 20*(i-1) && n <= 1 + i*10 + 50; } },
+        { LOOTING,               [](int i, int n){ return n >= 15 + (i-1)*9 && n <= 1 + i*10 + 50; } },
+        { SWEEPING_EDGE,         [](int i, int n){ return n >= 5 + (i-1)*9 && n <= 5 + (i-1)*9 + 15; } },
+        { EFFICIENCY,            [](int i, int n){ return n >= 1 + 10*(i-1) && n <= 1 + i*10 + 50; } },
+        { SILK_TOUCH,            [](int i, int n){ return n >= 15 && n <= 1 + i*10 + 50; } },
+        { UNBREAKING,            [](int i, int n){ return n >= 5 + (i-1)*8 && n <= 1 + i*10 + 50; } },
+        { FORTUNE,               [](int i, int n){ return n >= 15 + (i-1)*9 && n <= 1 + i*10 + 50; } },
+        { POWER,                 [](int i, int n){ return n >= 1 + (i-1)*10 && n <= 1 + (i-1)*10 + 15; } },
+        { PUNCH,                 [](int i, int n){ return n >= 12 + (i-1)*20 && n <= 12 + (i-1)*20 + 25; } },
+        { FLAME,                 [](int i, int n){ return n >= 20 && n <= 50; } },
+        { INFINITY_ENCHANTMENT,  [](int i, int n){ return n >= 20 && n <= 50; } },
+        { LUCK_OF_THE_SEA,       [](int i, int n){ return n >= 15 + (i-1)*9 && n <= 1 + i*10 + 50; } },
+        { LURE,                  [](int i, int n){ return n >= 15 + (i-1)*9 && n <= 1 + i*10 + 50; } },
+        { LOYALTY,               [](int i, int n){ return n >= 5 + i*7 && n <= 50; } },
+        { IMPALING,              [](int i, int n){ return n >= 1 + (i-1)*8 && n <= 1 + (i-1)*8 + 20; } },
+        { RIPTIDE,               [](int i, int n){ return n >= 10 + i*7 && n <= 50; } },
+        { CHANNELING,            [](int i, int n){ return n >= 25 && n <= 50; } },
+        { MULTISHOT,             [](int i, int n){ return n >= 20 && n <= 50; } },
+        { QUICK_CHARGE,          [](int i, int n){ return n >= 12 + (i-1)*20 && n <= 50; } },
+        { PIERCING,              [](int i, int n){ return n >= 1 + (i-1)*10 && n <= 50; } },
+        { MENDING,               [](int i, int n){ return n >= i*25 && n <= i*25 + 50; } },
+        { CURSE_OF_VANISHING,    [](int i, int n){ return n >= 25 && n <= 50; } },
+        { DENSITY,               [](int i, int n){ return n >= 5 + (i-1)*8 && n <= 25 + (i-1)*8; } },
+        { BREACH,                [](int i, int n){ return n >= 15 + (i-1)*9 && n <= 65 + (i-1)*9; } },
+        { WIND_BURST,            [](int i, int n){ return n >= 15 + (i-1)*9 && n <= 65 + (i-1)*9; } }
+    });
+
     // --------------------------------------------------------------------------------------------------
     // public api
 
@@ -237,7 +284,7 @@ namespace mc {
      */
     bool is_enchantment_available_at_level(const mc::Enchantment enchantment, const int enchantment_level, const int level)
     {
-        return false;
+        return ENCHANT_LEVEL_VALIDATORS.at(enchantment)(enchantment_level, level);
     }
 
     /** 

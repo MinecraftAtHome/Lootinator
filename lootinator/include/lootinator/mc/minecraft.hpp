@@ -103,13 +103,18 @@ namespace mc {
     };
     
     // ---------------------------------------------------------------------------------------
-    
+
+    bool is_enchantment_applicable(mc::Enchantment enchantment, mc::ItemType item_type, bool extra_enchants);
+    bool is_enchantment_available_at_level(const mc::Enchantment enchantment, const int enchanting_level);
+    uint32_t get_max_level(mc::Enchantment enchantment);
+    uint32_t get_enchantability(const std::string &item_name);
+
     std::vector<mc::Enchantment> get_enchantments_for_version(const mc::VersionRange version_range);
 
-    std::string item_type_to_string(const ItemType type);
-    ItemType string_to_item_type(const std::string& item_type_string);
-    std::string enchantment_to_string(const Enchantment type);
-    Enchantment string_to_enchantment(const std::string& enchantment_string);
+    std::string item_type_to_string(const mc::ItemType type);
+    mc::ItemType string_to_item_type(const std::string& item_type_string);
+    std::string enchantment_to_string(const mc::Enchantment type);
+    mc::Enchantment string_to_enchantment(const std::string& enchantment_string);
 }
 
 

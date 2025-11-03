@@ -59,7 +59,7 @@ namespace mc {
 
     /**
      * Shared memory structure: `[groups_1, groups_2, groups_3, ..., groups_n]`, 
-     * where `count_i` is the number of mutually-exclusive enchantment groups, e.g. `{"fortune", "silk_touch"}`, for effective level `i`. 
+     * where `count_i` is the number of mutually-exclusive enchantment groups among all applicable enchantments, e.g. `{"fortune", "silk_touch"}`, for an effective enchanting level `i`. 
      * Enchantment indices are not stored; `enchant_with_levels` output filtering is currently unsupported.
      */
     static std::vector<int> create_skip_enchant_with_levels_vector(const std::vector<mc::Enchantment>& enchants, const nlohmann::json &entry, const nlohmann::json &function) {

@@ -195,13 +195,14 @@ namespace mc {
         {NO_ENCHANTMENT, "no_enchantment"}
     });
 
+    // --------------------------------------------------------------------------------------------------
     // public api
 
-    /**
-     * Returns whether the provided enchantment can be obtained for the given item type
+    /** 
+     * @return whether the provided enchantment can be obtained for the given item type
      * in an enchanting table. When extra_enchants=true, the applicability is extended to
      * all anvil-placeable enchantments for the given item type (thorns for all armor 
-     * pieces, sharpness & smite & bane of arth. for axes)
+     * pieces, sharpness & smite & bane of arth. for axes).
      */
     bool is_enchantment_applicable(mc::Enchantment enchantment, mc::ItemType item_type, bool extra_enchants) 
     {
@@ -230,8 +231,17 @@ namespace mc {
         return false;
     }
 
-    /**
-     * Returns the maximum level of the provided enchantment or 0 if the enchantment is invalid
+    /** 
+     * @return whether the given enchantment can be applied by the `enchant_with_levels` loot function
+     * for the enchantment level `enchantment_level`, and effective enchanting level `level`.
+     */
+    bool is_enchantment_available_at_level(const mc::Enchantment enchantment, const int enchantment_level, const int level)
+    {
+        return false;
+    }
+
+    /** 
+     * @return the maximum level of the provided enchantment or 0 if the enchantment is invalid.
      */
     uint32_t get_max_level(mc::Enchantment enchantment)
     {
@@ -245,8 +255,8 @@ namespace mc {
         }
     }
 
-    /**
-     * Returns the enchantability for the provided item name or 0 if the item is invalid
+    /** 
+     * @return the enchantability for the provided item name or 0 if the item is invalid.
      */
     uint32_t get_enchantability(const std::string& item_name)
     {
@@ -260,8 +270,8 @@ namespace mc {
         }
     }
 
-    /**
-     * Returns the order of enchantments for a provided version range (as a std::vector)
+    /** 
+     * @return the order of enchantments for a provided version range.
      */
     std::vector<mc::Enchantment> get_enchantments_for_version(const mc::VersionRange version_range)
     {

@@ -263,11 +263,11 @@ namespace mc {
     /**
      * Returns the order of enchantments for a provided version range (as a std::vector)
      */
-    std::vector<int> get_enchantments_for_version(const mc::VersionRange version_range)
+    std::vector<mc::Enchantment> get_enchantments_for_version(const mc::VersionRange version_range)
     {
         if (version_range == mc::VersionRange::MC_1_13)
         {
-            return std::vector<int>({{ 
+            return std::vector<mc::Enchantment>({{ 
                 PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
                 RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER, FROST_WALKER, CURSE_OF_BINDING,
                 SHARPNESS, SMITE, BANE_OF_ARTHROPODS, KNOCKBACK, FIRE_ASPECT, LOOTING, SWEEPING_EDGE,
@@ -279,7 +279,7 @@ namespace mc {
         }
         else if (version_range == mc::VersionRange::MC_1_14_TO_1_15 || version_range == mc::VersionRange::MC_1_16_TO_1_20)
         {
-            return std::vector<int>({{
+            return std::vector<mc::Enchantment>({{
                 PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
                 RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER, FROST_WALKER, CURSE_OF_BINDING,
                 SHARPNESS, SMITE, BANE_OF_ARTHROPODS, KNOCKBACK, FIRE_ASPECT, LOOTING, SWEEPING_EDGE,
@@ -291,7 +291,7 @@ namespace mc {
         }
         else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_9)
         {
-            return std::vector<int>({{
+            return std::vector<mc::Enchantment>({{
                 PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
                 RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER, 
                 SHARPNESS, SMITE, BANE_OF_ARTHROPODS, KNOCKBACK, FIRE_ASPECT, LOOTING, SWEEPING_EDGE,
@@ -305,7 +305,7 @@ namespace mc {
         else
         {
             std::cerr << "minecraft.cpp: get_enchantments_for_version(): Bad version range: " << version_range << '\n';
-            return std::vector<int>();
+            return std::vector<mc::Enchantment>();
         }
     }
 

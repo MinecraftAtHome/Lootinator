@@ -104,6 +104,8 @@ namespace mc {
     
     // ---------------------------------------------------------------------------------------
     
+    std::vector<mc::Enchantment> get_enchantments_for_version(const mc::VersionRange version_range);
+
     std::string item_type_to_string(const ItemType type);
     ItemType string_to_item_type(const std::string& item_type_string);
     std::string enchantment_to_string(const Enchantment type);

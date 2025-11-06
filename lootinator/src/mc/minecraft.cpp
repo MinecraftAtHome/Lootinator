@@ -1,11 +1,17 @@
 #include "lootinator/mc/minecraft.hpp"
 #include "lootinator/utility/enum_bimap.hpp"
 
+#include <unordered_set>
 #include <functional>
 #include <iostream>
 #include <vector>
 
+
 namespace mc {
+    std::unordered_set<mc::Enchantment> TREASURE_ENCHANTS({
+        CURSE_OF_BINDING, CURSE_OF_VANISHING, FROST_WALKER, MENDING, SOUL_SPEED, SWIFT_SNEAK, WIND_BURST
+    });
+
     std::unordered_map<mc::ItemType, std::vector<Enchantment>> ITEM_ENCHANTMENTS({
             {CHESTPLATE, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,THORNS,CURSE_OF_BINDING}},
             {HELMET, {PROTECTION,FIRE_PROTECTION,BLAST_PROTECTION,PROJECTILE_PROTECTION,RESPIRATION,AQUA_AFFINITY,CURSE_OF_BINDING}},
@@ -245,6 +251,11 @@ namespace mc {
     // --------------------------------------------------------------------------------------------------
     // public api
 
+    bool is_treasure_enchantment(mc::Enchantment enchantment)
+    {
+        return TREASURE_ENCHANTS.find(enchantment) != TREASURE_ENCHANTS.end();
+    }
+
     /** 
      * @return whether the provided enchantment can be obtained for the given item type
      * in an enchanting table. When extra_enchants=true, the applicability is extended to
@@ -282,7 +293,7 @@ namespace mc {
      * @return whether the given enchantment can be applied by the `enchant_with_levels` loot function
      * for the enchantment level `enchantment_level`, and effective enchanting level `level`.
      */
-    bool is_enchantment_available_at_level(const mc::Enchantment enchantment, const int enchantment_level, const int level)
+    bool is_enchantment_available_at_level(mc::Enchantment enchantment, int enchantment_level, int level)
     {
         return ENCHANT_LEVEL_VALIDATORS.at(enchantment)(enchantment_level, level);
     }

@@ -84,7 +84,7 @@ namespace mc {
                 std::fprintf(stderr, "create_list_enchant_randomly_vector(): got non-string enchant list element, skipped.\n");
                 continue;
             }
-            mc::Enchantment ench = mc::string_to_enchantment(entry);
+            mc::Enchantment ench = mc::string_to_enchantment(mc::strip_prefix(entry));
             if (ench == mc::Enchantment::NO_ENCHANTMENT) {
                 std::fprintf(stderr, "create_list_enchant_randomly_vector(): got unrecognized enchantment, skipped.\n");
                 continue;
@@ -158,7 +158,7 @@ namespace mc {
             if (!allow_treasure && mc::is_treasure_enchantment(ench)) {
                 continue;
             }
-            
+
             for (int ench_level = mc::get_max_level(ench); ench_level >= 1; ench_level--) {
                 if (!mc::is_enchantment_available_at_level(ench, ench_level, level)) {
                     continue;

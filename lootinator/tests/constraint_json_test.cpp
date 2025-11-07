@@ -6,7 +6,7 @@
 
 static void test_json_parse() {
     try {
-        std::vector<loot::Constraint> cons = loot::parse_constraints_from_json("../../lootinator/tests/constraints.json");
+        std::vector<loot::Constraint> cons = loot::parse_constraints_from_json("../../lootinator/tests/data/constraints.json");
 
         std::vector<loot::ItemAttribute> attributes;
         attributes.push_back({1, {17, 37}});

@@ -104,9 +104,12 @@ namespace mc {
     
     // ---------------------------------------------------------------------------------------
 
+    std::string strip_prefix(const std::string& str);
+
     bool is_treasure_enchantment(mc::Enchantment enchantment);
+    int count_unique_groups(const std::vector<mc::Enchantment> &enchantments);
     bool is_enchantment_applicable(mc::Enchantment enchantment, mc::ItemType item_type, bool extra_enchants);
-    bool is_enchantment_available_at_level(mc::Enchantment enchantment, int enchanting_level, int level);
+    bool is_enchantment_available_at_level(mc::Enchantment enchantment, int enchantment_level, int level);
     uint32_t get_max_level(mc::Enchantment enchantment);
     uint32_t get_enchantability(const std::string &item_name);
 

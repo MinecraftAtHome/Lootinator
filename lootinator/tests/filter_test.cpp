@@ -51,6 +51,8 @@ int correctness_test() {
 }
 
 int LOOTINATOR_EXTERN tests_filter_test(int argc, char** const argv) {
+    (void)argc; (void)argv;
+    
     if (smoke_test()) return 1;
     if (correctness_test()) return 1;
     return 0;

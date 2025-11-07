@@ -248,12 +248,96 @@ namespace mc {
         { WIND_BURST,            [](int i, int n){ return n >= 15 + (i-1)*9 && n <= 65 + (i-1)*9; } }
     });
 
+    std::unordered_map<mc::Enchantment, int> ENCHANTMENT_GROUPS({
+        {NO_ENCHANTMENT, 0},
+
+        {PROTECTION, 1}, {FIRE_PROTECTION, 1}, {BLAST_PROTECTION, 1}, {PROJECTILE_PROTECTION, 1},
+
+        {RESPIRATION, 2},
+        {AQUA_AFFINITY, 3},
+        {THORNS, 4},
+        {SWIFT_SNEAK, 5},
+        {FEATHER_FALLING, 6},
+
+        {DEPTH_STRIDER, 7}, {FROST_WALKER, 7},
+
+        {SOUL_SPEED, 8},
+
+        {SHARPNESS, 9}, {SMITE, 9}, {BANE_OF_ARTHROPODS, 9}, {DENSITY, 9}, {BREACH, 9},
+
+        {KNOCKBACK, 10},
+        {FIRE_ASPECT, 11},
+        {LOOTING, 12},
+        {SWEEPING_EDGE, 13},
+        {EFFICIENCY, 14},
+
+        {SILK_TOUCH, 15}, {FORTUNE, 15},
+
+        {LUCK_OF_THE_SEA, 16},
+        {LURE, 17},
+        {POWER, 18},
+        {PUNCH, 19},
+        {FLAME, 20},
+
+        {INFINITY_ENCHANTMENT, 21}, {MENDING, 21},
+
+        {QUICK_CHARGE, 22},
+
+        {MULTISHOT, 23}, {PIERCING, 23},
+
+        {IMPALING, 24},
+
+        // FIXME this is technically wrong! This group of 3 enchantments
+        // can become a single exclusion group if riptide is chosen first, and
+        // two exclusion groups if one of the other enchants is chosen first.
+        // Lootinator's enchant_with_levels handling doesn't account for the 2
+        // options, so if level-enchanted tridents are ever introduced in some
+        // loot table, their handling will occasionally be incorrect.
+        {CHANNELING, 25},
+        {RIPTIDE, 26}, {LOYALTY, 26},
+
+        {WIND_BURST, 27},
+        {UNBREAKING, 28},
+        {CURSE_OF_VANISHING, 29},
+        {CURSE_OF_BINDING, 30}
+    });
+
     // --------------------------------------------------------------------------------------------------
     // public api
 
-    bool is_treasure_enchantment(mc::Enchantment enchantment)
+    std::string strip_prefix(const std::string &str)
+    {
+        if (str.find("minecraft:") == 0) {
+            return str.substr(10);
+        }
+        return str;
+    }
+
+    bool is_treasure_enchantment(mc::Enchantment enchantment) 
     {
         return TREASURE_ENCHANTS.find(enchantment) != TREASURE_ENCHANTS.end();
+    }
+
+    /** 
+     * @return The number of groups of mutually exclusive enchantments present in
+     *         the provided list of enchantments.
+     */
+    int count_unique_groups(const std::vector<mc::Enchantment>& enchantments)
+    {
+        uint64_t group_flags = 0;
+        for (const auto& ench : enchantments) {
+            group_flags |= 1 << ENCHANTMENT_GROUPS.at(ench);
+        }
+
+        int unique_groups = 0;
+        group_flags >>= 1; // exclude the NO_ENCHANTMENT group
+        for (int i = 0; i < 63; i++) {
+            if (group_flags & (1ULL << i)) {
+                unique_groups++; // could just use popcount but whatever
+            }
+        }
+
+        return unique_groups;
     }
 
     /** 
@@ -293,8 +377,7 @@ namespace mc {
      * @return whether the given enchantment can be applied by the `enchant_with_levels` loot function
      * for the enchantment level `enchantment_level`, and effective enchanting level `level`.
      */
-    bool is_enchantment_available_at_level(mc::Enchantment enchantment, int enchantment_level, int level)
-    {
+    bool is_enchantment_available_at_level(mc::Enchantment enchantment, int enchantment_level, int level) {
         return ENCHANT_LEVEL_VALIDATORS.at(enchantment)(enchantment_level, level);
     }
 
@@ -303,12 +386,10 @@ namespace mc {
      */
     uint32_t get_max_level(mc::Enchantment enchantment)
     {
-        if (ENCHANTMENT_MAX_LEVEL.find(enchantment) != ENCHANTMENT_MAX_LEVEL.end())
-        {
+        if (ENCHANTMENT_MAX_LEVEL.find(enchantment) != ENCHANTMENT_MAX_LEVEL.end()) {
             return ENCHANTMENT_MAX_LEVEL.at(enchantment);
         }
-        else
-        {
+        else {
             return 0;
         }
     }
@@ -318,12 +399,10 @@ namespace mc {
      */
     uint32_t get_enchantability(const std::string& item_name)
     {
-        if (ITEM_NAME_TO_ENCHANTABILITY.find(item_name) != ITEM_NAME_TO_ENCHANTABILITY.end())
-        {
+        if (ITEM_NAME_TO_ENCHANTABILITY.find(item_name) != ITEM_NAME_TO_ENCHANTABILITY.end()) {
             return ITEM_NAME_TO_ENCHANTABILITY.at(item_name);
         }
-        else
-        {
+        else {
             return 0;
         }
     }
@@ -333,8 +412,7 @@ namespace mc {
      */
     std::vector<mc::Enchantment> get_enchantments_for_version(const mc::VersionRange version_range)
     {
-        if (version_range == mc::VersionRange::MC_1_13)
-        {
+        if (version_range == mc::VersionRange::MC_1_13) {
             return std::vector<mc::Enchantment>({{ 
                 PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
                 RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER, FROST_WALKER, CURSE_OF_BINDING,
@@ -345,8 +423,7 @@ namespace mc {
                 MENDING, CURSE_OF_VANISHING
             }});
         }
-        else if (version_range == mc::VersionRange::MC_1_14_TO_1_15 || version_range == mc::VersionRange::MC_1_16_TO_1_20)
-        {
+        else if (version_range == mc::VersionRange::MC_1_14_TO_1_15 || version_range == mc::VersionRange::MC_1_16_TO_1_20) {
             return std::vector<mc::Enchantment>({{
                 PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
                 RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER, FROST_WALKER, CURSE_OF_BINDING,
@@ -357,8 +434,7 @@ namespace mc {
                 MULTISHOT, QUICK_CHARGE, PIERCING, MENDING, CURSE_OF_VANISHING
             }});
         }
-        else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_9)
-        {
+        else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_9) {
             return std::vector<mc::Enchantment>({{
                 PROTECTION, FIRE_PROTECTION, FEATHER_FALLING, BLAST_PROTECTION, PROJECTILE_PROTECTION,
                 RESPIRATION, AQUA_AFFINITY, THORNS, DEPTH_STRIDER, 
@@ -370,8 +446,7 @@ namespace mc {
                 CURSE_OF_BINDING, CURSE_OF_VANISHING, FROST_WALKER, MENDING
             }});
         }
-        else
-        {
+        else {
             std::cerr << "minecraft.cpp: get_enchantments_for_version(): Bad version range: " << version_range << '\n';
             return std::vector<mc::Enchantment>();
         }
@@ -381,48 +456,40 @@ namespace mc {
 
     std::string item_type_to_string(const mc::ItemType type)
     {
-        if (ITEM_TYPE_TO_NAME.find(type) != ITEM_TYPE_TO_NAME.end())
-        {
-            return ITEM_TYPE_TO_NAME.at(type); // TODO
+        if (ITEM_TYPE_TO_NAME.find(type) != ITEM_TYPE_TO_NAME.end()) {
+            return ITEM_TYPE_TO_NAME.at(type);
         }
-        else 
-        {
+        else {
             return "lootinator::null";
         }
     }
 
     mc::ItemType string_to_item_type(const std::string &item_type_string)
     {
-        if (ITEM_NAME_TO_ITEM_TYPE.find(item_type_string) != ITEM_NAME_TO_ITEM_TYPE.end()) 
-        {
-            return ITEM_NAME_TO_ITEM_TYPE.at(item_type_string); // TODO
+        if (ITEM_NAME_TO_ITEM_TYPE.find(item_type_string) != ITEM_NAME_TO_ITEM_TYPE.end()) {
+            return ITEM_NAME_TO_ITEM_TYPE.at(item_type_string);
         }
-        else 
-        {
+        else {
             return mc::ItemType::NO_ITEM;
         }
     }
 
     std::string enchantment_to_string(const mc::Enchantment type)
     {
-        if (ENCHANTMENT_TO_NAME.contains_enum(type))
-        {
-            return ENCHANTMENT_TO_NAME.lookup_enum(type); // TODO
+        if (ENCHANTMENT_TO_NAME.contains_enum(type)) {
+            return ENCHANTMENT_TO_NAME.lookup_enum(type);
         }
-        else 
-        {
+        else {
             return "lootinator::null";
         }
     }
 
     mc::Enchantment string_to_enchantment(const std::string &enchantment_string)
     {
-        if (ENCHANTMENT_TO_NAME.contains_string(enchantment_string)) 
-        {
-            return ENCHANTMENT_TO_NAME.lookup_string(enchantment_string); // TODO
+        if (ENCHANTMENT_TO_NAME.contains_string(enchantment_string)) {
+            return ENCHANTMENT_TO_NAME.lookup_string(enchantment_string);
         }
-        else 
-        {
+        else {
             return mc::Enchantment::NO_ENCHANTMENT;
         }
     }

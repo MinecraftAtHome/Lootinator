@@ -4,7 +4,7 @@
 #include "lootinator/constraint/constraint.h"
 #include "lootinator/utility/debug.h"
 
-void test_json_parse() {
+static void test_json_parse() {
     try {
         std::vector<loot::Constraint> cons = loot::parse_constraints_from_json("../../lootinator/tests/constraints.json");
 
@@ -22,6 +22,8 @@ void test_json_parse() {
 }
 
 int LOOTINATOR_EXTERN tests_constraint_json_test(int argc, char** const argv) {
+    (void)argc; (void)argv;
+
     test_json_parse();
     return 0;
 }

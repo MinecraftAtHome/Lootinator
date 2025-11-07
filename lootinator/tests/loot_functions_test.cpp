@@ -7,20 +7,29 @@
 static void smoke_test()
 {
     loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_21_TO_1_21_9);
-    auto& entry = lt.data["pools"][0]["entries"][7];
+    auto& entry = lt.data["pools"][0]["entries"][7]; // golden sword
     mc::LootFunctionData data = mc::parse_loot_function_data(lt, entry, 0);
     ASSERT_NE(data.type, mc::LootFunctionType::IGNORED);
 }
 
 static void correctness_test_enchant_randomly_list()
 {
-    
+    loot::LootTable lt("../../lootinator/tests/data/bastion_1_17_1.json", mc::VersionRange::MC_1_16_TO_1_20);
+    auto& entry = lt.data["pools"][0]["entries"][9]; // soul speed book
+    mc::LootFunctionData data = mc::parse_loot_function_data(lt, entry, 0);
+    ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_RANDOMLY);
+
+    std::vector<mc::Enchantment> target_order({mc::SOUL_SPEED});
+    std::vector<int> target_shmem({3});
+
+    ASSERT_EQ(std::equal(target_order.begin(), target_order.end(), data.enchant_randomly.enchantment_order.begin()), true);
+    ASSERT_EQ(std::equal(target_shmem.begin(), target_shmem.end(), data.shared_mem.begin()), true);
 }
 
 static void correctness_test_enchant_randomly_natural()
 {
     loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_21_TO_1_21_9);
-    auto& entry = lt.data["pools"][0]["entries"][14];
+    auto& entry = lt.data["pools"][0]["entries"][14]; // golden helmet
     mc::LootFunctionData data = mc::parse_loot_function_data(lt, entry, 0);
     ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_RANDOMLY);
 

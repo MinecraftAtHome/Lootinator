@@ -43,7 +43,7 @@ namespace mc {
         std::string item_name = mc::strip_prefix(entry["name"]);
         mc::ItemType item_type = mc::string_to_item_type(item_name);
         if (item_type == mc::ItemType::NO_ITEM) {
-            std::fprintf(stderr, "create_enchant_randomly_vector(): unrecognized enchantable item.\n");
+            std::fprintf(stderr, "create_enchant_randomly_vector(): unrecognized enchantable item: %s\n", item_name.c_str());
             return lfd;
         }
 
@@ -139,7 +139,7 @@ namespace mc {
 
         int enchantability = mc::get_enchantability(item_name);
         int max_unamplified = levels.max + 1 + (enchantability / 4) * 2;
-        int max_effective_level = std::ceil(1.15f * max_unamplified);
+        int max_effective_level = static_cast<int>(std::ceil(1.15f * max_unamplified));
 
         for (int level = 0; level <= max_effective_level; level++) {
             lfd.shared_mem.push_back(get_enchant_with_levels_groups(enchants, level, item_type, allow_treasure));
@@ -152,6 +152,13 @@ namespace mc {
     {
         std::vector<mc::Enchantment> applicable;
         for (const auto& ench : enchants) {
+            if (!mc::is_enchantment_applicable(ench, item_type, false)) {
+                continue;
+            }
+            if (!allow_treasure && mc::is_treasure_enchantment(ench)) {
+                continue;
+            }
+            
             for (int ench_level = mc::get_max_level(ench); ench_level >= 1; ench_level--) {
                 if (!mc::is_enchantment_available_at_level(ench, ench_level, level)) {
                     continue;

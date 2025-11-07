@@ -15,7 +15,7 @@ static void smoke_test()
 static void correctness_test_enchant_randomly_list()
 {
     loot::LootTable lt("../../lootinator/tests/data/bastion_1_17_1.json", mc::VersionRange::MC_1_16_TO_1_20);
-    auto& entry = lt.data["pools"][0]["entries"][9]; // soul speed book
+    auto& entry = lt.data["pools"][0]["entries"][10]; // soul speed book
     mc::LootFunctionData data = mc::parse_loot_function_data(lt, entry, 0);
     ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_RANDOMLY);
 

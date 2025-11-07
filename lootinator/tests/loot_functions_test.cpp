@@ -14,6 +14,10 @@ static void smoke_test()
 
 static void correctness_test_enchant_randomly_list()
 {
+    loot::LootTable lt("../../lootinator/tests/ruined_portal.json", mc::VersionRange::MC_1_21_TO_1_21_9);
+    auto& entry = lt.data["pools"][0]["entries"][7];
+    mc::LootFunctionData data = mc::parse_loot_function_data(lt, entry, 0);
+    ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_RANDOMLY);
     
 }
 

@@ -105,7 +105,7 @@ namespace mc {
      */
     static void create_enchant_randomly_vector(mc::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, mc::ItemType item, const nlohmann::json &function) 
     {
-        bool allow_treasure = function.contains("treasure") ? function["treasure"] : false;
+        bool allow_treasure = function.contains("treasure") ? function["treasure"] : true;
 
         // add enchantments in natural order
         for (auto ench : enchants) {
@@ -135,7 +135,7 @@ namespace mc {
         util::RangeInclusive<int> levels = util::RangeInclusive<int>::from_json(function["levels"]);
 
         mc::ItemType item_type = mc::string_to_item_type(item_name);
-        bool allow_treasure = function.contains("treasure") ? function["treasure"] : false;
+        bool allow_treasure = function.contains("treasure") ? function["treasure"] : true;
 
         int enchantability = mc::get_enchantability(item_name);
         int max_unamplified = levels.max + 1 + (enchantability / 4) * 2;

@@ -6,10 +6,18 @@
 
 static void smoke_test()
 {
-    loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_21_TO_1_21_9);
-    auto& entry = lt.data["pools"][0]["entries"][7]; // golden sword
-    mc::LootFunctionData data = mc::parse_loot_function_data(lt, entry, 0);
-    ASSERT_NE(data.type, mc::LootFunctionType::IGNORED);
+    {
+        loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_21_TO_1_21_9);
+        auto& entry = lt.data["pools"][0]["entries"][7]; // golden sword
+        mc::LootFunctionData data = mc::parse_loot_function_data(lt, entry, 0);
+        ASSERT_NE(data.type, mc::LootFunctionType::IGNORED);
+    }
+    {
+        loot::LootTable lt("../../lootinator/tests/data/end_city_1_21_8.json", mc::VersionRange::MC_1_21_TO_1_21_9);
+        auto& entry = lt.data["pools"][0]["entries"][10]; // diamond boots
+        mc::LootFunctionData data = mc::parse_loot_function_data(lt, entry, 0);
+        ASSERT_NE(data.type, mc::LootFunctionType::IGNORED);
+    }
 }
 
 static void correctness_test_enchant_randomly_list()

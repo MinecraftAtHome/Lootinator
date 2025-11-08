@@ -17,6 +17,8 @@ namespace mc {
     struct EnchantWithLevelsData {
         int min_level;
         int max_level;
+        int min_effective_level;
+        int max_effective_level;
         // not storing enchantments, function output is skipped
     };
 

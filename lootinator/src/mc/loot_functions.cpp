@@ -133,13 +133,19 @@ namespace mc {
             return;
         }
         util::RangeInclusive<int> levels = util::RangeInclusive<int>::from_json(function["levels"]);
+        lfd.enchant_with_levels.min_level = levels.min;
+        lfd.enchant_with_levels.max_level = levels.max;
 
         mc::ItemType item_type = mc::string_to_item_type(item_name);
         bool allow_treasure = function.contains("treasure") ? function["treasure"] : true;
 
         int enchantability = mc::get_enchantability(item_name);
         int max_unamplified = levels.max + 1 + (enchantability / 4) * 2;
+        int min_unamplified = levels.min + 1;
         int max_effective_level = static_cast<int>(std::ceil(1.15f * max_unamplified));
+        int min_effective_level = static_cast<int>(std::floor(0.85f * min_unamplified));
+        lfd.enchant_with_levels.min_effective_level = min_effective_level;
+        lfd.enchant_with_levels.max_effective_level = max_effective_level;
 
         for (int level = 0; level <= max_effective_level; level++) {
             lfd.shared_mem.push_back(get_enchant_with_levels_groups(enchants, level, item_type, allow_treasure));

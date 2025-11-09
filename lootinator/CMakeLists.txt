@@ -46,6 +46,7 @@ set(TEST_FILES
     tests/constraint_test.cpp
     tests/constraint_json_test.cpp
     tests/filter_test.cpp
+    tests/loot_functions_test.cpp
 )
 
 # TODO: compiler flags, (-O3, warnings, etc)

@@ -3,13 +3,13 @@
 #include "lootinator/assertions.h"
 #include "lootinator/constraint/constraint.h"
 
-void print_constraint_vec(std::vector<loot::Constraint> cvec) {
+static void print_constraint_vec(std::vector<loot::Constraint> cvec) {
     for (auto& c : cvec)
         std::cerr << c << "\n";
     std::cerr << "-----\n";
 }
 
-void test_single_merge() {
+static void test_single_merge() {
     std::vector<loot::Constraint> constraints1;
     constraints1.push_back({2u, {1u, 3u}, 10});
     std::vector<loot::Constraint> constraints2;
@@ -22,7 +22,7 @@ void test_single_merge() {
 }
 
 // TODO make this use like a macro to avoid repetitions
-void test_multi_merge() {
+static void test_multi_merge() {
     std::vector<loot::Constraint> constraints1;
     std::vector<loot::Constraint> constraints2;
 
@@ -74,6 +74,8 @@ void test_multi_merge() {
 }
 
 int LOOTINATOR_EXTERN tests_constraint_test(int argc, char** const argv) {
+    (void)argc; (void)argv;
+
     test_single_merge();
     test_multi_merge();
 

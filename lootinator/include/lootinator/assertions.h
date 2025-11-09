@@ -19,6 +19,11 @@ namespace loot {
         std::terminate();
     }
 
+    inline void assert_noexcept_fail(const char* file, int line, const char* message) {
+        std::cerr << file << ":" << line << "No-exception assertion failed!\n" << message << std::endl;
+        std::terminate();
+    }
+
     #define ASSERT_COMPARE(first, operator_symbol, second) do {\
         const auto& first_var = first;\
         const auto& second_var = second;\
@@ -35,6 +40,13 @@ namespace loot {
     #define ASSERT_LT(first, second) ASSERT_COMPARE(first, <,  second)
     #define ASSERT_GE(first, second) ASSERT_COMPARE(first, >=, second)
     #define ASSERT_LE(first, second) ASSERT_COMPARE(first, <=, second)
+
+    #define ASSERT_NOEXCEPT(code) do {\
+        try {code;}\
+        catch (const std::exception& any) {\
+            loot::assert_noexcept_fail(__FILE__, __LINE__, any.what());\
+        }\
+    } while (false)
 }
 
 #endif

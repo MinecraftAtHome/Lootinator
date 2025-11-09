@@ -7,10 +7,10 @@
 
 int smoke_test() {
     try {
-        loot::LootTable lt("../../lootinator/tests/ruined_portal.json", mc::VersionRange::MC_1_16_TO_1_20);
+        loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_16_TO_1_20);
         util::debug(std::cerr, lt.item_names);
         loot::LootTableConstraintList ltcl(lt);
-        std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../lootinator/tests/ruined_portal_constraints.json");
+        std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../lootinator/tests/data/ruined_portal_constraints.json");
         ASSERT_EQ(ltcl.initialize_constraints(constr), true);
     } 
     catch (const std::exception& e) {
@@ -22,10 +22,10 @@ int smoke_test() {
 
 int correctness_test() {
     try {
-        loot::LootTable lt("../../lootinator/tests/ruined_portal.json", mc::VersionRange::MC_1_16_TO_1_20);
+        loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_16_TO_1_20);
         util::debug(std::cerr, lt.item_names);
         loot::LootTableConstraintList ltcl(lt);
-        std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../lootinator/tests/ruined_portal_constraints.json");
+        std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../lootinator/tests/data/ruined_portal_constraints.json");
         ASSERT_EQ(ltcl.initialize_constraints(constr), true);
         std::cerr << "\n\n";
 
@@ -51,6 +51,8 @@ int correctness_test() {
 }
 
 int LOOTINATOR_EXTERN tests_filter_test(int argc, char** const argv) {
+    (void)argc; (void)argv;
+    
     if (smoke_test()) return 1;
     if (correctness_test()) return 1;
     return 0;

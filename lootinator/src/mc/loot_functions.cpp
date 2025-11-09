@@ -37,7 +37,6 @@ namespace mc {
         }
 
         const auto& func = entry["functions"][function_ref.function_id];
-        const auto& func_name = func["function"];
 
         std::string item_name = mc::strip_prefix(entry["name"]);
         mc::ItemType item_type = mc::string_to_item_type(item_name);

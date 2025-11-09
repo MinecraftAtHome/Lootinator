@@ -40,6 +40,8 @@ namespace loot {
     }
 
     void generate_rarity_filter(std::ostream& out, const std::string& prng_var_pointer, const std::string& fail_operation, const float rarity) {
+        (void)out; (void)prng_var_pointer; (void)fail_operation; (void)rarity;
+        
         // TODO
     }
 }

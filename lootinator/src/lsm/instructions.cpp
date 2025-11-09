@@ -120,6 +120,7 @@ namespace loot {
         }
 
         void loot::lsm::Instruction::debug(int indent_level) {
+            (void)indent_level;
             TODO("instruction not implemented yet!");
         }
 

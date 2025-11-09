@@ -3,6 +3,6 @@
 
 namespace loot {
     void NaiveBruteforceTemplate::generate_kernel_body(std::ostream& out) const {
-        
+        (void)out;
     }
 }

@@ -39,23 +39,12 @@ namespace mc {
         const auto& func = entry["functions"][function_ref.function_id];
         const auto& func_name = func["function"];
 
-        /*
-            1) enchant_randomly
-            2) enchant_with_levels
-            3) set_count
-        */
-
-        // TODO: these function names should be moved out into some sort of registry for maintainability. 
-        if (mc::strip_prefix(func_name) != "enchant_randomly" && mc::strip_prefix(func_name) != "enchant_with_levels" && mc::strip_prefix(func_name) != "set_count") {
-            return lfd;
-        }
-
         std::string item_name = mc::strip_prefix(entry["name"]);
         mc::ItemType item_type = mc::string_to_item_type(item_name);
-
+        std::string function_name = mc::strip_prefix(func["function"]); 
         std::vector<mc::Enchantment> all_enchants = mc::get_enchantments_for_version(loot_table.version_range);
 
-        std::string function_name = mc::strip_prefix(func["function"]); 
+        // TODO: these function names should be moved out into some sort of registry for maintainability.
         if (function_name == "enchant_randomly") {
             // some versions define available enchantments as "options", others use "enchantments"
             if (func.contains("options") && func["options"] != "#minecraft:on_random_loot") {
@@ -78,6 +67,9 @@ namespace mc {
             util::RangeInclusive<int> range = util::RangeInclusive<int>::from_json(func["count"]);
             lfd.set_count.min = range.min;
             lfd.set_count.max = range.max;
+        }
+        else if (function_name == "set_damage") {
+            lfd.type = mc::LootFunctionType::APPLY_DAMAGE;
         }
         
         return lfd;

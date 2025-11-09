@@ -11,6 +11,7 @@ namespace mc {
         ENCHANT_RANDOMLY,
         ENCHANT_WITH_LEVELS,
         SET_COUNT,
+        APPLY_DAMAGE,
         IGNORED
     };
     

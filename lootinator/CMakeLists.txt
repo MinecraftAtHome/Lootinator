@@ -14,6 +14,7 @@ add_library(lootinator
     include/lootinator/utility/enum_bimap.hpp
     include/lootinator/utility/range.h
     include/lootinator/utility/mth.h
+    include/lootinator/lsm/function_ref.hpp
     include/lootinator/lsm/parser.hpp
     include/lootinator/lsm/instructions.hpp
     include/lootinator/lsm/constraints_to_lsm.hpp

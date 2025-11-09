@@ -1,9 +1,5 @@
 #include "lootinator/mc/loot_functions.hpp"
 #include "lootinator/utility/range.h"
-<<<<<<< HEAD
-#include "lootinator/lsm/cuda/lsm_to_cuda.hpp"
-=======
->>>>>>> dev
 
 
 namespace mc {
@@ -16,25 +12,10 @@ namespace mc {
     mc::LootFunctionData::LootFunctionData() : type(mc::LootFunctionType::IGNORED) {}
 
     /**
-<<<<<<< HEAD
-=======
-     * @warning This is only a temporary integration helper.
-     * 
-     * Creates shared memory data for the provided loot function. If the function is not
-     * an enchantment function or the provided data is invalid, an empty vector is returned.
-     */
-    std::vector<int> get_shared_memory_for_function(const loot::LootTable &loot_table, const nlohmann::json &entry, const int function_id)
-    {
-        return parse_loot_function_data(loot_table, entry, function_id).shared_mem;
-    }
-
-    /**
->>>>>>> dev
      * Parses enchantment function data from provided json strings. If the operation fails or the function
      * is not of type `enchant_randomly` or `enchant_with_levels`, `LootFunctionData::type` is set to `IGNORED`.
      * In that case, all other contents of the returned struct should be ignored.
      */
-<<<<<<< HEAD
     mc::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, loot::lsm::Function function_ref)
     {
         mc::LootFunctionData lfd;
@@ -45,11 +26,6 @@ namespace mc {
         int pool_id = function_ref.pool_id;
 
         const auto &entry = loot_table.data["pools"][pool_id]["entries"][entry_id];
-=======
-    mc::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, const nlohmann::json &entry, const int function_id)
-    {
-        mc::LootFunctionData lfd;
->>>>>>> dev
 
         // safeguards
         if (!entry.contains("functions") || entry["functions"].size() <= function_id) {
@@ -60,7 +36,6 @@ namespace mc {
             return lfd;
         }
 
-<<<<<<< HEAD
         const auto& func = entry["functions"][function_ref.function_id];
         const auto& func_name = func["function"];
 
@@ -82,19 +57,6 @@ namespace mc {
 
         std::string function_name = mc::strip_prefix(func["function"]); 
         if (function_name == "enchant_randomly") {
-=======
-        std::string item_name = mc::strip_prefix(entry["name"]);
-        mc::ItemType item_type = mc::string_to_item_type(item_name);
-        if (item_type == mc::ItemType::NO_ITEM) {
-            std::fprintf(stderr, "create_enchant_randomly_vector(): unrecognized enchantable item: %s\n", item_name.c_str());
-            return lfd;
-        }
-
-        const auto& func = entry["functions"][function_id];
-        std::vector<mc::Enchantment> all_enchants = mc::get_enchantments_for_version(loot_table.version_range);
-
-        if (func["function"] == "minecraft:enchant_randomly") {
->>>>>>> dev
             // some versions define available enchantments as "options", others use "enchantments"
             if (func.contains("options") && func["options"] != "#minecraft:on_random_loot") {
                 create_list_enchant_randomly_vector(lfd, func["options"]);
@@ -107,7 +69,6 @@ namespace mc {
                 create_enchant_randomly_vector(lfd, all_enchants, item_type, func);
             }
         }
-<<<<<<< HEAD
         else if (function_name == "enchant_with_levels") {
             create_skip_enchant_with_levels_vector(lfd, all_enchants, item_name, func);
         }
@@ -118,11 +79,6 @@ namespace mc {
             lfd.set_count.min = range.min;
             lfd.set_count.max = range.max;
         }
-=======
-        else if (func["function"] == "minecraft:enchant_with_levels") {
-            create_skip_enchant_with_levels_vector(lfd, all_enchants, item_name, func);
-        }
->>>>>>> dev
         
         return lfd;
     }
@@ -162,11 +118,7 @@ namespace mc {
      */
     static void create_enchant_randomly_vector(mc::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, mc::ItemType item, const nlohmann::json &function) 
     {
-<<<<<<< HEAD
         bool allow_treasure = function.contains("treasure") ? (bool)function["treasure"] : true;
-=======
-        bool allow_treasure = function.contains("treasure") ? function["treasure"] : true;
->>>>>>> dev
 
         // add enchantments in natural order
         for (auto ench : enchants) {
@@ -198,11 +150,7 @@ namespace mc {
         lfd.enchant_with_levels.max_level = levels.max;
 
         mc::ItemType item_type = mc::string_to_item_type(item_name);
-<<<<<<< HEAD
         bool allow_treasure = function.contains("treasure") ? (bool)function["treasure"] : true;
-=======
-        bool allow_treasure = function.contains("treasure") ? function["treasure"] : true;
->>>>>>> dev
 
         int enchantability = mc::get_enchantability(item_name);
         int max_unamplified = levels.max + 1 + (enchantability / 4) * 2;

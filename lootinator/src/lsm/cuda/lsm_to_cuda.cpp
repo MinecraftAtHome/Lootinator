@@ -5,6 +5,7 @@
 #include "lootinator/lsm/constraints_to_lsm.hpp"
 #include "lootinator/template/kernel_template.h"
 #include "lootinator/lsm/cuda/lsm_to_cuda.hpp"
+#include "lootinator/mc/loot_functions.hpp"
 #include "nlohmann/json.hpp"
 
 namespace loot { namespace lsm {
@@ -36,12 +37,14 @@ namespace loot { namespace lsm {
         return chunk.offset;
     }                
 
-    void create_shared_memory(LootTableConstraintList &ltcl, BlockInstruction *program) {
+    SharedMem create_shared_memory(LootTableConstraintList &ltcl, BlockInstruction *program) {
         SharedMem shared_mem;
 
         for (auto &pool : ltcl.loot_table.precomputed_loot) {
             shared_mem.add_pool(pool);
         }
+
+        return shared_mem;
     }
 
     void compile_roll(LootTableConstraintList &ltcl, PoolInstruction *instruction) {
@@ -69,11 +72,26 @@ namespace loot { namespace lsm {
     }                   
 
     void lsm_to_cuda(LootTableConstraintList &ltcl, BlockInstruction *program, std::string output_file) {
-        create_shared_memory(ltcl, program);
+        SharedMem smem = create_shared_memory(ltcl, program);
         
         program->debug(0);
-        program->compile(0);
-        // PoolInstruction *instruction = dynamic_cast<PoolInstruction *>(program->children[1]);
-        // compile_roll(ltcl, instruction);
-    }
+
+        // pass 1
+        std::vector<mc::LootFunctionData> function_data;
+        program->compile_pass1(ltcl, function_data);
+
+        for (auto &function : function_data) {
+            if (function.type == mc::LootFunctionType::IGNORED) {
+                continue;
+            }
+            std::cout << function.type << "\n"; 
+            util::DebugStruct(std::cout, "Function")
+                .add("pool_id", function.function_ref.pool_id)
+                .add("entry_id", function.function_ref.entry_id)
+                .add("function_id", function.function_ref.function_id)
+                .finish();
+            std::cout << "\n";
+            smem.add_function(function.function_ref, function.shared_mem);
+        }        
+    }   
 }}

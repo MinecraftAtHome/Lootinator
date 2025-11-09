@@ -89,6 +89,12 @@ lsm_to_cuda, rough steps:
 6. Find all pool asserts, create structure for holding counts and other data of all items that we care about
 7.  
 
+passes:
+1) functions, shared memory
+2) pool assert accumulators (step 6)
+3) emit cuda
+
+
 int counts[3] = {0};
 
 case 2: {

@@ -2,6 +2,8 @@
 #define LOOTINATOR_LSM_INSTRUCTIONS_H
 
 #include <vector>
+#include "lootinator/constraint/filter.h"
+#include "lootinator/mc/loot_functions.hpp"
 
 namespace loot {
     namespace lsm {
@@ -22,8 +24,11 @@ namespace loot {
                 InstructionType tp;
                 Instruction *as_ins();
                 virtual void debug(int indent_level);
-                virtual void compile(int indent_level);
                 virtual ~Instruction() {};
+                // note: these need be implemented! right now uncommenting this will result in an error!
+                virtual void compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data);
+                // virtual void compile_pass2();
+                // virtual void compile_pass3();
         };
 
         class FunctionInstruction : public Instruction {
@@ -33,7 +38,7 @@ namespace loot {
                 FunctionInstruction(FunctionType func_tp);
                 FunctionInstruction(FunctionType func_tp, std::vector<int> args);
                 void debug(int indent_level) override;
-                // void compile(int indent_level) override;
+                void compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) override;
         };
 
         class PoolAssertFunctionInstruction : public Instruction {
@@ -43,7 +48,6 @@ namespace loot {
                 std::vector<int> rvalues;
                 PoolAssertFunctionInstruction(std::vector<int> lvalues, Comparision comp, std::vector<int> rvalues);
                 void debug(int indent_level) override;
-                // void compile(int indent_level) override;
         };
 
         class BlockInstruction : public Instruction {
@@ -53,7 +57,7 @@ namespace loot {
                 void add_instruction(Instruction *ins);
                 virtual ~BlockInstruction() override;
                 void debug(int indent_level) override;
-                // void compile(int indent_level) override;
+                void compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) override;
         };
 
         class PoolInstruction : public BlockInstruction {
@@ -67,7 +71,6 @@ namespace loot {
                 int item;
                 CaseInstruction(int item);
                 void debug(int indent_level) override;
-                // void compile(int indent_level) override;
         };
 
         class RollInstruction : public BlockInstruction {
@@ -75,7 +78,6 @@ namespace loot {
                 int roll_count;
                 RollInstruction(int roll_count);
                 void debug(int indent_level) override;
-                // void compile(int indent_level) override;
         };
     }
 }

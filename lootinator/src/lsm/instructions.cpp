@@ -1,11 +1,13 @@
-#include "lootinator/lsm/instructions.hpp"
-
 #include <iostream>
 #include <vector>
 #include <cassert>
 #include <numeric>
 #include <string>
 #include <map>
+
+#include "lootinator/lsm/instructions.hpp"
+#include "lootinator/lsm/constraints_to_lsm.hpp"
+#include "nlohmann/json.hpp"
 
 template<typename T>
 std::string join(const std::vector<T>& vec, const std::string& delimiter) {
@@ -121,8 +123,25 @@ namespace loot {
             TODO("instruction not implemented yet!");
         }
 
-        void loot::lsm::Instruction::compile(int indent_level) {
-            TODO("instruction not implemented yet!");
-        } 
+        void loot::lsm::Instruction::compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) {
+            
+        }
+
+        void loot::lsm::BlockInstruction::compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) {
+            for (auto &child : this->children) {
+                child->compile_pass1(ltcl, function_data);
+            }
+        }   
+
+        void loot::lsm::FunctionInstruction::compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) {
+            if (this->func_tp != FUNC_FUNC) {
+                return;
+            }
+
+            Function function_ref = {this->args[0], this->args[1], this->args[2]};
+
+            mc::LootFunctionData data = mc::parse_loot_function_data(ltcl.loot_table, function_ref);           
+            function_data.push_back(data);
+        }   
     }
 }

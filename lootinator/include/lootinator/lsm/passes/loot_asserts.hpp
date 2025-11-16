@@ -9,11 +9,20 @@ namespace lsm {
         loot::lsm::Comparision comp;
         int rvalue;
         size_t lvalue_length;
-    }
+        loot::lsm::PoolAssertFunctionInstruction *ref;
+        void debug();
+    };
 
     struct AssertionGroup {
         std::vector<Assertion> assertions;
-    }
+        void sort();
+        void debug();
+    };
+
+    struct PoolAsserts {
+        std::vector<AssertionGroup> groups;
+        void debug();
+    };
 }
 
 #endif

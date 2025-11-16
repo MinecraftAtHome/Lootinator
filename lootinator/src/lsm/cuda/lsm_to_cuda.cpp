@@ -95,6 +95,12 @@ namespace loot { namespace lsm {
         }
         
         // pass 2
-        
+        int num_assertions = 0;
+        std::vector<mc::PoolAsserts> pool_asserts;
+        program->compile_pass2((void *)&pool_asserts, num_assertions);
+
+        for (auto &assert : pool_asserts) {
+            assert.debug();
+        }
     }   
 }}

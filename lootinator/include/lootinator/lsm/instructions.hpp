@@ -4,6 +4,7 @@
 #include <vector>
 #include "lootinator/constraint/filter.h"
 #include "lootinator/lsm/passes/loot_functions.hpp"
+#include "lootinator/lsm/passes/loot_asserts.hpp"
 
 namespace loot {
     namespace lsm {
@@ -27,7 +28,7 @@ namespace loot {
                 virtual ~Instruction() {};
                 // note: these need be implemented! right now uncommenting this will result in an error!
                 virtual void compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data);
-                // virtual void compile_pass2();
+                virtual void compile_pass2(void *data, int &num_assertions);
                 // virtual void compile_pass3();
         };
 
@@ -45,9 +46,10 @@ namespace loot {
             public:
                 std::vector<int> lvalues;
                 Comparision comp;
-                std::vector<int> rvalues;
+                std::vector<int> rvalues; // FIXME: not sure why this is a vector... it should just be one value
                 PoolAssertFunctionInstruction(std::vector<int> lvalues, Comparision comp, std::vector<int> rvalues);
                 void debug(int indent_level) override;
+                void compile_pass2(void *data, int &num_assertions) override;
         };
 
         class BlockInstruction : public Instruction {
@@ -58,12 +60,14 @@ namespace loot {
                 virtual ~BlockInstruction() override;
                 void debug(int indent_level) override;
                 void compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) override;
+                void compile_pass2(void *data, int &num_assertions) override;
         };
 
         class PoolInstruction : public BlockInstruction {
             public:
                 int id;
                 PoolInstruction(int id);
+                void compile_pass2(void *data, int &num_assertions) override;
         };
 
         class CaseInstruction : public BlockInstruction {

@@ -6,7 +6,7 @@
 #include "lootinator/utility/range.h"
 
 
-namespace mc {
+namespace mc { // TODO: change this to lsm namespace
     enum LootFunctionType {
         ENCHANT_RANDOMLY,
         ENCHANT_WITH_LEVELS,

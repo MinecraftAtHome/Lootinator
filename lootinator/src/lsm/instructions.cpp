@@ -54,7 +54,7 @@ namespace loot {
 
         void loot::lsm::PoolAssertFunctionInstruction::debug(int indent_level) {
             std::map<Comparision, const char *> lookup = {
-                {COMP_EQUAL, "=="}, {COMP_LE, "<="}, {COMP_GE, ">="}, {COMP_G, ">"}, {COMP_L, "<"}
+                {COMP_EQUAL, "=="}, {COMP_GE, ">="}
             };
             printf("%*s%s %s %s %s\n", indent_level, "", "POOL ASSERT", join(this->lvalues, ",").c_str(), lookup[this->comp], join(this->rvalues, ",").c_str());
         }
@@ -128,11 +128,21 @@ namespace loot {
             
         }
 
+        void loot::lsm::Instruction::compile_pass2(void *data, int &num_assertions) {
+            
+        }
+
         void loot::lsm::BlockInstruction::compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) {
             for (auto &child : this->children) {
                 child->compile_pass1(ltcl, function_data);
             }
         }   
+
+        void loot::lsm::BlockInstruction::compile_pass2(void *data, int &num_assertions) {
+            for (auto &child : this->children) {
+                child->compile_pass2(data, num_assertions); 
+            }
+        }
 
         void loot::lsm::FunctionInstruction::compile_pass1(LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) {
             if (this->func_tp != FUNC_FUNC) {
@@ -144,5 +154,33 @@ namespace loot {
             mc::LootFunctionData data = mc::parse_loot_function_data(ltcl.loot_table, function_ref);           
             function_data.push_back(data);
         }   
+
+        void loot::lsm::PoolInstruction::compile_pass2(void *data, int &num_assertions) {
+            std::vector<lsm::PoolAsserts> *pool_asserts = reinterpret_cast<std::vector<lsm::PoolAsserts> *>(data);
+            num_assertions = 0;
+            lsm::PoolAsserts pool_assert;
+            for (auto &child : this->children) {
+                child.compile_pass2(&pool_assert, num_assertions); 
+            }
+            pool_asserts->push_back(pool_assert);
+        }
+
+        void loot::lsm::CaseInstruction::compile_pass2(void *data, int &num_assertions) {
+            lsm::PoolAsserts *pool_assert = reinterpret_cast<lsm::PoolAsserts *>(data);
+            lsm::AssertionGroup group;
+            for (auto &child : this->children) {
+                child.compile_pass2(&group, num_assertions);
+            }
+            group.sort();
+            pool_assert->groups.push_back(group);    
+        }
+
+        void loot::lsm::PoolAssertFunctionInstruction::compile_pass2(void *data, int &num_assertions) {
+            lsm::AssertionGroup *group = reinterpret_cast<lsm::AssertionGroup *>(data);
+
+            lsm::Assertion assert = {num_assertions, this->comp, this->rvalues[0], this->lvalues.size(), this};
+            num_assertions++;
+            group->assertions.push_back(assert);
+        }
     }
 }

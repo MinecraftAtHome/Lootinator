@@ -6,10 +6,10 @@
 namespace lsm {    
     struct Assertion {
         int index;
-        loot::lsm::Comparision comp;
+        lsm::Comparision comp;
         int rvalue;
         size_t lvalue_length;
-        loot::lsm::PoolAssertFunctionInstruction *ref;
+        lsm::PoolAssertFunctionInstruction *ref;
         void debug();
     };
 

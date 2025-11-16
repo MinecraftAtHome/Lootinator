@@ -43,12 +43,12 @@ int main() {
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
 		ltcl.initialize_constraints(constr);
 
-		std::vector<loot::lsm::BlockInstruction*> programs = loot::lsm::get_lsm_representations(ltcl, constr);
+		std::vector<lsm::BlockInstruction*> programs = lsm::get_lsm_representations(ltcl, constr);
 		
 		int prog_idx = 0;
 		for (auto& prog : programs)
 		{	
-			loot::lsm::lsm_to_cuda(ltcl, prog, "output_" + std::to_string(prog_idx));
+			lsm::lsm_to_cuda(ltcl, prog, "output_" + std::to_string(prog_idx));
 			delete prog;
 			prog_idx++;
 		}
@@ -60,16 +60,16 @@ int main() {
 }
 
 int main_lsmtest() {	
-	loot::lsm::BlockInstruction program = loot::lsm::BlockInstruction();
-	loot::lsm::PoolInstruction pool0 = loot::lsm::PoolInstruction(0);
-	loot::lsm::RollInstruction roll_ins = loot::lsm::RollInstruction(0);	
-	loot::lsm::FunctionInstruction f = loot::lsm::FunctionInstruction(loot::lsm::FunctionType::FUNC_FAIL);
-	loot::lsm::FunctionInstruction advance = loot::lsm::FunctionInstruction(loot::lsm::FunctionType::FUNC_LCG_ADVANCE, {1});
-	loot::lsm::PoolAssertFunctionInstruction pool_assert0 = loot::lsm::PoolAssertFunctionInstruction({0, 5}, loot::lsm::Comparision::COMP_GE, {2});
-	loot::lsm::PoolAssertFunctionInstruction pool_assert1 = loot::lsm::PoolAssertFunctionInstruction({1, 1}, loot::lsm::Comparision::COMP_EQUAL, {3});
+	lsm::BlockInstruction program = lsm::BlockInstruction();
+	lsm::PoolInstruction pool0 = lsm::PoolInstruction(0);
+	lsm::RollInstruction roll_ins = lsm::RollInstruction(0);	
+	lsm::FunctionInstruction f = lsm::FunctionInstruction(lsm::FunctionType::FUNC_FAIL);
+	lsm::FunctionInstruction advance = lsm::FunctionInstruction(lsm::FunctionType::FUNC_LCG_ADVANCE, {1});
+	lsm::PoolAssertFunctionInstruction pool_assert0 = lsm::PoolAssertFunctionInstruction({0, 5}, lsm::Comparision::COMP_GE, {2});
+	lsm::PoolAssertFunctionInstruction pool_assert1 = lsm::PoolAssertFunctionInstruction({1, 1}, lsm::Comparision::COMP_EQUAL, {3});
 
-	loot::lsm::CaseInstruction case0 = loot::lsm::CaseInstruction(0);
-	loot::lsm::CaseInstruction case1 = loot::lsm::CaseInstruction(1);
+	lsm::CaseInstruction case0 = lsm::CaseInstruction(0);
+	lsm::CaseInstruction case1 = lsm::CaseInstruction(1);
 
 	case0.add_instruction(pool_assert0.as_ins());
 	case1.add_instruction(pool_assert1.as_ins());

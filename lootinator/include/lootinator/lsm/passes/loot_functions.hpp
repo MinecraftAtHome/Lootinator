@@ -35,7 +35,7 @@ namespace mc { // TODO: change this to lsm namespace
     struct LootFunctionData {
         std::vector<int> shared_mem;
         LootFunctionType type;
-        loot::lsm::Function function_ref;
+        lsm::Function function_ref;
 
         // FIXME ideally use union
         EnchantRandomlyData enchant_randomly;
@@ -46,7 +46,7 @@ namespace mc { // TODO: change this to lsm namespace
     };
 
     std::vector<int> get_shared_memory_for_function(const loot::LootTable &loot_table, const nlohmann::json &entry, const int function_id);
-    mc::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, loot::lsm::Function function_ref);
+    mc::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, lsm::Function function_ref);
 }
 
 #endif

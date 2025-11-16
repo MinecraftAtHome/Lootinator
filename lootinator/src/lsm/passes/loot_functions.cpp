@@ -16,7 +16,7 @@ namespace mc {
      * is not of type `enchant_randomly` or `enchant_with_levels`, `LootFunctionData::type` is set to `IGNORED`.
      * In that case, all other contents of the returned struct should be ignored.
      */
-    mc::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, loot::lsm::Function function_ref)
+    mc::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, lsm::Function function_ref)
     {
         mc::LootFunctionData lfd;
         lfd.function_ref = function_ref;

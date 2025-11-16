@@ -1,16 +1,15 @@
 #include "lootinator/lsm/constraints_to_lsm.hpp"
 #include <iostream>
 
-
-namespace loot { namespace lsm {
-    std::vector<loot::lsm::BlockInstruction*> get_lsm_representations(const LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints)
+namespace lsm {
+    std::vector<lsm::BlockInstruction*> get_lsm_representations(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints)
     {
         std::vector<loot::Constraint> merged_constraints;
         loot::merge_contraints(constraints, merged_constraints);
 
-        std::vector<loot::lsm::BlockInstruction*> programs;
+        std::vector<lsm::BlockInstruction*> programs;
         for (auto& pool_filter : ltcl.available_filters) {
-            loot::lsm::BlockInstruction* main_block = new loot::lsm::BlockInstruction();
+            lsm::BlockInstruction* main_block = new lsm::BlockInstruction();
             add_filter_on(ltcl, pool_filter, main_block);
             add_pool_forward_filters(ltcl, constraints, merged_constraints, main_block);
             programs.push_back(main_block);
@@ -26,7 +25,7 @@ namespace loot { namespace lsm {
         out.push_back(max_incl);
     }
 
-    void add_filter_on(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, loot::lsm::BlockInstruction *main_block)
+    void add_filter_on(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, lsm::BlockInstruction *main_block)
     {
         // TODO
 
@@ -51,7 +50,7 @@ namespace loot { namespace lsm {
         }
 
         std::vector<int> next_int_vector;
-        if (pool_filter.reversal_type == ReversalType::ITEM_ONLY)
+        if (pool_filter.reversal_type == loot::ReversalType::ITEM_ONLY)
         {
             //std::cerr << "poolidx = " << pool_filter.pool_idx << " vecsize = " << ltcl.loot_table.total_weights.size() << "\n";
             int total_weight = ltcl.loot_table.total_weights[pool_filter.pool_idx];
@@ -92,7 +91,7 @@ namespace loot { namespace lsm {
         return util::RangeInclusive<uint32_t>(0,0);
     }
 
-    void add_pool_forward_filters(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const std::vector<loot::Constraint> &merged_constraints, loot::lsm::BlockInstruction *main_block)
+    void add_pool_forward_filters(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const std::vector<loot::Constraint> &merged_constraints, lsm::BlockInstruction *main_block)
     {
         int pool_idx = 0;
         for (auto& pool : ltcl.loot_table.data["pools"])
@@ -134,7 +133,7 @@ namespace loot { namespace lsm {
         return std::vector<int>();
     }
 
-    void add_loot_assertions(const loot::LootTableConstraintList &ltcl, const nlohmann::json& entry, const std::vector<loot::Constraint> &merged_constraints, loot::lsm::CaseInstruction *case_ins)
+    void add_loot_assertions(const loot::LootTableConstraintList &ltcl, const nlohmann::json& entry, const std::vector<loot::Constraint> &merged_constraints, lsm::CaseInstruction *case_ins)
     {
         for (auto& constraint : merged_constraints)
         {
@@ -145,31 +144,29 @@ namespace loot { namespace lsm {
                 {
                     // '==' comparator, need a single assertion
                     PoolAssertFunctionInstruction* pool_assert_ins = new PoolAssertFunctionInstruction(
-                        attribute_vector, Comparision::COMP_EQUAL, {static_cast<int>(constraint.count_range.min)}
+                        attribute_vector, lsm::Comparision::COMP_EQUAL, {static_cast<int>(constraint.count_range.min)}
                     );
                     case_ins->add_instruction(pool_assert_ins);
                     continue;
                 }
 
-                if (constraint.count_range.min != COUNT_NONE)
+                if (constraint.count_range.min != loot::COUNT_NONE)
                 {
                     // min count is bounded, need a '>=' assertion
                     PoolAssertFunctionInstruction* pool_assert_ins = new PoolAssertFunctionInstruction(
-                        attribute_vector, Comparision::COMP_GE, {static_cast<int>(constraint.count_range.min)}
+                        attribute_vector, lsm::Comparision::COMP_GE, {static_cast<int>(constraint.count_range.min)}
                     );
                     case_ins->add_instruction(pool_assert_ins);
                 }
-                if (constraint.count_range.max < COUNT_INFINITE)
-                {
-                    // max count is bounded, need a '<=' assertion
-                    PoolAssertFunctionInstruction* pool_assert_ins = new PoolAssertFunctionInstruction(
-                        attribute_vector, Comparision::COMP_LE, {static_cast<int>(constraint.count_range.max)}
-                    );
-                    case_ins->add_instruction(pool_assert_ins);
-                }
+                // if (constraint.count_range.max < loot::COUNT_INFINITE)
+                // {
+                //     // max count is bounded, need a '<=' assertion
+                //     PoolAssertFunctionInstruction* pool_assert_ins = new PoolAssertFunctionInstruction(
+                //         attribute_vector, lsm::Comparision::COMP_LE, {static_cast<int>(constraint.count_range.max)}
+                //     );
+                //     case_ins->add_instruction(pool_assert_ins);
+                // }
             }
         }
     }
-}}
-
-
+}

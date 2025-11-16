@@ -1,7 +1,7 @@
 #ifndef LOOTINATOR_LSM_FUNCTION_REF_H
 #define LOOTINATOR_LSM_FUNCTION_REF_H
 
-namespace loot { namespace lsm {
+namespace lsm {
     struct Function {
         int pool_id;
         int entry_id;
@@ -17,6 +17,6 @@ namespace loot { namespace lsm {
             return std::hash<int>()(func.pool_id) ^ (std::hash<int>()(func.entry_id) << 1) ^ (std::hash<int>()(func.function_id) << 2); 
         }
     };   
-}}
+}
 
 #endif

@@ -6,9 +6,10 @@
 #include "lootinator/template/kernel_template.h"
 #include "lootinator/lsm/cuda/lsm_to_cuda.hpp"
 #include "lootinator/lsm/passes/loot_functions.hpp"
+#include "lootinator/lsm/passes/loot_asserts.hpp"
 #include "nlohmann/json.hpp"
 
-namespace loot { namespace lsm {
+namespace lsm {
     void SharedMem::add_pool(std::vector<int> &pool) {
         Chunk c = {(int)this->shared.size(), (int)pool.size()};
         this->pool_offset.push_back(c);
@@ -37,7 +38,7 @@ namespace loot { namespace lsm {
         return chunk.offset;
     }                
 
-    SharedMem create_shared_memory(LootTableConstraintList &ltcl) {
+    SharedMem create_shared_memory(loot::LootTableConstraintList &ltcl) {
         SharedMem shared_mem;
 
         for (auto &pool : ltcl.loot_table.precomputed_loot) {
@@ -47,7 +48,7 @@ namespace loot { namespace lsm {
         return shared_mem;
     }
 
-    void compile_roll(LootTableConstraintList &ltcl, PoolInstruction *instruction) {
+    void compile_roll(loot::LootTableConstraintList &ltcl, PoolInstruction *instruction) {
         int pool_idx = instruction->id;
         const nlohmann::json &pool = ltcl.loot_table.data["pools"][pool_idx];
         util::RangeInclusive<std::uint32_t> roll_range = util::RangeInclusive<std::uint32_t>::from_json(pool["rolls"]);     
@@ -71,36 +72,36 @@ namespace loot { namespace lsm {
         fprintf(stdout, "}\n");
     }                   
 
-    void lsm_to_cuda(LootTableConstraintList &ltcl, BlockInstruction *program, std::string output_file) {
+    void lsm_to_cuda(loot::LootTableConstraintList &ltcl, BlockInstruction *program, std::string output_file) {
         SharedMem smem = create_shared_memory(ltcl);
         
         program->debug(0);
 
-        // pass 1
-        std::vector<mc::LootFunctionData> function_data;
-        program->compile_pass1(ltcl, function_data);
+        // // pass 1
+        // std::vector<mc::LootFunctionData> function_data;
+        // program->compile_pass1(ltcl, function_data);
 
-        for (auto &function : function_data) {
-            if (function.type == mc::LootFunctionType::IGNORED) {
-                continue;
-            }
-            std::cout << function.type << "\n"; 
-            util::DebugStruct(std::cout, "Function")
-                .add("pool_id", function.function_ref.pool_id)
-                .add("entry_id", function.function_ref.entry_id)
-                .add("function_id", function.function_ref.function_id)
-                .finish();
-            std::cout << "\n";
-            smem.add_function(function.function_ref, function.shared_mem);
-        }
+        // for (auto &function : function_data) {
+        //     if (function.type == mc::LootFunctionType::IGNORED) {
+        //         continue;
+        //     }
+        //     std::cout << function.type << "\n"; 
+        //     util::DebugStruct(std::cout, "Function")
+        //         .add("pool_id", function.function_ref.pool_id)
+        //         .add("entry_id", function.function_ref.entry_id)
+        //         .add("function_id", function.function_ref.function_id)
+        //         .finish();
+        //     std::cout << "\n";
+        //     smem.add_function(function.function_ref, function.shared_mem);
+        // }
         
-        // pass 2
-        int num_assertions = 0;
-        std::vector<mc::PoolAsserts> pool_asserts;
-        program->compile_pass2((void *)&pool_asserts, num_assertions);
+        // // pass 2
+        // int num_assertions = 0;
+        // std::vector<lsm::PoolAsserts> pool_asserts;
+        // program->compile_pass2((void *)&pool_asserts, num_assertions);
 
-        for (auto &assert : pool_asserts) {
-            assert.debug();
-        }
+        // for (auto &assert : pool_asserts) {
+        //     assert.debug();
+        // }
     }   
-}}
+}

@@ -9,13 +9,13 @@ static void smoke_test()
 {
     {
         loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_21_TO_1_21_9);
-        loot::lsm::Function function_ref = {0, 7, 0};
+        lsm::Function function_ref = {0, 7, 0};
         mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
         ASSERT_NE(data.type, mc::LootFunctionType::IGNORED);
     }
     {
         loot::LootTable lt("../../lootinator/tests/data/end_city_1_21_8.json", mc::VersionRange::MC_1_21_TO_1_21_9);
-        loot::lsm::Function function_ref = {0, 10, 0};
+        lsm::Function function_ref = {0, 10, 0};
         mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
         ASSERT_NE(data.type, mc::LootFunctionType::IGNORED);
     }
@@ -24,7 +24,7 @@ static void smoke_test()
 static void correctness_test_enchant_randomly_list()
 {
     loot::LootTable lt("../../lootinator/tests/data/bastion_1_17_1.json", mc::VersionRange::MC_1_16_TO_1_20);
-    loot::lsm::Function function_ref = {0, 10, 0};
+    lsm::Function function_ref = {0, 10, 0};
     mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
     ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_RANDOMLY);
 
@@ -38,7 +38,7 @@ static void correctness_test_enchant_randomly_list()
 static void correctness_test_enchant_randomly_natural()
 {
     loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_21_TO_1_21_9);
-    loot::lsm::Function function_ref = {0, 14, 0};    
+    lsm::Function function_ref = {0, 14, 0};    
     mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
     ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_RANDOMLY);
 
@@ -56,7 +56,7 @@ static void correctness_test_enchant_randomly_natural()
 static void correctness_test_enchant_with_levels()
 {
     loot::LootTable lt("../../lootinator/tests/data/end_city_1_21_8.json", mc::VersionRange::MC_1_21_TO_1_21_9);
-    loot::lsm::Function function_ref = {0, 10, 0};        
+    lsm::Function function_ref = {0, 10, 0};        
     mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
     ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_WITH_LEVELS);
 

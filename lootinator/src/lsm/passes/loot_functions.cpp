@@ -1,4 +1,4 @@
-#include "lootinator/mc/loot_functions.hpp"
+#include "lootinator/lsm/passes/loot_functions.hpp"
 #include "lootinator/utility/range.h"
 
 

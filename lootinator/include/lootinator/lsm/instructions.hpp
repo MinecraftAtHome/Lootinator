@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "lootinator/constraint/filter.h"
-#include "lootinator/mc/loot_functions.hpp"
+#include "lootinator/lsm/passes/loot_functions.hpp"
 
 namespace loot {
     namespace lsm {
@@ -16,7 +16,7 @@ namespace loot {
         };
 
         enum Comparision {
-            COMP_EQUAL, COMP_LE, COMP_GE, COMP_G, COMP_L
+            COMP_EQUAL, COMP_GE
         };
 
         class Instruction {

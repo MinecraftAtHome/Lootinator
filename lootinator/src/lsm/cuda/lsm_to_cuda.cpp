@@ -5,12 +5,12 @@
 #include "lootinator/lsm/constraints_to_lsm.hpp"
 #include "lootinator/template/kernel_template.h"
 #include "lootinator/lsm/cuda/lsm_to_cuda.hpp"
-#include "lootinator/mc/loot_functions.hpp"
+#include "lootinator/lsm/passes/loot_functions.hpp"
 #include "nlohmann/json.hpp"
 
 namespace loot { namespace lsm {
     void SharedMem::add_pool(std::vector<int> &pool) {
-        Chunk c = {this->shared.size(), pool.size()};
+        Chunk c = {(int)this->shared.size(), (int)pool.size()};
         this->pool_offset.push_back(c);
         for (auto &i : pool) {
             this->shared.push_back(i);
@@ -19,7 +19,7 @@ namespace loot { namespace lsm {
 
     void SharedMem::add_function(const Function function_ref, std::vector<int> &function) {
         Chunk c = {
-            this->shared.size(), function.size()
+            (int)this->shared.size(), (int)function.size()
         };
         this->function_offset[function_ref] = c;
         for (auto &i : function) {
@@ -37,7 +37,7 @@ namespace loot { namespace lsm {
         return chunk.offset;
     }                
 
-    SharedMem create_shared_memory(LootTableConstraintList &ltcl, BlockInstruction *program) {
+    SharedMem create_shared_memory(LootTableConstraintList &ltcl) {
         SharedMem shared_mem;
 
         for (auto &pool : ltcl.loot_table.precomputed_loot) {
@@ -72,7 +72,7 @@ namespace loot { namespace lsm {
     }                   
 
     void lsm_to_cuda(LootTableConstraintList &ltcl, BlockInstruction *program, std::string output_file) {
-        SharedMem smem = create_shared_memory(ltcl, program);
+        SharedMem smem = create_shared_memory(ltcl);
         
         program->debug(0);
 
@@ -92,6 +92,9 @@ namespace loot { namespace lsm {
                 .finish();
             std::cout << "\n";
             smem.add_function(function.function_ref, function.shared_mem);
-        }        
+        }
+        
+        // pass 2
+        
     }   
 }}

@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "lootinator/assertions.h"
 #include "lootinator/utility/debug.h"
-#include "lootinator/mc/loot_functions.hpp"
+#include "lootinator/lsm/passes/loot_functions.hpp"
 #include "lootinator/lsm/function_ref.hpp"
 
 static void smoke_test()

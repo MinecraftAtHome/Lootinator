@@ -1,5 +1,5 @@
-#ifndef LOOTINATOR_MC_LOOT_FUNCTIONS_H
-#define LOOTINATOR_MC_LOOT_FUNCTIONS_H
+#ifndef LOOTINATOR_LSM_LOOT_FUNCTIONS_H
+#define LOOTINATOR_LSM_LOOT_FUNCTIONS_H
 
 #include "lootinator/loot_table.h"
 #include "lootinator/lsm/function_ref.hpp"

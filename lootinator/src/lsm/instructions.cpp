@@ -64,6 +64,7 @@ namespace lsm {
         this->args = args;
         this->tp = lsm::InstructionType::INS_FUNC;
     }
+
             
     void lsm::BlockInstruction::add_instruction(Instruction *ins) {
         this->children.push_back(ins);

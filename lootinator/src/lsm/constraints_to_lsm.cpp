@@ -10,8 +10,8 @@ namespace lsm {
         std::vector<lsm::BlockInstruction*> programs;
         for (auto& pool_filter : ltcl.available_filters) {
             lsm::BlockInstruction* main_block = new lsm::BlockInstruction();
-            add_filter_on(ltcl, pool_filter, main_block);
-            add_pool_forward_filters(ltcl, constraints, merged_constraints, main_block);
+            // add_filter_on(ltcl, pool_filter, main_block);
+            add_pool_forward_filters(ltcl, constraints, pool_filter, merged_constraints, main_block);
             programs.push_back(main_block);
         }
 
@@ -37,6 +37,34 @@ namespace lsm {
         // - version range -> enchantment order mapping (V)
         // - check which enchantment can go on item (V)
 
+
+        // main_block->add_instruction(new FunctionInstruction(FunctionType::FUNC_FILTER_ON, next_int_vector));
+    }
+
+    util::RangeInclusive<uint32_t> get_weight_range_for_item(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter) {
+        int pool_idx = pool_filter.pool_idx;
+        const auto& entries = ltcl.loot_table.data["pools"][pool_idx]["entries"];
+
+        uint32_t current_weight = 0;
+        int eid = 0;
+        for (const auto& entry : entries) {
+            int entry_weight = 1;
+            if (entry.contains("weight")) {
+                entry_weight = entry["weight"];
+            }
+            if (eid == pool_filter.entry_idx) {
+                return util::RangeInclusive<uint32_t>(current_weight, current_weight+entry_weight-1);
+            }
+            current_weight += entry_weight;
+            eid++;
+        }
+
+        std::cerr << "constraints_to_lsm.cpp: get_weight_range_for_item: failed to find entry" 
+                     "matching the specified pool filter, pool_filter.entry_idx = " << pool_filter.entry_idx << '\n';
+        return util::RangeInclusive<uint32_t>(0,0);
+    }
+
+    std::vector<int> get_next_int_vector(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter) {
         bool entry_set_count_advancement = false;
         auto& entry = ltcl.loot_table.data["pools"][pool_filter.pool_idx]["entries"][pool_filter.entry_idx];
         if (entry.contains("functions")) {
@@ -63,35 +91,10 @@ namespace lsm {
                 }
             }
         }
-
-        main_block->add_instruction(new FunctionInstruction(FunctionType::FUNC_FILTER_ON, next_int_vector));
+        return next_int_vector;
     }
 
-    util::RangeInclusive<uint32_t> get_weight_range_for_item(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter)
-    {
-        int pool_idx = pool_filter.pool_idx;
-        const auto& entries = ltcl.loot_table.data["pools"][pool_idx]["entries"];
-
-        uint32_t current_weight = 0;
-        int eid = 0;
-        for (const auto& entry : entries) {
-            int entry_weight = 1;
-            if (entry.contains("weight")) {
-                entry_weight = entry["weight"];
-            }
-            if (eid == pool_filter.entry_idx) {
-                return util::RangeInclusive<uint32_t>(current_weight, current_weight+entry_weight-1);
-            }
-            current_weight += entry_weight;
-            eid++;
-        }
-
-        std::cerr << "constraints_to_lsm.cpp: get_weight_range_for_item: failed to find entry" 
-                     "matching the specified pool filter, pool_filter.entry_idx = " << pool_filter.entry_idx << '\n';
-        return util::RangeInclusive<uint32_t>(0,0);
-    }
-
-    void add_pool_forward_filters(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const std::vector<loot::Constraint> &merged_constraints, lsm::BlockInstruction *main_block)
+    void add_pool_forward_filters(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const loot::PoolFilter &pool_filter, const std::vector<loot::Constraint> &merged_constraints, lsm::BlockInstruction *main_block)
     {
         int pool_idx = 0;
         for (auto& pool : ltcl.loot_table.data["pools"])
@@ -109,6 +112,10 @@ namespace lsm {
                 CaseInstruction* case_ins = new CaseInstruction(entry_idx);
                 for (int func_idx = 0; func_idx < entry["functions"].size(); func_idx++)
                 {
+                    if (entry_idx == pool_filter.entry_idx) {
+                        std::vector<int> next_int_vector = get_next_int_vector(ltcl, pool_filter);
+                        case_ins->add_instruction(new FunctionInstruction(FunctionType::FUNC_FILTER_ON, next_int_vector));
+                    }
                     FunctionInstruction* func_ins = new FunctionInstruction(FunctionType::FUNC_FUNC, {pool_idx, entry_idx, func_idx});
                     case_ins->add_instruction(func_ins);
                 }
@@ -126,11 +133,12 @@ namespace lsm {
 
     static std::vector<int> vectorize_attributes(const loot::LootTableConstraintList &ltcl, const loot::Constraint& constraint)
     {
-        (void)ltcl;
-        (void)constraint;
-        // TODO combine numeric values of all attributes that are represented
-        // by a single point (ranges should get ignored)
-        return std::vector<int>();
+        std::vector<int> attributes;
+        for (auto const &attr : constraint.attributes) {
+            attributes.push_back(attr.type);
+            attributes.push_back(attr.level);   
+        }
+        return attributes;
     }
 
     void add_loot_assertions(const loot::LootTableConstraintList &ltcl, const nlohmann::json& entry, const std::vector<loot::Constraint> &merged_constraints, lsm::CaseInstruction *case_ins)

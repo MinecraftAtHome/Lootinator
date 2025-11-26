@@ -1,6 +1,6 @@
 [
 	{
-		"item": 2,
+		"item": 2, 
 		"range": {
             "min": 20,
             "max": 100000
@@ -17,11 +17,8 @@
 		"slot": 0,
 		"attributes": [
 			{
-				"type": 0,
-				"level_range": {
-					"min": 5,
-					"max": 5
-				}
+				"type": 21,
+				"level": 5
 			}
 		]
 	}

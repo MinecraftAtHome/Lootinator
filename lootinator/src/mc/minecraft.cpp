@@ -1,5 +1,6 @@
 #include "lootinator/mc/minecraft.hpp"
 #include "lootinator/utility/enum_bimap.hpp"
+#include "lootinator/utility/debug.h"
 
 #include <unordered_set>
 #include <functional>
@@ -492,5 +493,31 @@ namespace mc {
         else {
             return mc::Enchantment::NO_ENCHANTMENT;
         }
+    }
+
+    mc::Enchantment get_enchantment_from_attribute(ItemAttribute &attr) {
+        return (mc::Enchantment)attr.type;
+    }
+
+    mc::AttributeCategory ItemAttribute::get_category() const {
+        return this->type == 0 ? mc::AttributeCategory::NO_ATTRIBUTE : (this->type >= 1 && this->type < 1000 ? mc::AttributeCategory::ENCHANTMENT_ATTRIBUTE : mc::AttributeCategory::NO_ATTRIBUTE);
+    }
+
+    // -------------------------------------------------------------------------------
+    // ItemAttribute
+
+    bool mc::ItemAttribute::operator==(const ItemAttribute& other) const {
+        return type == other.type && level == other.level;
+    }
+
+    bool mc::ItemAttribute::operator!=(const ItemAttribute& other) const {
+        return !(*this == other);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const ItemAttribute& attribute) {
+        return util::DebugStruct(os, "ItemAttribute")
+            .add("type", attribute.type)
+            .add("level", attribute.level)
+            .finish();
     }
 }

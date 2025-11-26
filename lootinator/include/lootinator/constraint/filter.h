@@ -2,6 +2,7 @@
 #define LOOTINATOR_CONSTRAINT_FILTER_H
 
 #include "lootinator/constraint/constraint.h"
+#include "lootinator/mc/minecraft.hpp"
 
 namespace loot {
     static const int NO_POOL_MATCH = -1;
@@ -23,10 +24,10 @@ namespace loot {
         int pool_idx; // for which pool the filter is defined
         int entry_idx; // which entry the filter targets
         int entry_count; // how many instances of the entry are targetted
-        ItemAttribute attribute; // required attributes of the entry
+        mc::ItemAttribute attribute; // required attributes of the entry
         float filter_score; // heuristic performance estimate, bigger = faster
 
-        PoolFilter(ReversalType type, int pool_idx, int entry_idx, int entry_count, ItemAttribute attribute);
+        PoolFilter(ReversalType type, int pool_idx, int entry_idx, int entry_count, mc::ItemAttribute attribute);
         void compute_filter_score(const LootTable& loot_table);
         bool operator==(const PoolFilter& other) const;
         bool operator!=(const PoolFilter& other) const;

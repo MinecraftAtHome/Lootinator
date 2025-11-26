@@ -1,7 +1,8 @@
 #include "lootinator/constraint/filter.h"
 #include "lootinator/utility/mth.h"
-#include <iostream>
+#include "lootinator/mc/minecraft.hpp"
 
+#include <iostream>
 
 namespace loot {
     // iterates over the entries for each loot pool and find one that matches
@@ -29,7 +30,7 @@ namespace loot {
         return pool_match;
     }
 
-    PoolFilter::PoolFilter(ReversalType type, int pool_idx, int entry_idx, int entry_count, ItemAttribute attribute) 
+    PoolFilter::PoolFilter(ReversalType type, int pool_idx, int entry_idx, int entry_count, mc::ItemAttribute attribute) 
         : attribute(attribute), reversal_type(type), pool_idx(pool_idx), entry_idx(entry_idx), entry_count(entry_count), filter_score(0.0f) {}
 
     void PoolFilter::compute_filter_score(const LootTable &loot_table)
@@ -133,7 +134,7 @@ namespace loot {
                 continue;
 
             loot::Constraint aggregated = aggregate_constraints(constraints, main_constraint, reversal_type);
-            loot::ItemAttribute filtered_attribute = aggregated.attributes.empty() ? loot::ItemAttribute{0, {0, 0}} : aggregated.attributes.at(0);
+            mc::ItemAttribute filtered_attribute = aggregated.attributes.empty() ? mc::ItemAttribute{0, 0} : aggregated.attributes.at(0);
             loot::PoolFilter base_filter(reversal_type, pool_idx, 0, 0, filtered_attribute);
             
             add_all_filter_variants(pool, pool_rolls, base_filter, aggregated);
@@ -249,7 +250,7 @@ namespace loot {
             case ReversalType::ITEM_AND_ATTRIBUTE_AND_LEVEL: {
                 auto& main_attr = main_constraint.attributes.at(0);
                 for (auto& attr : main_constraint.attributes) {
-                    if (main_attr.type == attr.type && main_attr.level_range == attr.level_range)
+                    if (main_attr.type == attr.type && main_attr.level == attr.level)
                         return true;
                 }
                 return false;

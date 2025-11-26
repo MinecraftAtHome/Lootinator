@@ -12,32 +12,14 @@ namespace loot {
     constexpr uint32_t COUNT_NONE = 0;
     constexpr uint32_t COUNT_INFINITE = 10000;
 
-    // represents an additional attribute of an item, such as an enchantment
-    // or type of music disc
-    struct ItemAttribute {
-        std::uint32_t type;
-        util::RangeInclusive<std::uint32_t> level_range;
-
-        static ItemAttribute from_json(nlohmann::json json) {
-            uint32_t type = json["type"];
-            util::RangeInclusive<std::uint32_t> level_range = util::RangeInclusive<std::uint32_t>::from_json(json["level_range"]);
-            return {type, level_range};
-        }
-
-        mc::AttributeCategory get_category() const;
-        bool operator==(const ItemAttribute& other) const;
-        bool operator!=(const ItemAttribute& other) const;
-        friend std::ostream& operator<<(std::ostream& os, const ItemAttribute& attribute);
-    };
-
-    bool attributes_match(const std::vector<ItemAttribute>& first, const std::vector<ItemAttribute>& second);
+    bool attributes_match(const std::vector<mc::ItemAttribute>& first, const std::vector<mc::ItemAttribute>& second);
 
     // stores loot constraints on individual slots of items
     struct Constraint {
         std::uint32_t item;
         util::RangeInclusive<std::uint32_t> count_range;
         std::int32_t slot_id; // contraints are shared by cracking and finding kernels, finding won't use this
-        std::vector<ItemAttribute> attributes;
+        std::vector<mc::ItemAttribute> attributes;
 
         bool item_equal(const Constraint& other) const;
         bool matches_entry(const LootTable& loot_table, const nlohmann::json& entry) const;

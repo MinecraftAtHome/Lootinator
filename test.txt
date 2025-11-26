@@ -7,7 +7,6 @@ per pool: assert accumulator
 global assert accumulator
 
 BLOCK START
-   FUNC_FILTER_ON 398 80 119 0 1 1 
    BLOCK START
       LCG_ADVANCE 1 
       ROLL START (0)
@@ -23,13 +22,12 @@ BLOCK START
          CASE END
          CASE 3
             FUNC_FUNC 0 3 0 
-            GLOBAL ASSERT == 1
          CASE END
          CASE 4
-            POOL ASSERT 4 >= 1 
-            POOL ASSERT 4 5 >= 1 
+            FUNC_FUNC 0 4 0 
          CASE END
          CASE 5
+            FUNC_FUNC 0 5 0
          CASE END
          CASE 6
             FUNC_FUNC 0 6 0 
@@ -47,7 +45,7 @@ BLOCK START
             FUNC_FUNC 0 10 0
          CASE END
          CASE 11
-            FUNC_FUNC 0 11 0
+            FILTER_ON <args>
          CASE END
          CASE 12
             FUNC_FUNC 0 12 0
@@ -94,8 +92,11 @@ lsm_to_cuda, rough steps:
 4. Emit check_loot_seed, this will be generated from the case list
 5. Gather all cases that make the same number of lcg calls and do not have pool asserts together, for optimal switch case generation
 6. Find all pool asserts, create structure for holding counts and other data of all items that we care about
-7.  
 
+constraints:
+1. >= 20 iron nuggets
+2. 1 eff V golden pickaxe
+ 
 passes:
 1. functions, shared memory
 2. pool assert accumulators (step 6)
@@ -166,3 +167,5 @@ eff 2 pickaxe
 .
 eff 4 pickaxe
 ----------------------
+
+filter on eff pickaxe

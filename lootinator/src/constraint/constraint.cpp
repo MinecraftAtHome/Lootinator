@@ -4,44 +4,20 @@
 #include <algorithm>
 
 #include "lootinator/constraint/constraint.h"
-
+#include "lootinator/mc/minecraft.hpp"
 
 namespace loot {
     // -------------------------------------------------------------------------------
-    // ItemAttribute
-
-    bool loot::ItemAttribute::operator==(const ItemAttribute& other) const {
-        return type == other.type && level_range == other.level_range;
-    }
-
-    bool loot::ItemAttribute::operator!=(const ItemAttribute& other) const {
-        return !(*this == other);
-    }
-
-    // TODO FIXME !!! USES HUGE SIMPLIFICATION
-    // should only be used for testing
-    mc::AttributeCategory ItemAttribute::get_category() const {
-        return mc::AttributeCategory::ENCHANTMENT_ATTRIBUTE;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const ItemAttribute& attribute) {
-        return util::DebugStruct(os, "ItemAttribute")
-            .add("type", attribute.type)
-            .add("level_range", attribute.level_range)
-            .finish();
-    }
-
-    // -------------------------------------------------------------------------------
     // Constraint
 
-    bool attributes_match(const std::vector<ItemAttribute>& first, const std::vector<ItemAttribute>& second) {
+    bool attributes_match(const std::vector<mc::ItemAttribute>& first, const std::vector<mc::ItemAttribute>& second) {
         if (first.size() != second.size())
             return false;
 
         for (const auto& e1 : first) {
             bool found = false;
             for (const auto& e2 : second) {
-                if (e1.type == e2.type && e1.level_range == e2.level_range) {
+                if (e1.type == e2.type && e1.level == e2.level) {
                     found = true;
                     break;
                 }
@@ -146,10 +122,10 @@ namespace loot {
         }
     }
 
-    std::vector<loot::ItemAttribute> parse_attribute_json(nlohmann::json attribute_json) {
-        std::vector<loot::ItemAttribute> attributes;
+    std::vector<mc::ItemAttribute> parse_attribute_json(nlohmann::json attribute_json) {
+        std::vector<mc::ItemAttribute> attributes;
         for (auto json : attribute_json) {
-            attributes.push_back(ItemAttribute::from_json(json));
+            attributes.push_back(mc::ItemAttribute::from_json(json));
         }
         return attributes;
     }
@@ -162,7 +138,7 @@ namespace loot {
             std::uint32_t item = con["item"];
             std::int32_t slot_id = con["slot"];
             util::RangeInclusive<std::uint32_t> count_range = util::RangeInclusive<std::uint32_t>::from_json(con["range"]); 
-            std::vector<loot::ItemAttribute> attributes = parse_attribute_json(con["attributes"]);
+            std::vector<mc::ItemAttribute> attributes = parse_attribute_json(con["attributes"]);
             constraints.push_back({item, count_range, slot_id, attributes});
         }
         return constraints;

@@ -74,34 +74,35 @@ namespace lsm {
 
     void lsm_to_cuda(loot::LootTableConstraintList &ltcl, BlockInstruction *program, std::string output_file) {
         SharedMem smem = create_shared_memory(ltcl);
-        
         program->debug(0);
 
-        // // pass 1
-        // std::vector<mc::LootFunctionData> function_data;
-        // program->compile_pass1(ltcl, function_data);
+        // pass 1
+        std::vector<mc::LootFunctionData> function_data;
+        program->compile_pass1(ltcl, function_data);
 
-        // for (auto &function : function_data) {
-        //     if (function.type == mc::LootFunctionType::IGNORED) {
-        //         continue;
-        //     }
-        //     std::cout << function.type << "\n"; 
-        //     util::DebugStruct(std::cout, "Function")
-        //         .add("pool_id", function.function_ref.pool_id)
-        //         .add("entry_id", function.function_ref.entry_id)
-        //         .add("function_id", function.function_ref.function_id)
-        //         .finish();
-        //     std::cout << "\n";
-        //     smem.add_function(function.function_ref, function.shared_mem);
-        // }
+        for (auto &function : function_data) {
+            if (function.type == mc::LootFunctionType::IGNORED) {
+                continue;
+            }
+            std::cout << function.type << "\n"; 
+            util::DebugStruct(std::cout, "Function")
+                .add("pool_id", function.function_ref.pool_id)
+                .add("entry_id", function.function_ref.entry_id)
+                .add("function_id", function.function_ref.function_id)
+                .finish();
+            std::cout << "\n";
+            smem.add_function(function.function_ref, function.shared_mem);
+        }
         
-        // // pass 2
-        // int num_assertions = 0;
-        // std::vector<lsm::PoolAsserts> pool_asserts;
-        // program->compile_pass2((void *)&pool_asserts, num_assertions);
+        // pass 2
+        int num_assertions = 0;
+        std::vector<lsm::PoolAsserts> pool_asserts;
+        program->compile_pass2((void *)&pool_asserts, num_assertions);
 
-        // for (auto &assert : pool_asserts) {
-        //     assert.debug();
-        // }
+        for (auto &assert : pool_asserts) {
+            assert.debug();
+        }
+
+        std::cout << "===============\n";
     }   
 }

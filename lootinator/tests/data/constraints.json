@@ -9,17 +9,11 @@
         "attributes": [
             {
                 "type": 1,
-                "level_range": {
-                    "min": 17,
-                    "max": 37
-                }   
+                "level": 17
             },
             {
                 "type": 2,
-                "level_range": {
-                    "min": 21,
-                    "max": 60
-                }   
+                "level": 21
             }
         ]
     },
@@ -33,10 +27,7 @@
         "attributes": [
             {
                 "type": 18,
-                "level_range": {
-                    "min": 0,
-                    "max": 7
-                }   
+                "level": 7
             }
         ]
     }

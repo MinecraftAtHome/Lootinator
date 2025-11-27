@@ -32,8 +32,7 @@ int correctness_test() {
         for (auto& filter : ltcl.available_filters) {
             util::DebugStruct(std::cerr, "PoolFilter")
                 .add("attribute.type", filter.attribute.type)
-                .add("attribute.min_level", filter.attribute.level_range.min)
-                .add("attribute.max_level", filter.attribute.level_range.max)
+                .add("attribute.level", filter.attribute.level)
                 .add("reversal_type", filter.reversal_type)
                 .add("pool_idx", filter.pool_idx)
                 .add("entry_idx", filter.entry_idx)

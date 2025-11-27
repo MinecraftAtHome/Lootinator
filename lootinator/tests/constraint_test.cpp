@@ -19,6 +19,7 @@ static void test_single_merge() {
     const loot::Constraint target = {2u, {3u, 8u}, loot::SLOT_NONE};
     const loot::Constraint actual = constraints2.at(0);
     ASSERT_EQ(target, actual);
+    std::cerr << "INFO: single merge test passed\n";
 }
 
 // TODO make this use like a macro to avoid repetitions
@@ -27,22 +28,22 @@ static void test_multi_merge() {
     std::vector<loot::Constraint> constraints2;
 
     // example constraint lists:
-    std::vector<loot::ItemAttribute> c1_attrs;
-    c1_attrs.push_back({0u, {2u,2u}});
-    c1_attrs.push_back({2u, {1u,1u}});
+    std::vector<mc::ItemAttribute> c1_attrs;
+    c1_attrs.push_back({0u, 2u});
+    c1_attrs.push_back({2u, 1u});
     loot::Constraint c1 = {1u, {2u,3u}, 3, c1_attrs};
-    std::vector<loot::ItemAttribute> c2_attrs;
-    c2_attrs.push_back({0u, {2u,2u}});
-    c2_attrs.push_back({2u, {1u,2u}});
+    std::vector<mc::ItemAttribute> c2_attrs;
+    c2_attrs.push_back({0u, 2u});
+    c2_attrs.push_back({2u, 1u});
     loot::Constraint c2 = {1u, {1u,4u}, 7, c2_attrs};
 
-    std::vector<loot::ItemAttribute> c3_attrs;
-    c3_attrs.push_back({2u, {1u,2u}});
-    c3_attrs.push_back({0u, {2u,2u}});
+    std::vector<mc::ItemAttribute> c3_attrs;
+    c3_attrs.push_back({2u, 1u});
+    c3_attrs.push_back({0u, 2u});
     loot::Constraint c3 = {1u, {1u,1u}, 2, c3_attrs};
-    std::vector<loot::ItemAttribute> c4_attrs;
-    c4_attrs.push_back({2u, {3u,3u}});
-    c4_attrs.push_back({3u, {1u,2u}});
+    std::vector<mc::ItemAttribute> c4_attrs;
+    c4_attrs.push_back({2u, 3u});
+    c4_attrs.push_back({3u, 1u});
     loot::Constraint c4 = {1u, {1u,1u}, 2, c4_attrs};
 
     constraints1.push_back(c1);
@@ -56,10 +57,9 @@ static void test_multi_merge() {
     print_constraint_vec(constraints2);
 
     std::vector<loot::Constraint> expectedConstraints;
-    c1.slot_id = c3.slot_id = c4.slot_id = loot::SLOT_NONE;
-    c3.count_range = {2u,5u};
+    c1.slot_id = c4.slot_id = loot::SLOT_NONE;
+    c1.count_range = {4u,8u};
     expectedConstraints.push_back(c1);
-    expectedConstraints.push_back(c3);
     expectedConstraints.push_back(c4);
     print_constraint_vec(expectedConstraints);
 
@@ -70,7 +70,7 @@ static void test_multi_merge() {
                 equal_els++;
         }
     }
-    ASSERT_EQ(equal_els, 3);
+    ASSERT_EQ(equal_els, 2);
 }
 
 int LOOTINATOR_EXTERN tests_constraint_test(int argc, char** const argv) {

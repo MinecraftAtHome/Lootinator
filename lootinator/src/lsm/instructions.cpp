@@ -36,8 +36,13 @@ namespace lsm {
         this->tp = lsm::InstructionType::INS_CASE;       
     }
 
-    lsm::RollInstruction::RollInstruction(int roll_count) {
-        this->roll_count = roll_count;
+    /**
+     * @param min_roll_count The minimum number of generated loot rolls
+     * @param extra_roll_bound The nextInt bound used for random roll count choice, or 0 if the roll is constant.
+     */
+    lsm::RollInstruction::RollInstruction(int min_roll_count, int extra_roll_bound) {
+        this->min_roll_count = min_roll_count;
+        this->extra_roll_bound = extra_roll_bound;
         this->tp = lsm::InstructionType::INS_ROLL;
     }
 
@@ -100,7 +105,7 @@ namespace lsm {
     }
 
     void lsm::RollInstruction::debug(int indent_level) {
-        printf("%*s%s (%d)\n", indent_level, "", "ROLL START", this->roll_count);   
+        printf("%*s%s (%d)\n", indent_level, "", "ROLL START", this->min_roll_count);   
         for (auto child : this->children) {
             child->debug(indent_level + 3);
         }

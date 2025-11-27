@@ -102,7 +102,7 @@ namespace lsm {
             PoolInstruction* pool_block = new PoolInstruction(pool_idx);
             util::RangeInclusive<std::uint32_t> roll_range = util::RangeInclusive<std::uint32_t>::from_json(pool["rolls"]);     
             FunctionInstruction* advance = new FunctionInstruction(FunctionType::FUNC_LCG_ADVANCE, {roll_range.min != roll_range.max ? 1 : 0}); 
-            RollInstruction* roll_block = new RollInstruction(0/*TODO use actual data*/);
+            RollInstruction* roll_block = new RollInstruction(roll_range.min, roll_range.max - roll_range.min + 1);
             pool_block->add_instruction(advance);
             
             int entry_idx = 0;

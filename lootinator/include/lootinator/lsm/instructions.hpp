@@ -78,8 +78,9 @@ namespace lsm {
 
     class RollInstruction : public BlockInstruction {
         public:
-            int roll_count;
-            RollInstruction(int roll_count);
+            int min_roll_count;
+            int extra_roll_bound;
+            RollInstruction(int min_roll_count, int extra_roll_bound);
             void debug(int indent_level) override;
     };
 }

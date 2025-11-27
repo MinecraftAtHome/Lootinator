@@ -62,7 +62,7 @@ int main() {
 int main_lsmtest() {	
 	lsm::BlockInstruction program = lsm::BlockInstruction();
 	lsm::PoolInstruction pool0 = lsm::PoolInstruction(0);
-	lsm::RollInstruction roll_ins = lsm::RollInstruction(0);	
+	lsm::RollInstruction roll_ins = lsm::RollInstruction(0, 0);	
 	lsm::FunctionInstruction f = lsm::FunctionInstruction(lsm::FunctionType::FUNC_FAIL);
 	lsm::FunctionInstruction advance = lsm::FunctionInstruction(lsm::FunctionType::FUNC_LCG_ADVANCE, {1});
 	lsm::PoolAssertFunctionInstruction pool_assert0 = lsm::PoolAssertFunctionInstruction({0, 5}, lsm::Comparision::COMP_GE, {2});

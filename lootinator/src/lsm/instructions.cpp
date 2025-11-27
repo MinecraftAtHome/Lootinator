@@ -105,7 +105,7 @@ namespace lsm {
     }
 
     void lsm::RollInstruction::debug(int indent_level) {
-        printf("%*s%s (%d)\n", indent_level, "", "ROLL START", this->min_roll_count);   
+        printf("%*s%s (%d, %d)\n", indent_level, "", "ROLL START", this->min_roll_count, this->extra_roll_bound);   
         for (auto child : this->children) {
             child->debug(indent_level + 3);
         }

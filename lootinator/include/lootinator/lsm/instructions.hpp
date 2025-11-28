@@ -42,7 +42,7 @@ namespace lsm {
 
     class PoolAssertFunctionInstruction : public Instruction {
         public:
-            std::vector<int> lvalues;
+            std::vector<int> lvalues;// enchant id, enchant level?
             Comparision comp;
             std::vector<int> rvalues; // FIXME: not sure why this is a vector... it should just be one value
             PoolAssertFunctionInstruction(std::vector<int> lvalues, Comparision comp, std::vector<int> rvalues);

@@ -23,6 +23,8 @@ namespace lsm {
         for (auto &assert : this->assertions) {
             assert.debug();
         }
+        std::cout << "asserts = " << this->assertions.size() << '\n';
+        util::debug(std::cout, filter_on_affected_assertions);
     }
 
     void PoolAsserts::debug() {

@@ -172,14 +172,40 @@ namespace lsm {
         pool_asserts->push_back(pool_assert);
     }
 
+    static bool matches_filter_signature(std::vector<int> assertion_lvals, std::vector<int> filter_on_lvals) {
+        size_t min_length = std::min(assertion_lvals.size(), filter_on_lvals.size());
+        for (size_t i = 0; i < min_length; i++) {
+            if (assertion_lvals[i] != filter_on_lvals[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     void lsm::CaseInstruction::compile_pass2(void *data, int &num_assertions) {
         lsm::PoolAsserts *pool_assert = reinterpret_cast<lsm::PoolAsserts *>(data);
         lsm::AssertionGroup group;
+        lsm::FunctionInstruction* filter_on_func = nullptr;
+
         for (auto &child : this->children) {
+            lsm::FunctionInstruction* func_child = dynamic_cast<lsm::FunctionInstruction*>(child);
+            if (func_child != nullptr && func_child->func_tp == FUNC_FILTER_ON) {
+                filter_on_func = func_child;
+            }
             child->compile_pass2(&group, num_assertions);
         }
         group.sort();
-        pool_assert->groups.push_back(group);    
+        pool_assert->groups.push_back(group);
+
+        if (filter_on_func != nullptr) {
+            int assertion_index = 0;
+            for (auto &assertion : group.assertions) {
+                if (matches_filter_signature(assertion.ref->lvalues, filter_on_func->args)) {
+                    group.filter_on_affected_assertions.push_back(assertion_index);
+                }
+                assertion_index++;
+            }
+        }
     }
 
     void lsm::PoolAssertFunctionInstruction::compile_pass2(void *data, int &num_assertions) {

@@ -10,8 +10,7 @@ namespace lsm {
         std::vector<lsm::BlockInstruction*> programs;
         for (auto& pool_filter : ltcl.available_filters) {
             lsm::BlockInstruction* main_block = new lsm::BlockInstruction();
-            // add_filter_on(ltcl, pool_filter, main_block);
-            add_pool_forward_filters(ltcl, constraints, pool_filter, merged_constraints, main_block);
+            compile_constraints(ltcl, constraints, pool_filter, merged_constraints, main_block);
             programs.push_back(main_block);
         }
 
@@ -23,22 +22,6 @@ namespace lsm {
         out.push_back(bound);
         out.push_back(min_incl);
         out.push_back(max_incl);
-    }
-
-    void add_filter_on(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, lsm::BlockInstruction *main_block)
-    {
-        // TODO
-
-        //filter-on (bound1 min1 max1) (bound2 min2 max2) ...
-        // - enchant_randomly enchant id -> enchant index for the loot function ()
-        // - set_count item count -> nextInt output that generates that item count (~)
-
-        // for enchant randomly:
-        // - version range -> enchantment order mapping (V)
-        // - check which enchantment can go on item (V)
-
-
-        // main_block->add_instruction(new FunctionInstruction(FunctionType::FUNC_FILTER_ON, next_int_vector));
     }
 
     util::RangeInclusive<uint32_t> get_weight_range_for_item(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter) {
@@ -94,7 +77,7 @@ namespace lsm {
         return next_int_vector;
     }
 
-    void add_pool_forward_filters(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const loot::PoolFilter &pool_filter, const std::vector<loot::Constraint> &merged_constraints, lsm::BlockInstruction *main_block)
+    void compile_constraints(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const loot::PoolFilter &pool_filter, const std::vector<loot::Constraint> &merged_constraints, lsm::BlockInstruction *main_block)
     {
         int pool_idx = 0;
         for (auto& pool : ltcl.loot_table.data["pools"])

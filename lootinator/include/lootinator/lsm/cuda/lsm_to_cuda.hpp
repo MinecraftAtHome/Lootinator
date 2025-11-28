@@ -14,11 +14,6 @@ namespace lsm {
         int size;
     };
 
-    struct PassInfo {
-        std::vector<lsm::Function> function_refs;
-        std::vector<lsm::PoolAssertFunctionInstruction *> pool_asserts;
-    };
-
     class SharedMem {
         public:
             std::vector<int> shared;
@@ -32,7 +27,7 @@ namespace lsm {
             int get_function_start(Function function_ref);                
     };
 
-    void lsm_to_cuda(loot::LootTableConstraintList &ltcl, lsm::BlockInstruction *program, std::string filename);
+    void lsm_to_cuda(loot::LootTableConstraintList &ltcl, Program &program, std::string output_file);
     void compile_roll(loot::LootTableConstraintList &ltcl, PoolInstruction *instruction);
 }
 #endif

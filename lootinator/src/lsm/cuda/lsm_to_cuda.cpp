@@ -72,15 +72,14 @@ namespace lsm {
         fprintf(stdout, "}\n");
     }                   
 
-    void lsm_to_cuda(loot::LootTableConstraintList &ltcl, BlockInstruction *program, std::string output_file) {
+    void lsm_to_cuda(loot::LootTableConstraintList &ltcl, Program &program, std::string output_file) {
         SharedMem smem = create_shared_memory(ltcl);
-        program->debug(0);
+        program.main_block->debug(0);
 
         // pass 1
-        std::vector<mc::LootFunctionData> function_data;
-        program->compile_pass1(ltcl, function_data);
+        program.main_block->compile_pass1(ltcl, program.pass_info.function_data);
 
-        for (auto &function : function_data) {
+        for (auto &function : program.pass_info.function_data) {
             if (function.type == mc::LootFunctionType::IGNORED) {
                 continue;
             }
@@ -95,11 +94,9 @@ namespace lsm {
         }
         
         // pass 2
-        int num_assertions = 0;
-        std::vector<lsm::PoolAsserts> pool_asserts;
-        program->compile_pass2((void *)&pool_asserts, num_assertions);
+        program.main_block->compile_pass2((void *)&program.pass_info.pool_asserts, program.pass_info.num_assertions);
 
-        for (auto &assert : pool_asserts) {
+        for (auto &assert : program.pass_info.pool_asserts) {
             assert.debug();
         }
 

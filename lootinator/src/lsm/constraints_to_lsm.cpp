@@ -1,17 +1,20 @@
 #include "lootinator/lsm/constraints_to_lsm.hpp"
+#include "lootinator/lsm/program.hpp"
 #include <iostream>
 
 namespace lsm {
-    std::vector<lsm::BlockInstruction*> get_lsm_representations(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints)
+    std::vector<lsm::Program> get_lsm_representations(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints)
     {
         std::vector<loot::Constraint> merged_constraints;
         loot::merge_contraints(constraints, merged_constraints);
 
-        std::vector<lsm::BlockInstruction*> programs;
+        std::vector<lsm::Program> programs;
         for (auto& pool_filter : ltcl.available_filters) {
             lsm::BlockInstruction* main_block = new lsm::BlockInstruction();
-            compile_constraints(ltcl, constraints, pool_filter, merged_constraints, main_block);
-            programs.push_back(main_block);
+            lsm::PassInfo pass_info = lsm::PassInfo(pool_filter);
+            lsm::Program program = lsm::Program(main_block, pass_info);
+            compile_constraints(ltcl, constraints, pool_filter, merged_constraints, program);
+            programs.push_back(program);
         }
 
         return programs;
@@ -77,8 +80,7 @@ namespace lsm {
         return next_int_vector;
     }
 
-    void compile_constraints(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const loot::PoolFilter &pool_filter, const std::vector<loot::Constraint> &merged_constraints, lsm::BlockInstruction *main_block)
-    {
+    void compile_constraints(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const loot::PoolFilter &pool_filter, const std::vector<loot::Constraint> &merged_constraints, lsm::Program &program) {
         int pool_idx = 0;
         for (auto& pool : ltcl.loot_table.data["pools"])
         {
@@ -109,7 +111,7 @@ namespace lsm {
             }
 
             pool_block->add_instruction(roll_block);
-            main_block->add_instruction(pool_block);
+            program.main_block->add_instruction(pool_block);
             pool_idx++;
         }
     }

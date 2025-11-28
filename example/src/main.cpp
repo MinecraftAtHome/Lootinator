@@ -43,13 +43,12 @@ int main() {
         std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
 		ltcl.initialize_constraints(constr);
 
-		std::vector<lsm::BlockInstruction*> programs = lsm::get_lsm_representations(ltcl, constr);
+		std::vector<lsm::Program> programs = lsm::get_lsm_representations(ltcl, constr);
 		
 		int prog_idx = 0;
-		for (auto& prog : programs)
-		{	
+		for (auto& prog : programs) {	
 			lsm::lsm_to_cuda(ltcl, prog, "output_" + std::to_string(prog_idx));
-			delete prog;
+			delete prog.main_block; // TODO: one day we will use unique pointers :)
 			prog_idx++;
 		}
     } 

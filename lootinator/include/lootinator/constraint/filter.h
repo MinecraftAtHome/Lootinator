@@ -9,6 +9,7 @@ namespace loot {
     static const int MULTI_POOL_MATCH = -2;
 
     enum ReversalType {
+        BRUTEFORCE,
         ITEM_ONLY,
         ITEM_AND_ATTRIBUTE,
         ITEM_AND_ATTRIBUTE_AND_LEVEL

@@ -50,7 +50,7 @@ namespace lsm {
         return util::RangeInclusive<uint32_t>(0,0);
     }
 
-    std::vector<int> get_next_int_vector(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter) {
+    std::vector<int> get_next_int_vector(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, lsm::Program& program) {
         bool entry_set_count_advancement = false;
         auto& entry = ltcl.loot_table.data["pools"][pool_filter.pool_idx]["entries"][pool_filter.entry_idx];
         if (entry.contains("functions")) {
@@ -77,8 +77,8 @@ namespace lsm {
                 }
             }
         }
-        
-        return next_int_vector;
+
+        // CONTINUE HERE KRIS
     }
 
     void compile_constraints(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const loot::PoolFilter &pool_filter, const std::vector<loot::Constraint> &merged_constraints, lsm::Program &program) {
@@ -99,7 +99,7 @@ namespace lsm {
                 for (int func_idx = 0; func_idx < entry["functions"].size(); func_idx++)
                 {
                     if (entry_idx == pool_filter.entry_idx) {
-                        std::vector<int> next_int_vector = get_next_int_vector(ltcl, pool_filter);
+                        std::vector<int> next_int_vector = get_next_int_vector(ltcl, pool_filter, program);
                         case_ins->add_instruction(new FunctionInstruction(FunctionType::FUNC_FILTER_ON, next_int_vector));
                     }
                     FunctionInstruction* func_ins = new FunctionInstruction(FunctionType::FUNC_FUNC, {pool_idx, entry_idx, func_idx});

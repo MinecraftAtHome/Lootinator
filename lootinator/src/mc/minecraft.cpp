@@ -495,7 +495,7 @@ namespace mc {
         }
     }
 
-    mc::Enchantment get_enchantment_from_attribute(ItemAttribute &attr) {
+    mc::Enchantment get_enchantment_from_attribute(const ItemAttribute &attr) {
         return (mc::Enchantment)attr.type;
     }
 

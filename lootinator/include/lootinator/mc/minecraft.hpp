@@ -138,7 +138,7 @@ namespace mc {
 
     std::vector<mc::Enchantment> get_enchantments_for_version(const mc::VersionRange version_range);
     // NOTE: when we have new item attribute types, they need to be added here!
-    mc::Enchantment get_enchantment_from_attribute(ItemAttribute &attr);
+    mc::Enchantment get_enchantment_from_attribute(const ItemAttribute &attr);
 
     std::string item_type_to_string(mc::ItemType type);
     mc::ItemType string_to_item_type(const std::string& item_type_string);

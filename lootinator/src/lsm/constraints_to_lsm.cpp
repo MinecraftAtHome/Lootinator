@@ -20,13 +20,6 @@ namespace lsm {
         return programs;
     }
 
-    static void add_next_int(int bound, int min_incl, int max_incl, std::vector<int>& out)
-    {
-        out.push_back(bound);
-        out.push_back(min_incl);
-        out.push_back(max_incl);
-    }
-
     util::RangeInclusive<uint32_t> get_weight_range_for_item(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter) {
         int pool_idx = pool_filter.pool_idx;
         const auto& entries = ltcl.loot_table.data["pools"][pool_idx]["entries"];
@@ -64,21 +57,36 @@ namespace lsm {
         }
 
         std::vector<int> next_int_vector;
-        if (pool_filter.reversal_type != lsm::KernelStructureType::BRUTEFORCE)
+
+        // TODO when new types of kernel structures are added, they need to be handled here
+        if (pool_filter.reversal_type == lsm::KernelStructureType::STATE_PREDICTION_WEIGHT || pool_filter.reversal_type == lsm::KernelStructureType::ADVANCED_REVERSAL_WEIGHT_AND_ENCHANTMENT)
         {
+            // TODO move this to lsm_to_cuda or whatever part computes lsm::Program filter-on data
+
             //std::cerr << "poolidx = " << pool_filter.pool_idx << " vecsize = " << ltcl.loot_table.total_weights.size() << "\n";
-            int total_weight = ltcl.loot_table.total_weights[pool_filter.pool_idx];
-            util::RangeInclusive<uint32_t> weight_range = get_weight_range_for_item(ltcl, pool_filter);
-            for (int i = 0; i < pool_filter.entry_count; i++)
+            // int total_weight = ltcl.loot_table.total_weights[pool_filter.pool_idx];
+            // util::RangeInclusive<uint32_t> weight_range = get_weight_range_for_item(ltcl, pool_filter);
+            // for (int i = 0; i < pool_filter.entry_count; i++)
+            // {
+            //     add_next_int(total_weight, weight_range.min, weight_range.max, next_int_vector);
+            //     if (entry_set_count_advancement) {
+            //         add_next_int(0, 1, 1, next_int_vector); // skip 1 lcg state
+            //     }
+            // }
+        }
+        if (pool_filter.attribute.get_category() == mc::AttributeCategory::ENCHANTMENT_ATTRIBUTE)
+        {
+            if (pool_filter.reversal_type == lsm::KernelStructureType::ADVANCED_REVERSAL_ENCHANTMENT_AND_LEVEL || pool_filter.reversal_type == lsm::KernelStructureType::ADVANCED_REVERSAL_WEIGHT_AND_ENCHANTMENT)
             {
-                add_next_int(total_weight, weight_range.min, weight_range.max, next_int_vector);
-                if (entry_set_count_advancement) {
-                    add_next_int(0, 1, 1, next_int_vector); // skip 1 lcg state
-                }
+                next_int_vector.push_back(static_cast<int>(mc::get_enchantment_from_attribute(pool_filter.attribute)));
+                // TODO add proper data to the Program struct
+                // it needs an rng representation of the enchantment
+            }
+            if (pool_filter.reversal_type == lsm::KernelStructureType::ADVANCED_REVERSAL_ENCHANTMENT_AND_LEVEL)
+            {
+                next_int_vector.push_back(pool_filter.attribute.level);
             }
         }
-
-
         
         return next_int_vector;
     }

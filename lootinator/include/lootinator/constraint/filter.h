@@ -24,6 +24,7 @@ namespace loot {
 
         PoolFilter(lsm::KernelStructureType type, int pool_idx, int entry_idx, int entry_count, mc::ItemAttribute attribute);
         void compute_filter_score(const LootTable& loot_table);
+        bool is_equivalent_to(const PoolFilter& other) const;
         bool operator==(const PoolFilter& other) const;
         bool operator!=(const PoolFilter& other) const;
 

@@ -47,6 +47,22 @@ namespace loot {
         filter_score = weight_score;
     }
 
+    bool PoolFilter::is_equivalent_to(const PoolFilter& other) const {
+        if (reversal_type != other.reversal_type)
+            return false;
+            
+        switch (reversal_type)
+        {
+        case lsm::KernelStructureType::STATE_PREDICTION_WEIGHT:
+            return pool_idx == other.pool_idx && entry_idx == other.entry_idx;
+        case lsm::KernelStructureType::ADVANCED_REVERSAL_ENCHANTMENT_AND_LEVEL:
+            return (*this) == other;
+        case lsm::KernelStructureType::ADVANCED_REVERSAL_WEIGHT_AND_ENCHANTMENT:
+            return pool_idx == other.pool_idx && entry_idx == other.entry_idx && attribute.type == other.attribute.type;
+        }
+        return false;
+    }
+
     bool PoolFilter::operator==(const PoolFilter &other) const {
         return reversal_type == other.reversal_type
             && pool_idx == other.pool_idx
@@ -106,12 +122,15 @@ namespace loot {
 
         // deduplicate in O(n^3) cause why not
         for (int i = 0; i < available_filters.size(); i++) {
-            for (int j = 0; j < i; j++) {
+            for (int j = 0; j < available_filters.size(); j++) {
                 if (i == j) continue;
-                if (available_filters.at(i) == available_filters.at(j)) {
+                if (available_filters.at(i).is_equivalent_to(available_filters.at(j))) {
+                    printf("%d %d %d\n", available_filters[i].pool_idx, available_filters[i].entry_idx, available_filters[i].reversal_type);
                     available_filters.erase(available_filters.begin() + i);
+                    if (i < j) {
+                        j--;
+                    }
                     i--;
-                    j--;
                 }
             }
         }
@@ -130,7 +149,6 @@ namespace loot {
         const util::RangeInclusive<uint32_t> pool_rolls = util::RangeInclusive<uint32_t>::from_json(pool["rolls"]);
 
         lsm::KernelStructureType rtypes[] = {
-            lsm::KernelStructureType::BRUTEFORCE, 
             lsm::KernelStructureType::STATE_PREDICTION_WEIGHT, 
             lsm::KernelStructureType::ADVANCED_REVERSAL_ENCHANTMENT_AND_LEVEL, 
             lsm::KernelStructureType::ADVANCED_REVERSAL_WEIGHT_AND_ENCHANTMENT
@@ -188,18 +206,18 @@ namespace loot {
         available_filters.push_back(pool_filter); // state prediction
 
         // try adding a consecutive multi-item filter (for 2 or 3 rolls)
-        if (roll_range.min > 1) {
-            // X - X - X - ...
-            if (roll_range.min > pool_rolls.max / 2) {
-                pool_filter.entry_count = 2;
-                available_filters.push_back(pool_filter); // advanced reversal on 2 items
-            }
-            // X X - X X - ...
-            if (roll_range.min > pool_rolls.max*2 / 3) {
-                pool_filter.entry_count = 3;
-                available_filters.push_back(pool_filter); // advanced reversal on 3 items
-            }
-        }
+        // if (roll_range.min > 1) {
+        //     // X - X - X - ...
+        //     if (roll_range.min > pool_rolls.max / 2) {
+        //         pool_filter.entry_count = 2;
+        //         available_filters.push_back(pool_filter); // advanced reversal on 2 items
+        //     }
+        //     // X X - X X - ...
+        //     if (roll_range.min > pool_rolls.max*2 / 3) {
+        //         pool_filter.entry_count = 3;
+        //         available_filters.push_back(pool_filter); // advanced reversal on 3 items
+        //     }
+        // }
 
         // TODO add epic's thing
     }

@@ -2,18 +2,12 @@
 #define LOOTINATOR_CONSTRAINT_FILTER_H
 
 #include "lootinator/constraint/constraint.h"
+#include "lootinator/lsm/lsm.hpp"
 #include "lootinator/mc/minecraft.hpp"
 
 namespace loot {
     static const int NO_POOL_MATCH = -1;
     static const int MULTI_POOL_MATCH = -2;
-
-    enum ReversalType {
-        BRUTEFORCE,
-        ITEM_ONLY,
-        ITEM_AND_ATTRIBUTE,
-        ITEM_AND_ATTRIBUTE_AND_LEVEL
-    };
 
     /*
     Describes the actual data the kernel will use for the initial filter. Unlike constraints,
@@ -21,14 +15,14 @@ namespace loot {
     The item's properties will all be directly mapped to code filtering them.
     */
     struct PoolFilter {
-        ReversalType reversal_type; // scope of reversal
+        lsm::KernelStructureType reversal_type; // scope of reversal
         int pool_idx; // for which pool the filter is defined
         int entry_idx; // which entry the filter targets
         int entry_count; // how many instances of the entry are targetted
         mc::ItemAttribute attribute; // required attributes of the entry
         float filter_score; // heuristic performance estimate, bigger = faster
 
-        PoolFilter(ReversalType type, int pool_idx, int entry_idx, int entry_count, mc::ItemAttribute attribute);
+        PoolFilter(lsm::KernelStructureType type, int pool_idx, int entry_idx, int entry_count, mc::ItemAttribute attribute);
         void compute_filter_score(const LootTable& loot_table);
         bool operator==(const PoolFilter& other) const;
         bool operator!=(const PoolFilter& other) const;
@@ -51,9 +45,9 @@ namespace loot {
     private:
         void add_possible_filters(const std::vector<loot::Constraint>& constraints, const loot::Constraint& main_constraint, int pool_idx);
         void add_all_filter_variants(const nlohmann::json &pool, const util::RangeInclusive<uint32_t> &pool_rolls, const loot::PoolFilter &base_filter, const loot::Constraint &aggregated_constraint);
-        loot::Constraint aggregate_constraints(const std::vector<loot::Constraint> &constraints, const loot::Constraint &main_constraint, loot::ReversalType type);
-        bool constraint_applicable(const loot::Constraint& constr, ReversalType type);
-        bool constraints_match_for_reversal_type(const loot::Constraint& first, const loot::Constraint& second, loot::ReversalType type) const;
+        loot::Constraint aggregate_constraints(const std::vector<loot::Constraint> &constraints, const loot::Constraint &main_constraint, lsm::KernelStructureType type);
+        bool constraint_applicable(const loot::Constraint& constr, lsm::KernelStructureType type);
+        bool constraints_match_for_reversal_type(const loot::Constraint& first, const loot::Constraint& second, lsm::KernelStructureType type) const;
         util::RangeInclusive<uint32_t> get_roll_range(const nlohmann::json& pool, const util::RangeInclusive<uint32_t>& pool_rolls, const loot::Constraint& aggregated_constraint) const;
         int find_matching_loot_pool(const loot::Constraint& constr) const;
         //bool entry_attributes_match(const loot::Constraint& constr, const nlohmann::json& entry) const;

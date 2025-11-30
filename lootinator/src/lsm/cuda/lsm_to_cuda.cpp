@@ -80,7 +80,7 @@ namespace lsm {
         program.main_block->compile_pass1(ltcl, program.pass_info.function_data);
 
         for (auto &function : program.pass_info.function_data) {
-            if (function.type == mc::LootFunctionType::IGNORED) {
+            if (function.type == lsm::LootFunctionType::IGNORED) {
                 continue;
             }
             std::cout << function.type << "\n"; 

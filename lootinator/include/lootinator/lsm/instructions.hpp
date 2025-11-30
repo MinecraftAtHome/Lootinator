@@ -25,7 +25,7 @@ namespace lsm {
             virtual void debug(int indent_level);
             virtual ~Instruction() {};
             // note: these need be implemented! right now uncommenting this will result in an error!
-            virtual void compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data);
+            virtual void compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<lsm::LootFunctionData> &function_data);
             virtual void compile_pass2(void *data, int &num_assertions);
             // virtual void compile_pass3();
     };
@@ -37,7 +37,7 @@ namespace lsm {
             FunctionInstruction(FunctionType func_tp);
             FunctionInstruction(FunctionType func_tp, std::vector<int> args);
             void debug(int indent_level) override;
-            void compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) override;
+            void compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<lsm::LootFunctionData> &function_data) override;
     };
 
     class PoolAssertFunctionInstruction : public Instruction {
@@ -57,7 +57,7 @@ namespace lsm {
             void add_instruction(Instruction *ins);
             virtual ~BlockInstruction() override;
             void debug(int indent_level) override;
-            void compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) override;
+            void compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<lsm::LootFunctionData> &function_data) override;
             void compile_pass2(void *data, int &num_assertions) override;
     };
 

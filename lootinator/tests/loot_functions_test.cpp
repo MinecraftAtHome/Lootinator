@@ -10,14 +10,14 @@ static void smoke_test()
     {
         loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_21_TO_1_21_9);
         lsm::Function function_ref = {0, 7, 0};
-        mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
-        ASSERT_NE(data.type, mc::LootFunctionType::IGNORED);
+        lsm::LootFunctionData data = lsm::parse_loot_function_data(lt, function_ref);
+        ASSERT_NE(data.type, lsm::LootFunctionType::IGNORED);
     }
     {
         loot::LootTable lt("../../lootinator/tests/data/end_city_1_21_8.json", mc::VersionRange::MC_1_21_TO_1_21_9);
         lsm::Function function_ref = {0, 10, 0};
-        mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
-        ASSERT_NE(data.type, mc::LootFunctionType::IGNORED);
+        lsm::LootFunctionData data = lsm::parse_loot_function_data(lt, function_ref);
+        ASSERT_NE(data.type, lsm::LootFunctionType::IGNORED);
     }
 }
 
@@ -25,8 +25,8 @@ static void correctness_test_enchant_randomly_list()
 {
     loot::LootTable lt("../../lootinator/tests/data/bastion_1_17_1.json", mc::VersionRange::MC_1_16_TO_1_20);
     lsm::Function function_ref = {0, 10, 0};
-    mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
-    ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_RANDOMLY);
+    lsm::LootFunctionData data = lsm::parse_loot_function_data(lt, function_ref);
+    ASSERT_EQ(data.type, lsm::LootFunctionType::ENCHANT_RANDOMLY);
 
     std::vector<mc::Enchantment> target_order({mc::SOUL_SPEED});
     std::vector<int> target_shmem({3});
@@ -39,8 +39,8 @@ static void correctness_test_enchant_randomly_natural()
 {
     loot::LootTable lt("../../lootinator/tests/data/ruined_portal.json", mc::VersionRange::MC_1_21_TO_1_21_9);
     lsm::Function function_ref = {0, 14, 0};    
-    mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
-    ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_RANDOMLY);
+    lsm::LootFunctionData data = lsm::parse_loot_function_data(lt, function_ref);
+    ASSERT_EQ(data.type, lsm::LootFunctionType::ENCHANT_RANDOMLY);
 
     std::vector<mc::Enchantment> target_order({
         mc::PROTECTION, mc::FIRE_PROTECTION, mc::BLAST_PROTECTION, mc::PROJECTILE_PROTECTION, 
@@ -57,8 +57,8 @@ static void correctness_test_enchant_with_levels()
 {
     loot::LootTable lt("../../lootinator/tests/data/end_city_1_21_8.json", mc::VersionRange::MC_1_21_TO_1_21_9);
     lsm::Function function_ref = {0, 10, 0};        
-    mc::LootFunctionData data = mc::parse_loot_function_data(lt, function_ref);
-    ASSERT_EQ(data.type, mc::LootFunctionType::ENCHANT_WITH_LEVELS);
+    lsm::LootFunctionData data = lsm::parse_loot_function_data(lt, function_ref);
+    ASSERT_EQ(data.type, lsm::LootFunctionType::ENCHANT_WITH_LEVELS);
 
     const int target_minlevel = 20, target_maxlevel = 39;
     ASSERT_EQ(target_minlevel, data.enchant_with_levels.min_level);

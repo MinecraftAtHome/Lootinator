@@ -8,6 +8,7 @@ add_library(lootinator
 	include/lootinator/lsm/cuda/lsm_to_cuda.hpp
 	include/lootinator/lsm/function_ref.hpp
 	include/lootinator/lsm/instructions.hpp
+	include/lootinator/lsm/lsm.hpp
 	include/lootinator/lsm/parser.hpp
 	include/lootinator/lsm/passes/loot_asserts.hpp
 	include/lootinator/lsm/passes/loot_functions.hpp

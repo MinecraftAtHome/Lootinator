@@ -1,7 +1,7 @@
-#ifndef LOOTINATOR_LOOTINATOR_H
-#define LOOTINATOR_LOOTINATOR_H
+#ifndef LOOTINATOR_LSM_LSM_H
+#define LOOTINATOR_LSM_LSM_H
 
-namespace loot {
+namespace lsm {
 	enum KernelStructureType {
         /**
          * This name speaks for itself.

@@ -1,6 +1,7 @@
 #include "lootinator/constraint/filter.h"
 #include "lootinator/utility/mth.h"
 #include "lootinator/mc/minecraft.hpp"
+#include "lootinator/lsm/lsm.hpp"
 
 #include <iostream>
 
@@ -30,7 +31,7 @@ namespace loot {
         return pool_match;
     }
 
-    PoolFilter::PoolFilter(ReversalType type, int pool_idx, int entry_idx, int entry_count, mc::ItemAttribute attribute) 
+    PoolFilter::PoolFilter(lsm::KernelStructureType type, int pool_idx, int entry_idx, int entry_count, mc::ItemAttribute attribute) 
         : attribute(attribute), reversal_type(type), pool_idx(pool_idx), entry_idx(entry_idx), entry_count(entry_count), filter_score(0.0f) {}
 
     void PoolFilter::compute_filter_score(const LootTable &loot_table)
@@ -128,7 +129,13 @@ namespace loot {
         const nlohmann::json& pool = loot_table.data["pools"][pool_idx];
         const util::RangeInclusive<uint32_t> pool_rolls = util::RangeInclusive<uint32_t>::from_json(pool["rolls"]);
 
-        ReversalType rtypes[3] = {ReversalType::ITEM_ONLY, ReversalType::ITEM_AND_ATTRIBUTE, ReversalType::ITEM_AND_ATTRIBUTE_AND_LEVEL};
+        lsm::KernelStructureType rtypes[] = {
+            lsm::KernelStructureType::BRUTEFORCE, 
+            lsm::KernelStructureType::STATE_PREDICTION_WEIGHT, 
+            lsm::KernelStructureType::ADVANCED_REVERSAL_ENCHANTMENT_AND_LEVEL, 
+            lsm::KernelStructureType::ADVANCED_REVERSAL_WEIGHT_AND_ENCHANTMENT
+        };
+
         for (auto reversal_type : rtypes) {
             if (!constraint_applicable(main_constraint, reversal_type))
                 continue;
@@ -197,7 +204,7 @@ namespace loot {
         // TODO add epic's thing
     }
 
-    loot::Constraint LootTableConstraintList::aggregate_constraints(const std::vector<loot::Constraint> &constraints, const loot::Constraint &main_constraint, loot::ReversalType reversal_type)
+    loot::Constraint LootTableConstraintList::aggregate_constraints(const std::vector<loot::Constraint> &constraints, const loot::Constraint &main_constraint, lsm::KernelStructureType reversal_type)
     {
         loot::Constraint aggregate{main_constraint.item, {0,0}, loot::SLOT_NONE, main_constraint.attributes};
         for (const auto& con : constraints) {
@@ -208,8 +215,8 @@ namespace loot {
         return aggregate;
     }
 
-    bool LootTableConstraintList::constraint_applicable(const loot::Constraint &constr, ReversalType type) {
-        return type == ReversalType::ITEM_ONLY || !constr.attributes.empty();
+    bool LootTableConstraintList::constraint_applicable(const loot::Constraint &constr, lsm::KernelStructureType type) {
+        return type == lsm::KernelStructureType::STATE_PREDICTION_WEIGHT || !constr.attributes.empty();
     }
 
     util::RangeInclusive<uint32_t> LootTableConstraintList::get_roll_range(const nlohmann::json &pool, const util::RangeInclusive<uint32_t>& pool_rolls, const loot::Constraint &aggregated_constraint) const {
@@ -234,12 +241,16 @@ namespace loot {
     }
 
     // FIXME assumes the first constraint has only 1 relevant attribute and it's at index 0
-    bool LootTableConstraintList::constraints_match_for_reversal_type(const loot::Constraint &main_constraint, const loot::Constraint &second, loot::ReversalType type) const
+    bool LootTableConstraintList::constraints_match_for_reversal_type(const loot::Constraint &main_constraint, const loot::Constraint &second, lsm::KernelStructureType type) const
     {
         switch (type) {
-            case ReversalType::ITEM_ONLY:
+            case lsm::KernelStructureType::BRUTEFORCE:
+                return false; // this should never happen, bruteforce is eliminated as an option before we enter this func
+
+            case lsm::KernelStructureType::STATE_PREDICTION_WEIGHT:
                 return main_constraint.item == second.item;
-            case ReversalType::ITEM_AND_ATTRIBUTE: {
+
+            case lsm::KernelStructureType::ADVANCED_REVERSAL_WEIGHT_AND_ENCHANTMENT: {
                 auto& main_attr = main_constraint.attributes.at(0);
                 for (auto& attr : main_constraint.attributes) {
                     if (main_attr.type == attr.type)
@@ -247,7 +258,8 @@ namespace loot {
                 }
                 return false;
             }
-            case ReversalType::ITEM_AND_ATTRIBUTE_AND_LEVEL: {
+
+            case lsm::KernelStructureType::ADVANCED_REVERSAL_ENCHANTMENT_AND_LEVEL: {
                 auto& main_attr = main_constraint.attributes.at(0);
                 for (auto& attr : main_constraint.attributes) {
                     if (main_attr.type == attr.type && main_attr.level == attr.level)

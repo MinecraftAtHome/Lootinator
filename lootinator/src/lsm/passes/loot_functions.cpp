@@ -2,23 +2,23 @@
 #include "lootinator/utility/range.h"
 
 
-namespace mc {
+namespace lsm {
     // forward declarations of static functions
-    static void create_list_enchant_randomly_vector(mc::LootFunctionData& lfd, const nlohmann::json &list);
-    static void create_enchant_randomly_vector(mc::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, mc::ItemType item_type, const nlohmann::json &function);
-    static void create_skip_enchant_with_levels_vector(mc::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, const std::string& item_name, const nlohmann::json &function);
+    static void create_list_enchant_randomly_vector(lsm::LootFunctionData& lfd, const nlohmann::json &list);
+    static void create_enchant_randomly_vector(lsm::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, mc::ItemType item_type, const nlohmann::json &function);
+    static void create_skip_enchant_with_levels_vector(lsm::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, const std::string& item_name, const nlohmann::json &function);
     static int get_enchant_with_levels_groups(const std::vector<mc::Enchantment>& enchants, int level, mc::ItemType item_type, bool allow_treasure);
 
-    mc::LootFunctionData::LootFunctionData() : type(mc::LootFunctionType::IGNORED) {}
+    lsm::LootFunctionData::LootFunctionData() : type(lsm::LootFunctionType::IGNORED) {}
 
     /**
      * Parses enchantment function data from provided json strings. If the operation fails or the function
-     * is not of type `enchant_randomly` or `enchant_with_levels`, `LootFunctionData::type` is set to `IGNORED`.
+     * is not of type `enchant_randomly` or `enchant_with_levels`, `lsm::LootFunctionData::type` is set to `IGNORED`.
      * In that case, all other contents of the returned struct should be ignored.
      */
-    mc::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, lsm::Function function_ref)
+    lsm::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, lsm::Function function_ref)
     {
-        mc::LootFunctionData lfd;
+        lsm::LootFunctionData lfd;
         lfd.function_ref = function_ref;
 
         int function_id = function_ref.function_id;
@@ -61,14 +61,14 @@ namespace mc {
             create_skip_enchant_with_levels_vector(lfd, all_enchants, item_name, func);
         }
         else if (function_name == "set_count") {
-            lfd.type = mc::LootFunctionType::SET_COUNT;
+            lfd.type = lsm::LootFunctionType::SET_COUNT;
 
             util::RangeInclusive<int> range = util::RangeInclusive<int>::from_json(func["count"]);
             lfd.set_count.min = range.min;
             lfd.set_count.max = range.max;
         }
         else if (function_name == "set_damage") {
-            lfd.type = mc::LootFunctionType::APPLY_DAMAGE;
+            lfd.type = lsm::LootFunctionType::APPLY_DAMAGE;
         }
         
         return lfd;
@@ -81,7 +81,7 @@ namespace mc {
      * The order is stored outside of shared memory and used by the compiler to map enchantment contraints to function-specific indices.
      * This variant of `enchant_randomly` uses a user-provided list of applicable enchantments.
      */
-    static void create_list_enchant_randomly_vector(mc::LootFunctionData& lfd, const nlohmann::json &list) 
+    static void create_list_enchant_randomly_vector(lsm::LootFunctionData& lfd, const nlohmann::json &list) 
     {
         for (auto& entry : list) {
             if (!entry.is_string()) {
@@ -97,7 +97,7 @@ namespace mc {
             lfd.shared_mem.push_back(max_level);
             lfd.enchant_randomly.enchantment_order.push_back(ench);
         }
-        lfd.type = mc::LootFunctionType::ENCHANT_RANDOMLY;
+        lfd.type = lsm::LootFunctionType::ENCHANT_RANDOMLY;
     }
 
     /**
@@ -107,7 +107,7 @@ namespace mc {
      * The order is stored outside of shared memory and used by the compiler to map enchantment contraints to function-specific indices.
      * This variant of `enchant_randomly` uses the standard Minecraft enchantment order for the appropriate version range.
      */
-    static void create_enchant_randomly_vector(mc::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, mc::ItemType item, const nlohmann::json &function) 
+    static void create_enchant_randomly_vector(lsm::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, mc::ItemType item, const nlohmann::json &function) 
     {
         bool allow_treasure = function.contains("treasure") ? (bool)function["treasure"] : true;
 
@@ -122,7 +122,7 @@ namespace mc {
                 lfd.enchant_randomly.enchantment_order.push_back(ench);
             }
         }
-        lfd.type = mc::LootFunctionType::ENCHANT_RANDOMLY;
+        lfd.type = lsm::LootFunctionType::ENCHANT_RANDOMLY;
     }
 
     /**
@@ -130,7 +130,7 @@ namespace mc {
      * where `count_i` is the number of mutually-exclusive enchantment groups among all applicable enchantments, e.g. `{"fortune", "silk_touch"}`, for an effective enchanting level `i`. 
      * Enchantment indices are not stored; `enchant_with_levels` output filtering is currently unsupported.
      */
-    static void create_skip_enchant_with_levels_vector(mc::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, const std::string& item_name, const nlohmann::json &function) 
+    static void create_skip_enchant_with_levels_vector(lsm::LootFunctionData& lfd, const std::vector<mc::Enchantment>& enchants, const std::string& item_name, const nlohmann::json &function) 
     {
         if (!function.contains("levels")) {
             fprintf(stderr, "create_skip_enchant_with_levels_vector(): levels undefined in loot function, parsing skipped.\n");
@@ -155,7 +155,7 @@ namespace mc {
             lfd.shared_mem.push_back(get_enchant_with_levels_groups(enchants, level, item_type, allow_treasure));
         }
 
-        lfd.type = mc::LootFunctionType::ENCHANT_WITH_LEVELS;
+        lfd.type = lsm::LootFunctionType::ENCHANT_WITH_LEVELS;
     }
 
     static int get_enchant_with_levels_groups(const std::vector<mc::Enchantment>& enchants, int level, mc::ItemType item_type, bool allow_treasure)

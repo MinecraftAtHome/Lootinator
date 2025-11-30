@@ -130,7 +130,7 @@ namespace lsm {
         TODO("instruction not implemented yet!");
     }
 
-    void lsm::Instruction::compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) {
+    void lsm::Instruction::compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<lsm::LootFunctionData> &function_data) {
         
     }
 
@@ -139,7 +139,7 @@ namespace lsm {
         (void)num_assertions;
     }
 
-    void lsm::BlockInstruction::compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) {
+    void lsm::BlockInstruction::compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<lsm::LootFunctionData> &function_data) {
         for (auto &child : this->children) {
             child->compile_pass1(ltcl, function_data);
         }
@@ -151,14 +151,14 @@ namespace lsm {
         }
     }
 
-    void lsm::FunctionInstruction::compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<mc::LootFunctionData> &function_data) {
+    void lsm::FunctionInstruction::compile_pass1(loot::LootTableConstraintList &ltcl, std::vector<lsm::LootFunctionData> &function_data) {
         if (this->func_tp != FUNC_FUNC) {
             return;
         }
 
         Function function_ref = {this->args[0], this->args[1], this->args[2]};
 
-        mc::LootFunctionData data = mc::parse_loot_function_data(ltcl.loot_table, function_ref);           
+        lsm::LootFunctionData data = lsm::parse_loot_function_data(ltcl.loot_table, function_ref);           
         function_data.push_back(data);
     }   
 

@@ -64,7 +64,7 @@ namespace lsm {
         }
 
         std::vector<int> next_int_vector;
-        if (pool_filter.reversal_type != loot::ReversalType::BRUTEFORCE)
+        if (pool_filter.reversal_type != lsm::KernelStructureType::BRUTEFORCE)
         {
             //std::cerr << "poolidx = " << pool_filter.pool_idx << " vecsize = " << ltcl.loot_table.total_weights.size() << "\n";
             int total_weight = ltcl.loot_table.total_weights[pool_filter.pool_idx];
@@ -78,7 +78,8 @@ namespace lsm {
             }
         }
 
-        // CONTINUE HERE KRIS
+
+        
         return next_int_vector;
     }
 

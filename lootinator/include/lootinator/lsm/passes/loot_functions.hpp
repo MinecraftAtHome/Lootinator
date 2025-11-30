@@ -6,7 +6,7 @@
 #include "lootinator/utility/range.h"
 
 
-namespace mc { // TODO: change this to lsm namespace
+namespace lsm {
     enum LootFunctionType {
         ENCHANT_RANDOMLY,
         ENCHANT_WITH_LEVELS,
@@ -34,7 +34,7 @@ namespace mc { // TODO: change this to lsm namespace
 
     struct LootFunctionData {
         std::vector<int> shared_mem;
-        LootFunctionType type;
+        lsm::LootFunctionType type;
         lsm::Function function_ref;
 
         // FIXME ideally use union
@@ -46,7 +46,7 @@ namespace mc { // TODO: change this to lsm namespace
     };
 
     std::vector<int> get_shared_memory_for_function(const loot::LootTable &loot_table, const nlohmann::json &entry, const int function_id);
-    mc::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, lsm::Function function_ref);
+    lsm::LootFunctionData parse_loot_function_data(const loot::LootTable &loot_table, lsm::Function function_ref);
 }
 
 #endif

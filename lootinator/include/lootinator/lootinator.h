@@ -2,7 +2,7 @@
 #define LOOTINATOR_LOOTINATOR_H
 
 namespace loot {
-	void hello();
+	
 }
 
 #endif

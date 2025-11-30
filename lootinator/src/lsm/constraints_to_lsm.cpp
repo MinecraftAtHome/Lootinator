@@ -79,6 +79,7 @@ namespace lsm {
         }
 
         // CONTINUE HERE KRIS
+        return next_int_vector;
     }
 
     void compile_constraints(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const loot::PoolFilter &pool_filter, const std::vector<loot::Constraint> &merged_constraints, lsm::Program &program) {

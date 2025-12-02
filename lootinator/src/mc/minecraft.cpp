@@ -455,6 +455,10 @@ namespace mc {
 
     // -----------------------------------------------------------------------------------
 
+    /**
+     * Converts the given ItemType enum value to a human-readable text representation of that item type.
+     * @return the string representation or `lootinator::null` if the given item type is unknown.
+     */
     std::string item_type_to_string(const mc::ItemType type)
     {
         if (ITEM_TYPE_TO_NAME.find(type) != ITEM_TYPE_TO_NAME.end()) {
@@ -465,9 +469,15 @@ namespace mc {
         }
     }
 
+    /**
+     * Converts the given Minecraft item name to an ItemType representing the item's category.
+     * The provided name must either contain the `minecraft:` prefix or have no prefix at all.
+     * Example mappings: `minecraft:diamond_sword` -> `ItemType::SWORD`, `iron_helmet` -> `ItemType::HELMET`
+     * @return the item type or `ItemType::NO_ITEM` if the item name is unknown.
+     */
     mc::ItemType string_to_item_type(const std::string &item_type_string)
     {
-        if (ITEM_NAME_TO_ITEM_TYPE.find(item_type_string) != ITEM_NAME_TO_ITEM_TYPE.end()) {
+        if (ITEM_NAME_TO_ITEM_TYPE.find(mc::strip_prefix(item_type_string)) != ITEM_NAME_TO_ITEM_TYPE.end()) {
             return ITEM_NAME_TO_ITEM_TYPE.at(item_type_string);
         }
         else {

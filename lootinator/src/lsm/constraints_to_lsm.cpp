@@ -43,6 +43,43 @@ namespace lsm {
         return util::RangeInclusive<uint32_t>(0,0);
     }
 
+    /**
+     * Adds the rng-level data necessary to execute the enchant_randomly function:
+     * - the total number of enchantments the target is being chosen from (maps to `nextInt` bound)
+     * - the index of the target enchantment in that list (maps to expected `nextInt` value)
+     * - the maximum level of the target enchantment (maps to `nextInt` bound of the level call)
+     * - the target level of the target enchantment, or `0` if the value is ignored (maps to expected `nextInt` value of the level call)
+     */
+    static void add_enchant_randomly_filter_data(const loot::LootTable &loot_table, const loot::PoolFilter &pool_filter, lsm::Program& program)
+    {
+        mc::Enchantment filtered_ench = mc::get_enchantment_from_attribute(pool_filter.attribute);
+
+        // find the enchant randomly function and extract its data
+        const auto& entry = loot_table.data["pools"][pool_filter.pool_idx]["entries"][pool_filter.entry_idx];
+        int func_idx = 0;
+        for (auto& func : entry["functions"]) {
+            if (func["function"] == "minecraft:enchant_randomly") {
+                break;
+            }
+            func_idx++;
+        }
+        lsm::LootFunctionData func_data = program.pass_info.get_data_for_function(pool_filter.pool_idx, pool_filter.entry_idx, func_idx);
+        
+        int target_idx = 0;
+        for (auto& ench : func_data.enchant_randomly.enchantment_order) {
+            if (filtered_ench == ench) {
+                break;
+            }
+            target_idx++;
+        }
+
+        std::vector<int>& code_data = program.pass_info.filter_on_code_data;
+        code_data.push_back(func_data.enchant_randomly.enchantment_order.size()); // total enchantments (#1)
+        code_data.push_back(target_idx); // target index (#2)
+        code_data.push_back(mc::get_max_level(filtered_ench)); // max level (#3)
+        code_data.push_back(pool_filter.attribute.level); // target level (#4)
+    }
+
     std::vector<int> get_next_int_vector(const loot::LootTableConstraintList &ltcl, const loot::PoolFilter &pool_filter, lsm::Program& program) {
         bool entry_set_count_advancement = false;
         auto& entry = ltcl.loot_table.data["pools"][pool_filter.pool_idx]["entries"][pool_filter.entry_idx];
@@ -56,39 +93,33 @@ namespace lsm {
             }
         }
 
-        std::vector<int> next_int_vector;
+        std::vector<int> signature_vec;
 
         // TODO when new types of kernel structures are added, they need to be handled here
         if (pool_filter.reversal_type == lsm::KernelStructureType::STATE_PREDICTION_WEIGHT || pool_filter.reversal_type == lsm::KernelStructureType::ADVANCED_REVERSAL_WEIGHT_AND_ENCHANTMENT)
         {
-            // TODO move this to lsm_to_cuda or whatever part computes lsm::Program filter-on data
-
             //std::cerr << "poolidx = " << pool_filter.pool_idx << " vecsize = " << ltcl.loot_table.total_weights.size() << "\n";
-            // int total_weight = ltcl.loot_table.total_weights[pool_filter.pool_idx];
-            // util::RangeInclusive<uint32_t> weight_range = get_weight_range_for_item(ltcl, pool_filter);
-            // for (int i = 0; i < pool_filter.entry_count; i++)
-            // {
-            //     add_next_int(total_weight, weight_range.min, weight_range.max, next_int_vector);
-            //     if (entry_set_count_advancement) {
-            //         add_next_int(0, 1, 1, next_int_vector); // skip 1 lcg state
-            //     }
-            // }
+            int total_weight = ltcl.loot_table.total_weights[pool_filter.pool_idx];
+            util::RangeInclusive<uint32_t> weight_range = get_weight_range_for_item(ltcl, pool_filter);
+            program.pass_info.filter_on_code_data.push_back(total_weight);
+            program.pass_info.filter_on_code_data.push_back(weight_range.min);
+            program.pass_info.filter_on_code_data.push_back(weight_range.max);
         }
         if (pool_filter.attribute.get_category() == mc::AttributeCategory::ENCHANTMENT_ATTRIBUTE)
         {
             if (pool_filter.reversal_type == lsm::KernelStructureType::ADVANCED_REVERSAL_ENCHANTMENT_AND_LEVEL || pool_filter.reversal_type == lsm::KernelStructureType::ADVANCED_REVERSAL_WEIGHT_AND_ENCHANTMENT)
             {
-                next_int_vector.push_back(static_cast<int>(mc::get_enchantment_from_attribute(pool_filter.attribute)));
-                // TODO add proper data to the Program struct
-                // it needs an rng representation of the enchantment
+                mc::Enchantment ench = mc::get_enchantment_from_attribute(pool_filter.attribute);
+                signature_vec.push_back(static_cast<int>(ench));
+                add_enchant_randomly_filter_data(ltcl.loot_table, pool_filter, program);
             }
             if (pool_filter.reversal_type == lsm::KernelStructureType::ADVANCED_REVERSAL_ENCHANTMENT_AND_LEVEL)
             {
-                next_int_vector.push_back(pool_filter.attribute.level);
+                signature_vec.push_back(pool_filter.attribute.level);
             }
         }
         
-        return next_int_vector;
+        return signature_vec;
     }
 
     void compile_constraints(const loot::LootTableConstraintList &ltcl, const std::vector<loot::Constraint> &constraints, const loot::PoolFilter &pool_filter, const std::vector<loot::Constraint> &merged_constraints, lsm::Program &program) {

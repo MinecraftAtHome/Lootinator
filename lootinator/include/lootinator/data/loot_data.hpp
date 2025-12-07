@@ -11,7 +11,7 @@ namespace data {
     class LootTreeNode {
         public:
         LootTreeNode *parent;
-        std::vector<LootTreeNode *> children;
+        std::vector<LootTreeNode*> children;
         std::vector<loot::Constraint> constraints;
 
         mc::VersionRange get_version();

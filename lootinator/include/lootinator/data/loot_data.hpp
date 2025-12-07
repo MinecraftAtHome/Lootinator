@@ -31,16 +31,15 @@ namespace data {
         public:
         util::RangeInclusive<std::uint32_t> rolls;
         std::vector<int> entry_lookup;
-    
+        
         LootPool(LootTreeNode *parent, const nlohmann::json &json);
     };
-
+    
     class LootTableRoot : public LootTreeNode {
         public:
-        std::string name;
         mc::VersionRange version;
 
-	    LootTableRoot(const nlohmann::json &json, mc::VersionRange, std::vector<loot::Constraint> &constraints); 
+	    LootTableRoot(const nlohmann::json &json, mc::VersionRange); 
         ~LootTableRoot(); 
     };
 

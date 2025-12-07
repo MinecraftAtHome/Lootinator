@@ -12,10 +12,10 @@ namespace data {
         public:
         LootTreeNode *parent;
         std::vector<LootTreeNode *> children;
-        std::vector<Constraint> constraints;
+        std::vector<loot::Constraint> constraints;
 
         mc::VersionRange get_version();
-        virtual LootTreeNode(LootTreeNode *parent, const nlohmann::json &json);
+        LootTreeNode(LootTreeNode *parent, const nlohmann::json &json);
     };
 
     class LootEntry : public LootTreeNode {
@@ -25,7 +25,7 @@ namespace data {
         std::string name;
         int weight;
 
-        LootEntry(LootTreeNode *parent, const nlohmann::json &json) override;
+        LootEntry(LootTreeNode *parent, const nlohmann::json &json);
     };
 
     class LootPool : public LootTreeNode {
@@ -33,7 +33,7 @@ namespace data {
         util::RangeInclusive<std::uint32_t> rolls;
         std::vector<int> entry_lookup;
     
-        LootPool(LootTreeNode *parent, const nlohmann::json &json) override;
+        LootPool(LootTreeNode *parent, const nlohmann::json &json);
     };
 
     class LootTableRoot : public LootTreeNode {
@@ -41,7 +41,7 @@ namespace data {
         std::string name;
         mc::VersionRange version;
 
-	    LootTableRoot(const nlohmann::json &json, mc::VersionRange, std::vector<Constraint> &constraints); 
+	    LootTableRoot(const nlohmann::json &json, mc::VersionRange, std::vector<loot::Constraint> &constraints); 
         ~LootTableRoot(); 
     };
 
@@ -75,7 +75,7 @@ namespace data {
         EnchantWithLevelsData enchant_with_levels;
         util::RangeInclusive<std::uint32_t> set_count;
 
-        LootPool(LootTreeNode *parent, const nlohmann::json &json) override;
+        LootFunctionData(LootTreeNode *parent, const nlohmann::json &json);
     };
 }
 

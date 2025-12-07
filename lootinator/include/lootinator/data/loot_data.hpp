@@ -15,6 +15,8 @@ namespace data {
         std::vector<loot::Constraint> constraints;
 
         mc::VersionRange get_version();
+        virtual int get_item_index(const std::string& item_name) const;
+        virtual ~LootTreeNode();
     };
 
     class LootEntry : public LootTreeNode {
@@ -69,7 +71,6 @@ namespace data {
         std::vector<int> shared_mem;
         data::LootFunctionType type;
 
-        // FIXME ideally use union
         EnchantRandomlyData enchant_randomly;
         EnchantWithLevelsData enchant_with_levels;
         util::RangeInclusive<std::uint32_t> set_count;

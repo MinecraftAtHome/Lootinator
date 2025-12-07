@@ -36,26 +36,11 @@ pool 0  {
 */
 
 int main() {
-	try {
-        loot::LootTable lt("../../example/src/ruined_portal.json", mc::VersionRange::MC_1_16_TO_1_20);
+	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
 
-        loot::LootTableConstraintList ltcl(lt);
-        std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
-		ltcl.initialize_constraints(constr);
-
-		std::vector<lsm::Program> programs = lsm::get_lsm_representations(ltcl, constr);
-		
-		int prog_idx = 0;
-		for (auto& prog : programs) {	
-			lsm::lsm_to_cuda(ltcl, prog, "output_" + std::to_string(prog_idx));
-			delete prog.main_block; // TODO: one day we will use unique pointers :)
-			prog_idx++;
-		}
-    } 
-    catch (const std::exception& e) {
-        std::cerr << "Caught exception: " << e.what() << std::endl;
-        return 1;
-	}
+    std::ifstream f("../../example/src/ruined_portal.json");
+	nlohmann::json loot_table_json = nlohmann::json::parse(f);
+	data::LootTableRoot root = LootTableRoot(loot_table_json, mc::VersionRange::MC_1_16_TO_1_20, constr); 
 }
 
 int main_lsmtest() {	

@@ -5,7 +5,7 @@
 
 namespace lsm {   
     /**
-     * Imagine a piece of beautiful documentation here... (TODO)
+     * Imagine a piece of beautiful documentation here... (TODO) nope!
      */ 
     struct Assertion {
         int index;

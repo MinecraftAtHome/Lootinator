@@ -11,11 +11,10 @@ namespace data {
     class LootTreeNode {
         public:
         LootTreeNode *parent;
-        std::vector<LootTreeNode*> children;
+        std::vector<LootTreeNode *> children;
         std::vector<loot::Constraint> constraints;
 
         mc::VersionRange get_version();
-        LootTreeNode(LootTreeNode *parent, const nlohmann::json &json);
     };
 
     class LootEntry : public LootTreeNode {

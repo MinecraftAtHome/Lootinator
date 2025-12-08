@@ -42,7 +42,6 @@ namespace data {
         mc::VersionRange version;
 
 	    LootTableRoot(const nlohmann::json &json, mc::VersionRange); 
-        ~LootTableRoot(); 
     };
 
 // LOOT FUNCTION DATA
@@ -55,16 +54,29 @@ namespace data {
         IGNORED
     };
 
+    /**
+     * Enchant_randomly always selects one random enchantment from a predefined list. That list can either
+     * have preset values or be derived from the internal enchantment order for a specific version of MC.
+     * Either way, this structure stores that final order.
+     */
     struct EnchantRandomlyData {
         std::vector<mc::Enchantment> enchantment_order;
     };
 
+    /**
+     * Stores data used for creating enchant_with_levels function skips. `level` is the base range of levels that can
+     * be selected by the particular function. `enchantability` is an item-dependent modifier value that can slightly
+     * offset the final (effective) level used to select enchantments. 
+     */
     struct EnchantWithLevelsData {
-        util::RangeInclusive<std::uint32_t> level;
-        util::RangeInclusive<std::uint32_t> effective_level; // TODO: revist
+        uint32_t enchantability;
+        util::RangeInclusive<std::uint32_t> level = {0,0};
         // not storing enchantments, function output is skipped
     };
 
+    /**
+     * Stores the type, shared memory contents, and relevant processed data of a loot function.
+     */
     class LootFunctionData : public LootTreeNode {
         public:
         std::vector<int> shared_mem;
@@ -72,9 +84,14 @@ namespace data {
 
         EnchantRandomlyData enchant_randomly;
         EnchantWithLevelsData enchant_with_levels;
-        util::RangeInclusive<std::uint32_t> set_count;
+        util::RangeInclusive<std::uint32_t> set_count = {0,0};
 
         LootFunctionData(LootTreeNode *parent, const nlohmann::json &json);
+
+        private:
+        void create_list_enchant_randomly(const nlohmann::json &list);
+        void create_enchant_randomly(const nlohmann::json &function);
+        void create_enchant_with_levels(const nlohmann::json &function);
     };
 }
 

@@ -1,5 +1,5 @@
 #include "lootinator/data/loot_data.hpp"
-#include "loot_data.hpp"
+
 
 namespace data {
     mc::VersionRange LootTreeNode::get_version() {

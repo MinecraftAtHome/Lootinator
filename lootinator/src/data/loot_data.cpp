@@ -1,6 +1,6 @@
 #include "lootinator/data/loot_data.hpp"
 
-
+#include <iostream>
 #include <fstream>
 
 namespace data {
@@ -27,7 +27,7 @@ namespace data {
 
     LootEntry::LootEntry(LootTreeNode *parent, const nlohmann::json &json) {
         this->parent = parent;
-
+        
         // entry parsing
         weight = json.contains("weight") ? json["weight"] : 1;
 
@@ -40,10 +40,11 @@ namespace data {
         else {
             // item entry
             name = json["name"];
-            type = mc::string_to_item_type(name);
-            item = get_item_index(name);
-        }
+                        type = mc::string_to_item_type(name);
+                        item = get_item_index(name);
+                    }
 
+        
         // loot functions
         if (json.contains("functions")) {
             for (auto& function_json : json["functions"]) {
@@ -65,7 +66,7 @@ namespace data {
 
         auto pools = json["pools"];
         for (auto &pool : pools) {
-            this->children.push_back(new LootPool(this, pool));
+                        this->children.push_back(new LootPool(this, pool));
         }
     }
 
@@ -81,10 +82,10 @@ namespace data {
         int index = 0;
         for (auto &entry : json["entries"]) {
             this->children.push_back(new LootEntry(this, entry));
-            for (int w = 0; w < entry.contains("weight") ? (int)entry["weight"] : 1; w++) {
+            for (int w = 0; w < (entry.contains("weight") ? (int)entry["weight"] : 1); w++) {
                 this->entry_lookup.push_back(index);
             }
-            index++;
+                        index++;
         }   
     }
 
@@ -92,13 +93,13 @@ namespace data {
     // loot function data
 
     LootFunctionData::LootFunctionData(LootTreeNode *parent, const nlohmann::json &json) {
-        this->parent = parent;
+                this->parent = parent;
 
         // function parsing
         std::string function_name = mc::strip_prefix(json["function"]); 
 
         if (function_name == "enchant_randomly") {
-            // some versions define available enchantments as "options", others use "enchantments"
+                        // some versions define available enchantments as "options", others use "enchantments"
             if (json.contains("options") && json["options"] != "#minecraft:on_random_loot") {
                 create_list_enchant_randomly(json["options"]);
             }

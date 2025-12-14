@@ -10,6 +10,8 @@
 #include "lootinator/lsm/constraints_to_lsm.hpp"
 #include "lootinator/lsm/cuda/lsm_to_cuda.hpp"
 
+#include "lootinator/data/loot_data.hpp"
+
 /*
 loot table: ruined portal
 constraints:
@@ -36,11 +38,15 @@ pool 0  {
 */
 
 int main() {
+	std::cout << "here0\n";
 	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
 
     std::ifstream f("../../example/src/ruined_portal.json");
+	std::cout << "here1\n";
 	nlohmann::json loot_table_json = nlohmann::json::parse(f);
-	data::LootTableRoot root = LootTableRoot(loot_table_json, mc::VersionRange::MC_1_16_TO_1_20, constr); 
+	std::cout << "here2\n";
+	data::LootTableRoot root = data::LootTableRoot(loot_table_json, "../../example/src/item_map.txt", mc::VersionRange::MC_1_16_TO_1_20); 
+	std::cout << "here3\n";
 }
 
 int main_lsmtest() {	

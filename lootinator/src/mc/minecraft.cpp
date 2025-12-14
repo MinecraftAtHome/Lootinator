@@ -477,8 +477,9 @@ namespace mc {
      */
     mc::ItemType string_to_item_type(const std::string &item_type_string)
     {
-        if (ITEM_NAME_TO_ITEM_TYPE.find(mc::strip_prefix(item_type_string)) != ITEM_NAME_TO_ITEM_TYPE.end()) {
-            return ITEM_NAME_TO_ITEM_TYPE.at(item_type_string);
+        std::string stripped_name = mc::strip_prefix(item_type_string);
+        if (ITEM_NAME_TO_ITEM_TYPE.find(stripped_name) != ITEM_NAME_TO_ITEM_TYPE.end()) {
+            return ITEM_NAME_TO_ITEM_TYPE.at(stripped_name);
         }
         else {
             return mc::ItemType::NO_ITEM;

@@ -17,6 +17,9 @@ namespace data {
         mc::VersionRange get_version();
         virtual int get_item_index(const std::string& item_name) const;
         virtual ~LootTreeNode();
+
+        void indent(int indentation) const;
+        virtual void print(int indentation) const;
     };
 
     class LootEntry : public LootTreeNode {
@@ -27,6 +30,7 @@ namespace data {
         int weight;
 
         LootEntry(LootTreeNode *parent, const nlohmann::json &json);
+        virtual void print(int indentation) const override;
     };
 
     class LootPool : public LootTreeNode {
@@ -35,6 +39,7 @@ namespace data {
         std::vector<int> entry_lookup;
         
         LootPool(LootTreeNode *parent, const nlohmann::json &json);
+        virtual void print(int indentation) const override;
     };
     
     class LootTableRoot : public LootTreeNode {
@@ -44,6 +49,7 @@ namespace data {
 
 	    LootTableRoot(const nlohmann::json &json, const std::string& item_map_filepath, mc::VersionRange version);
         virtual int get_item_index(const std::string& item_name) const override;
+        virtual void print(int indentation) const override;
     };
 
 // LOOT FUNCTION DATA
@@ -89,6 +95,7 @@ namespace data {
         util::RangeInclusive<std::uint32_t> set_count = {0,0};
 
         LootFunctionData(LootTreeNode *parent, const nlohmann::json &json);
+        virtual void print() const override;
 
         private:
         void create_list_enchant_randomly(const nlohmann::json &list);

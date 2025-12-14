@@ -1,7 +1,9 @@
 #include "lootinator/data/loot_data.hpp"
+#include "lootinator/utility/debug.h"
 
 #include <iostream>
 #include <fstream>
+
 
 namespace data {
     mc::VersionRange LootTreeNode::get_version() {
@@ -25,7 +27,15 @@ namespace data {
         throw "illegal state in LootTreeNode::get_item_index - parent was nullptr";
     }
 
-    LootEntry::LootEntry(LootTreeNode *parent, const nlohmann::json &json) {
+    void LootTreeNode::print() const {
+        for (const auto& child : children) {
+            child->print();
+            std::cout << '\n';
+        }
+    }
+
+    LootEntry::LootEntry(LootTreeNode *parent, const nlohmann::json &json)
+    {
         this->parent = parent;
         
         // entry parsing
@@ -40,11 +50,10 @@ namespace data {
         else {
             // item entry
             name = json["name"];
-                        type = mc::string_to_item_type(name);
-                        item = get_item_index(name);
-                    }
+            type = mc::string_to_item_type(name);
+            item = get_item_index(name);
+        }
 
-        
         // loot functions
         if (json.contains("functions")) {
             for (auto& function_json : json["functions"]) {
@@ -53,7 +62,18 @@ namespace data {
         }
     }
 
-	LootTableRoot::LootTableRoot(const nlohmann::json &json, const std::string& item_map_filepath, mc::VersionRange version) {
+    void LootEntry::print() const {
+        util::DebugStruct(std::cout, "LootEntry")
+            .add("item", item)
+            .add("name", name)
+            .add("type", type)
+            .add("weight", weight)
+            .finish();
+
+        LootTreeNode::print();
+    }
+
+    LootTableRoot::LootTableRoot(const nlohmann::json &json, const std::string& item_map_filepath, mc::VersionRange version) {
         this->parent = nullptr;
         this->version = version;
 
@@ -66,7 +86,7 @@ namespace data {
 
         auto pools = json["pools"];
         for (auto &pool : pools) {
-                        this->children.push_back(new LootPool(this, pool));
+            this->children.push_back(new LootPool(this, pool));
         }
     }
 
@@ -75,6 +95,14 @@ namespace data {
             return item_map.at(item_name);
         }
         return -1;
+    }
+
+    void LootTableRoot::print() const {
+        util::DebugStruct(std::cout, "LootTableRoot")
+            .add("version", version)
+            .finish();
+
+        LootTreeNode::print();
     }
 
     LootPool::LootPool(LootTreeNode *parent, const nlohmann::json &json) : rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {
@@ -87,6 +115,18 @@ namespace data {
             }
                         index++;
         }   
+    }
+
+    void LootPool::print(int indentation) const
+    {
+        indent(indentation);
+
+        util::DebugStruct(std::cout, "LootPool")
+            .add("min_rolls", rolls.min)
+            .add("max_rolls", rolls.max)
+            .finish();
+
+        LootTreeNode::print();
     }
 
     // -----------------------------------------------------------------
@@ -123,6 +163,18 @@ namespace data {
         }
     }
 
+    void LootFunctionData::print() const
+    {
+        std::cout << '\n';
+        util::DebugStruct(std::cout, "LootFunction")
+            .add("function_type", type)
+            .add("set_count_min", set_count.min)
+            .add("set_count_max", set_count.max)
+            .finish();
+
+        LootTreeNode::print();
+    } 
+    
     // function parsing helpers
 
     /**

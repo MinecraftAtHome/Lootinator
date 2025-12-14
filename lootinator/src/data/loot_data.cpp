@@ -1,6 +1,8 @@
 #include "lootinator/data/loot_data.hpp"
 #include "loot_data.hpp"
 
+#include <fstream>
+
 namespace data {
     mc::VersionRange LootTreeNode::get_version() {
         LootTreeNode* next = this;
@@ -48,15 +50,30 @@ namespace data {
                 children.push_back(new data::LootFunctionData(this, function_json));
             }
         }
-    }    
+    }
 
-	LootTableRoot::LootTableRoot(const nlohmann::json &json, mc::VersionRange version) {
+	LootTableRoot::LootTableRoot(const nlohmann::json &json, const std::string& item_map_filepath, mc::VersionRange version) {
         this->parent = nullptr;
         this->version = version;
+
+        std::ifstream fin(item_map_filepath);
+        std::string item_name;
+        int ix = 0;
+        while (fin >> item_name) {
+            this->item_map[item_name] = ix++;
+        }
+
         auto pools = json["pools"];
         for (auto &pool : pools) {
             this->children.push_back(new LootPool(this, pool));
         }
+    }
+
+    int LootTableRoot::get_item_index(const std::string &item_name) const {
+        if (item_map.find(item_name) != item_map.end()) {
+            return item_map.at(item_name);
+        }
+        return -1;
     }
 
     LootPool::LootPool(LootTreeNode *parent, const nlohmann::json &json) : rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {

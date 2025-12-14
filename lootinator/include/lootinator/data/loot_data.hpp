@@ -40,8 +40,10 @@ namespace data {
     class LootTableRoot : public LootTreeNode {
         public:
         mc::VersionRange version;
+        std::unordered_map<std::string, int> item_map;
 
-	    LootTableRoot(const nlohmann::json &json, mc::VersionRange); 
+	    LootTableRoot(const nlohmann::json &json, const std::string& item_map_filepath, mc::VersionRange version);
+        virtual int get_item_index(const std::string& item_name) const override;
     };
 
 // LOOT FUNCTION DATA

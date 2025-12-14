@@ -1,21 +1,24 @@
 import glob
+import pathlib
+
+path_pfx = pathlib.Path(__file__).parent.resolve()
 
 
 def get_file_list(dirname, flag):
-    file_list = list(filter(lambda x: '.' in x, glob.glob(dirname, recursive=True)))
+    file_list = list(filter(lambda x: '.' in x, glob.glob(str(dirname), recursive=True)))
     result = ''
     list_len = len(file_list)
     i = 0
     for filename in file_list:
         i += 1
-        result += '\t' + filename.replace("""\\""", '/')
+        result += '\t' + filename.replace(str(path_pfx), '').replace("""\\""", '/')[1:]
         if i != list_len or flag:
             result += '\n'
     return result
 
 
-includes = get_file_list('include/**', flag=True)
-sources = get_file_list('src/**', flag=False)
+includes = get_file_list(path_pfx / pathlib.Path('include') / pathlib.Path('**'), flag=True)
+sources = get_file_list(path_pfx / pathlib.Path('src') / pathlib.Path('**'), flag=False)
 
 cmake = \
 """add_library(lootinator
@@ -52,10 +55,8 @@ endforeach()
 """
 
 final_cmake = cmake.replace('@INCLUDES', includes).replace('@SOURCES', sources)
-with open('./CMakeLists.txt', "r") as f:
-    if f.readline().strip() != '#@AUTO-GENERATED':
-        print('You can only run this script from the folder where the meta-meta buildscript is located!')
-        exit(1)
-    
-with open('./CMakeLists.txt', "w") as f:
+cmake_filepath = path_pfx / pathlib.Path('CMakeLists.txt')
+print(cmake_filepath)
+     
+with open(cmake_filepath, "w") as f:
     f.write(final_cmake)

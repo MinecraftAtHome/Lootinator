@@ -1,5 +1,3 @@
-#@AUTO-GENERATED
-
 add_library(lootinator
 	include/lootinator/assertions.h
 	include/lootinator/constraint/constraint.h

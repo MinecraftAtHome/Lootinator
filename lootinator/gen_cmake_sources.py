@@ -52,5 +52,10 @@ endforeach()
 """
 
 final_cmake = cmake.replace('@INCLUDES', includes).replace('@SOURCES', sources)
+with open('./CMakeLists.txt', "r") as f:
+    if f.readline().strip() != '#@AUTO-GENERATED':
+        print('You can only run this script from the folder where the meta-meta buildscript is located!')
+        exit(1)
+    
 with open('./CMakeLists.txt', "w") as f:
     f.write(final_cmake)

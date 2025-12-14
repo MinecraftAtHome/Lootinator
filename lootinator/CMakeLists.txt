@@ -1,3 +1,5 @@
+#@AUTO-GENERATED
+
 add_library(lootinator
 	include/lootinator/assertions.h
 	include/lootinator/constraint/constraint.h
@@ -13,7 +15,6 @@ add_library(lootinator
 	include/lootinator/lsm/parser.hpp
 	include/lootinator/lsm/passes/loot_asserts.hpp
 	include/lootinator/lsm/passes/loot_functions.hpp
-	include/lootinator/lsm/passes/pass_info.cpp
 	include/lootinator/lsm/passes/pass_info.hpp
 	include/lootinator/lsm/program.hpp
 	include/lootinator/mc/minecraft.hpp
@@ -37,6 +38,7 @@ add_library(lootinator
 	src/lsm/parser.cpp
 	src/lsm/passes/loot_asserts.cpp
 	src/lsm/passes/loot_functions.cpp
+	src/lsm/passes/pass_info.cpp
 	src/mc/minecraft.cpp
 	src/template/helpers.cpp
 	src/template/kernel/naive_bruteforce_template.cpp

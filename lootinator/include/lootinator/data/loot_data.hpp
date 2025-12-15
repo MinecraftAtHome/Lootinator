@@ -10,6 +10,8 @@
 namespace data {
     class LootTreeNode {
         public:
+        static const int INDENT_SIZE = 4;
+
         LootTreeNode *parent;
         std::vector<LootTreeNode *> children;
         std::vector<loot::Constraint> constraints;
@@ -95,7 +97,7 @@ namespace data {
         util::RangeInclusive<std::uint32_t> set_count = {0,0};
 
         LootFunctionData(LootTreeNode *parent, const nlohmann::json &json);
-        virtual void print() const override;
+        virtual void print(int indentation) const override;
 
         private:
         void create_list_enchant_randomly(const nlohmann::json &list);

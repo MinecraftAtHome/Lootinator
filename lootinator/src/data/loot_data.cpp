@@ -27,10 +27,17 @@ namespace data {
         throw "illegal state in LootTreeNode::get_item_index - parent was nullptr";
     }
 
-    void LootTreeNode::print() const {
+    void LootTreeNode::indent(int indentation) const {
+        std::cout << '\n';
+        for (int i = 0; i < indentation; i++) {
+            std::cout << ' ';
+        }
+    }
+
+    void LootTreeNode::print(int indentation) const {
         for (const auto& child : children) {
-            child->print();
-            std::cout << '\n';
+            child->print(indentation);
+            //std::cout << '\n';
         }
     }
 
@@ -62,7 +69,9 @@ namespace data {
         }
     }
 
-    void LootEntry::print() const {
+    void LootEntry::print(int indentation) const {
+        indent(indentation);
+
         util::DebugStruct(std::cout, "LootEntry")
             .add("item", item)
             .add("name", name)
@@ -70,7 +79,7 @@ namespace data {
             .add("weight", weight)
             .finish();
 
-        LootTreeNode::print();
+        LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     }
 
     LootTableRoot::LootTableRoot(const nlohmann::json &json, const std::string& item_map_filepath, mc::VersionRange version) {
@@ -97,12 +106,15 @@ namespace data {
         return -1;
     }
 
-    void LootTableRoot::print() const {
+    void LootTableRoot::print(int indentation) const
+    {
+        indent(indentation);
+
         util::DebugStruct(std::cout, "LootTableRoot")
             .add("version", version)
             .finish();
 
-        LootTreeNode::print();
+        LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     }
 
     LootPool::LootPool(LootTreeNode *parent, const nlohmann::json &json) : rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {
@@ -126,14 +138,14 @@ namespace data {
             .add("max_rolls", rolls.max)
             .finish();
 
-        LootTreeNode::print();
+        LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     }
 
     // -----------------------------------------------------------------
     // loot function data
 
     LootFunctionData::LootFunctionData(LootTreeNode *parent, const nlohmann::json &json) {
-                this->parent = parent;
+        this->parent = parent;
 
         // function parsing
         std::string function_name = mc::strip_prefix(json["function"]); 
@@ -163,16 +175,17 @@ namespace data {
         }
     }
 
-    void LootFunctionData::print() const
+    void LootFunctionData::print(int indentation) const
     {
-        std::cout << '\n';
+        indent(indentation);
+
         util::DebugStruct(std::cout, "LootFunction")
             .add("function_type", type)
             .add("set_count_min", set_count.min)
             .add("set_count_max", set_count.max)
             .finish();
 
-        LootTreeNode::print();
+        LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     } 
     
     // function parsing helpers

@@ -38,17 +38,13 @@ pool 0  {
 */
 
 int main() {
-	std::cout << "here0\n";
 	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
-
     std::ifstream f("../../example/src/ruined_portal.json");
-	std::cout << "here1\n";
 	nlohmann::json loot_table_json = nlohmann::json::parse(f);
-	std::cout << "here2\n";
-	data::LootTableRoot root = data::LootTableRoot(loot_table_json, "../../example/src/item_map.txt", mc::VersionRange::MC_1_16_TO_1_20);
-	root.print();
 
-	std::cout << "here3\n";
+	data::LootTableRoot root = data::LootTableRoot(loot_table_json, "../../example/src/item_map.txt", mc::VersionRange::MC_1_16_TO_1_20);
+	
+	root.print(0);
 }
 
 int main_lsmtest() {	

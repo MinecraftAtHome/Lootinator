@@ -179,12 +179,40 @@ namespace data {
     {
         indent(indentation);
 
+        static const char* function_names[] = {"enchant_randomly", "enchant_with_levels", "set_count", "apply_damage", "NULL"};
         util::DebugStruct(std::cout, "LootFunction")
-            .add("function_type", type)
-            .add("set_count_min", set_count.min)
-            .add("set_count_max", set_count.max)
+            .add("function_type", function_names[type])
             .finish();
 
+        indent(indentation + LootTreeNode::INDENT_SIZE);
+        std::cout << "SharedMemory: ";
+        util::debug(std::cout, shared_mem);
+
+        indent(indentation + LootTreeNode::INDENT_SIZE);
+        if (type == data::LootFunctionType::ENCHANT_RANDOMLY) {
+            std::cout << "Enchantments: ";
+            util::debug(std::cout, enchant_randomly.enchantment_order);
+        }
+        else {
+            util::DebugStruct extra_data(std::cout, "ExtraData");
+
+            switch (type) {
+            case data::LootFunctionType::ENCHANT_WITH_LEVELS:
+                extra_data.add("enchantability", enchant_with_levels.enchantability);
+                extra_data.add("min_level", enchant_with_levels.level.min);
+                extra_data.add("max_level", enchant_with_levels.level.max);
+                break;
+            case data::LootFunctionType::SET_COUNT:
+                extra_data.add("min_count", set_count.min);
+                extra_data.add("max_count", set_count.max);
+                break;
+            default:
+                break;
+            }
+
+            extra_data.finish();
+        }
+        
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     } 
     

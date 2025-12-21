@@ -30,7 +30,8 @@ static void correctness_test_enchant_randomly_list()
 
     data::LootTreeNode* node = root.children[0]->children[10]->children[0];
     data::LootFunctionData* func_node = dynamic_cast<data::LootFunctionData*>(node);
-    ASSERT_NE(func_node, nullptr);
+    data::LootFunctionData* prevent_this = nullptr;
+    ASSERT_NE(func_node, prevent_this);
 
     ASSERT_EQ(std::equal(target_order.begin(), target_order.end(), func_node->enchant_randomly.enchantment_order.begin()), true);
     ASSERT_EQ(std::equal(target_shmem.begin(), target_shmem.end(), func_node->shared_mem.begin()), true);
@@ -44,7 +45,8 @@ static void correctness_test_enchant_randomly_natural()
     
     data::LootTreeNode* node = root.children[0]->children[14]->children[0];
     data::LootFunctionData* func_node = dynamic_cast<data::LootFunctionData*>(node);
-    ASSERT_NE(func_node, nullptr);
+    data::LootFunctionData* prevent_this = nullptr;
+    ASSERT_NE(func_node, prevent_this);
 
     std::vector<mc::Enchantment> target_order({
         mc::PROTECTION, mc::FIRE_PROTECTION, mc::BLAST_PROTECTION, mc::PROJECTILE_PROTECTION, 
@@ -65,10 +67,11 @@ static void correctness_test_enchant_with_levels()
 
     data::LootTreeNode* node = root.children[0]->children[10]->children[0];
     data::LootFunctionData* func_node = dynamic_cast<data::LootFunctionData*>(node);
-    ASSERT_NE(func_node, nullptr);
+    data::LootFunctionData* prevent_this = nullptr;
+    ASSERT_NE(func_node, prevent_this);
 
-    const int target_minlevel = 20, target_maxlevel = 39;
-    const int target_enchantability = 10;
+    const uint32_t target_minlevel = 20, target_maxlevel = 39;
+    const uint32_t target_enchantability = 10;
     ASSERT_EQ(target_minlevel, func_node->enchant_with_levels.level.min);
     ASSERT_EQ(target_maxlevel, func_node->enchant_with_levels.level.max);
     ASSERT_EQ(target_enchantability, func_node->enchant_with_levels.enchantability);

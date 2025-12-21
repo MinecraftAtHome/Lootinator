@@ -37,43 +37,6 @@ namespace loot {
         return loot::attributes_match(attributes, other.attributes);
     }
 
-    bool Constraint::matches_entry(const LootTable& loot_table, const nlohmann::json &entry) const
-    {
-        try {
-            // rule out empty entries instantly
-            if (entry["type"] != "minecraft:item") {
-                return false;
-            }
-
-            // check item type match
-            int item_idx = loot_table.find_item_name(entry["name"]);
-            if (item_idx == -1 || static_cast<uint32_t>(item_idx) != item) {
-                return false;
-            }
-            
-            // check attribute match by comparing categories of loot functions
-            // with categories of attributes
-            for (auto& constraint_attr : attributes) {
-                mc::AttributeCategory target_category = constraint_attr.get_category();
-
-                bool found_match = false;
-                for (auto& func : entry["functions"]) {
-                    if (get_loot_function_attribute_category(func["function"]) == target_category) {
-                        found_match = true;
-                    }
-                }
-                if (!found_match) {
-                    return false; // no loot function for this entry can produce the desired attribute category
-                }
-            }
-            return true; // each specified attribute can be obtained for this entry
-        }
-        catch (std::exception& any_ex) {
-            std::cerr << "Constraint::matches_entry failed due to exception: " << any_ex.what() << "\n";
-            return false;
-        }
-    }
-
     bool loot::Constraint::operator==(const Constraint &other) const
     {
         return item_equal(other) && other.count_range == count_range && other.slot_id == slot_id;

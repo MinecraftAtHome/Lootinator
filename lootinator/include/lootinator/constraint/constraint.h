@@ -3,7 +3,6 @@
 
 #include "lootinator/utility/range.h"
 #include "lootinator/utility/debug.h"
-#include "lootinator/loot_table.h"
 
 #include <cstdint>
 
@@ -22,7 +21,6 @@ namespace loot {
         std::vector<mc::ItemAttribute> attributes;
 
         bool item_equal(const Constraint& other) const;
-        bool matches_entry(const LootTable& loot_table, const nlohmann::json& entry) const;
 
         bool operator==(const Constraint& other) const;
         bool operator!=(const Constraint& other) const;
@@ -32,8 +30,6 @@ namespace loot {
 
     void merge_contraints(const std::vector<loot::Constraint>& src, std::vector<loot::Constraint>& dest);
     std::vector<loot::Constraint> parse_constraints_from_json(const char *filepath);
-
-    mc::AttributeCategory get_loot_function_attribute_category(const std::string& function_name);
 }
 
 #endif

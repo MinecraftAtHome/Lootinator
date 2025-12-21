@@ -6,7 +6,6 @@ add_library(lootinator
 	include/lootinator/cuda/kernel_structure.h
 	include/lootinator/data/loot_data.hpp
 	include/lootinator/lootinator.h
-	include/lootinator/loot_table.h
 	include/lootinator/mc/minecraft.hpp
 	include/lootinator/template/helpers.h
 	include/lootinator/template/kernel/naive_bruteforce_template.h
@@ -20,7 +19,6 @@ add_library(lootinator
 	src/constraint/constraint.cpp
 	src/data/loot_data.cpp
 	src/lootinator.cpp
-	src/loot_table.cpp
 	src/mc/minecraft.cpp
 	src/template/helpers.cpp
 	src/template/kernel/naive_bruteforce_template.cpp

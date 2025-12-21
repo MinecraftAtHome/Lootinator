@@ -1,5 +1,4 @@
-#ifndef LOOTINATOR_LSM_LSM_H
-#define LOOTINATOR_LSM_LSM_H
+// Leftover stuff from (rip) lsm
 
 namespace lsm {
 	enum KernelStructureType {
@@ -32,5 +31,3 @@ namespace lsm {
         // TODO durability state pred
     };
 }
-
-#endif

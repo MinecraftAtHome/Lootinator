@@ -1,3 +1,4 @@
+// header - Kernel base class
 typedef unsigned int u32;
 typedef int i32;
 typedef unsigned long long u64;
@@ -13,7 +14,10 @@ __device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 
 //@END_HEADER
 
 extern "C" {
-    __global__ void state_prediction_rolls(
+// end of base class
+
+    // start of StatePredictionSingleItemKernelWhatever
+    __global__ void state_prediction_rolls( 
         u64* result_array, u32* result_count, 
         u32* shared_mem_contents, u32 shared_mem_contents_length, 
         u64 offset)
@@ -49,4 +53,5 @@ extern "C" {
             }
         }
     }
-}
+
+} // remember about this guy!

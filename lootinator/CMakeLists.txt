@@ -1,20 +1,12 @@
 add_library(lootinator
 	include/lootinator/assertions.h
 	include/lootinator/constraint/constraint.h
-	include/lootinator/constraint/filter.h
+	include/lootinator/cuda/bruteforce_kernel.hpp
+	include/lootinator/cuda/kernel.hpp
+	include/lootinator/cuda/kernel_structure.h
 	include/lootinator/data/loot_data.hpp
 	include/lootinator/lootinator.h
 	include/lootinator/loot_table.h
-	include/lootinator/lsm/constraints_to_lsm.hpp
-	include/lootinator/lsm/cuda/lsm_to_cuda.hpp
-	include/lootinator/lsm/function_ref.hpp
-	include/lootinator/lsm/instructions.hpp
-	include/lootinator/lsm/lsm.hpp
-	include/lootinator/lsm/parser.hpp
-	include/lootinator/lsm/passes/loot_asserts.hpp
-	include/lootinator/lsm/passes/loot_functions.hpp
-	include/lootinator/lsm/passes/pass_info.hpp
-	include/lootinator/lsm/program.hpp
 	include/lootinator/mc/minecraft.hpp
 	include/lootinator/template/helpers.h
 	include/lootinator/template/kernel/naive_bruteforce_template.h
@@ -26,17 +18,9 @@ add_library(lootinator
 	include/lootinator/utility/range.h
 
 	src/constraint/constraint.cpp
-	src/constraint/filter.cpp
 	src/data/loot_data.cpp
 	src/lootinator.cpp
 	src/loot_table.cpp
-	src/lsm/constraints_to_lsm.cpp
-	src/lsm/cuda/lsm_to_cuda.cpp
-	src/lsm/instructions.cpp
-	src/lsm/parser.cpp
-	src/lsm/passes/loot_asserts.cpp
-	src/lsm/passes/loot_functions.cpp
-	src/lsm/passes/pass_info.cpp
 	src/mc/minecraft.cpp
 	src/template/helpers.cpp
 	src/template/kernel/naive_bruteforce_template.cpp

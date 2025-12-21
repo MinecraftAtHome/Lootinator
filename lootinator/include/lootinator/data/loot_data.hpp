@@ -15,6 +15,21 @@ namespace data {
         LootTreeNode *parent;
         std::vector<LootTreeNode *> children;
         std::vector<loot::Constraint> constraints;
+        // constraint holder here
+
+        // >=2 g pick
+        // >=1 g pick
+
+        // >= 2 effi pick
+        // >= 3 effi 5 pick
+
+        // Pool {
+        // ---- LootEntry g pick <-- {}
+        // ---- LootEntry g shovel {}
+        // ---- LootEntry g axe {}
+        // here 
+        // }
+        // ...
 
         mc::VersionRange get_version();
         virtual int get_item_index(const std::string& item_name) const;
@@ -38,7 +53,7 @@ namespace data {
     class LootPool : public LootTreeNode {
         public:
         util::RangeInclusive<std::uint32_t> rolls;
-        std::vector<int> entry_lookup;
+        std::vector<int> entry_lookup; // goes straight into shared memory
         
         LootPool(LootTreeNode *parent, const nlohmann::json &json);
         virtual void print(int indentation) const override;

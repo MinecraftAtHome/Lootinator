@@ -43,6 +43,7 @@ int main() {
 	nlohmann::json loot_table_json = nlohmann::json::parse(f);
 
 	data::LootTableRoot root = data::LootTableRoot(loot_table_json, "../../example/src/item_map.txt", mc::VersionRange::MC_1_16_TO_1_20);
+	root.add_constraints(constr);
 	
 	root.print(0);
 }

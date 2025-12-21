@@ -3,6 +3,7 @@
 
 #include "lootinator/utility/range.h"
 #include "lootinator/utility/debug.h"
+#include "lootinator/mc/minecraft.hpp"
 
 #include <cstdint>
 

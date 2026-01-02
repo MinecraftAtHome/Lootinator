@@ -20,6 +20,9 @@ namespace data {
         virtual int get_item_index(const std::string& item_name) const;
         virtual ~LootTreeNode();
 
+        virtual uint32_t get_min_lcg_advancement() const;
+        virtual uint32_t get_max_lcg_advancement() const;
+
         void indent(int indentation) const;
         virtual void print(int indentation) const;
     };
@@ -33,6 +36,9 @@ namespace data {
         // the range of nextInt values that produce this entry
         util::RangeInclusive<uint32_t> next_int_range;
 
+        virtual uint32_t get_min_lcg_advancement() const;
+        virtual uint32_t get_max_lcg_advancement() const;
+
         LootEntry(LootTreeNode *parent, const nlohmann::json &json, const util::RangeInclusive<uint32_t> next_int_range);
         virtual void print(int indentation) const override;
     };
@@ -44,6 +50,10 @@ namespace data {
         
         LootPool(LootTreeNode *parent, const nlohmann::json &json);
         uint32_t get_total_weight() const;
+
+        virtual uint32_t get_min_lcg_advancement() const;
+        virtual uint32_t get_max_lcg_advancement() const;
+
         virtual void print(int indentation) const override;
     };
     
@@ -101,8 +111,13 @@ namespace data {
 
         LootFunctionData(LootTreeNode *parent, const nlohmann::json &json);
         virtual void print(int indentation) const override;
+        
+        virtual uint32_t get_min_lcg_advancement() const;
+        virtual uint32_t get_max_lcg_advancement() const;
 
         private:
+        uint32_t get_enchant_randomly_advancement(const uint32_t& (*compare_func)(const uint32_t&, const uint32_t&), bool is_min) const;
+
         void create_list_enchant_randomly(const nlohmann::json &list);
         void create_enchant_randomly(const nlohmann::json &function);
         void create_enchant_with_levels(const nlohmann::json &function);

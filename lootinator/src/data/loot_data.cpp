@@ -20,7 +20,16 @@ namespace data {
         }
     }
 
-    int LootTreeNode::get_item_index(const std::string &item_name) const {
+    // assuming that the default loot tree node does not influence the lcg
+    uint32_t LootTreeNode::get_min_lcg_advancement() const {
+        return 0;
+    }
+    uint32_t LootTreeNode::get_max_lcg_advancement() const {
+        return 0;
+    }
+
+    int LootTreeNode::get_item_index(const std::string &item_name) const
+    {
         if (parent != nullptr) {
             return parent->get_item_index(item_name);
         }
@@ -39,6 +48,22 @@ namespace data {
             child->print(indentation);
             //std::cout << '\n';
         }
+    }
+
+    uint32_t LootEntry::get_min_lcg_advancement() const {
+        uint32_t total_advance = 0;
+        for (auto& func : children) {
+            total_advance += func->get_min_lcg_advancement();
+        }
+        return total_advance;
+    }
+
+    uint32_t LootEntry::get_max_lcg_advancement() const {
+        uint32_t total_advance = 0;
+        for (auto& func : children) {
+            total_advance += func->get_max_lcg_advancement();
+        }
+        return total_advance;
     }
 
     LootEntry::LootEntry(LootTreeNode *parent, const nlohmann::json &json, const util::RangeInclusive<uint32_t> next_int_range)
@@ -141,6 +166,30 @@ namespace data {
         return entry_lookup.size();
     }
 
+    uint32_t LootPool::get_min_lcg_advancement() const {
+        uint32_t min_among_children = 1000;
+        for (auto& child : children) {
+            min_among_children = std::min(min_among_children, child->get_min_lcg_advancement());
+        }
+
+        uint32_t item_choice_advance = (children.size() == 1 ? 0 : 1);
+        uint32_t roll_count_advance = (rolls.min == rolls.max ? 0 : 1);
+
+        return roll_count_advance + rolls.min * (min_among_children + item_choice_advance);
+    }
+
+    uint32_t LootPool::get_max_lcg_advancement() const {
+        uint32_t max_among_children = 0;
+        for (auto& child : children) {
+            max_among_children = std::max(max_among_children, child->get_max_lcg_advancement());
+        }
+
+        uint32_t item_choice_advance = (children.size() == 1 ? 0 : 1);
+        uint32_t roll_count_advance = (rolls.min == rolls.max ? 0 : 1);
+
+        return roll_count_advance + rolls.max * (max_among_children + item_choice_advance);
+    }
+
     void LootPool::print(int indentation) const
     {
         indent(indentation);
@@ -227,9 +276,54 @@ namespace data {
         }
         
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
-    } 
-    
+    }
+
+    uint32_t LootFunctionData::get_min_lcg_advancement() const {
+        switch (type) {
+        case APPLY_DAMAGE:
+            return 1;
+        case SET_COUNT:
+            return set_count.min == set_count.max ? 0 : 1;
+        case ENCHANT_RANDOMLY:
+            return get_enchant_randomly_advancement(std::min, true);
+
+        case ENCHANT_WITH_LEVELS:
+            // nice TODO 
+
+        default:
+            return 0;
+        }
+    }
+
+    uint32_t LootFunctionData::get_max_lcg_advancement() const {
+        switch (type) {
+        case APPLY_DAMAGE:
+            return 1;
+        case SET_COUNT:
+            return set_count.min == set_count.max ? 0 : 1;
+        case ENCHANT_RANDOMLY:
+            return get_enchant_randomly_advancement(std::max, false);
+
+        case ENCHANT_WITH_LEVELS:
+            // nice TODO 
+
+        default:
+            return 0;
+        }
+    }
+
     // function parsing helpers
+
+    uint32_t LootFunctionData::get_enchant_randomly_advancement(const uint32_t& (*compare_func)(const uint32_t&, const uint32_t&), bool is_min) const {
+        uint32_t total_advance = 1;
+        uint32_t extreme_level = is_min ? 10 : 0;
+        for (auto enchantment : enchant_randomly.enchantment_order) {
+            uint32_t level = mc::get_max_level(enchantment);
+            extreme_level = compare_func(extreme_level, level);
+        }
+
+        return total_advance + (extreme_level > 1 ? 1 : 0);
+    }
 
     /**
      * Shared memory structure: `[max_1, max_2, max_3, ..., max_n]`, 

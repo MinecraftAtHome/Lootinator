@@ -41,7 +41,8 @@ namespace data {
         }
     }
 
-    LootEntry::LootEntry(LootTreeNode *parent, const nlohmann::json &json)
+    LootEntry::LootEntry(LootTreeNode *parent, const nlohmann::json &json, const util::RangeInclusive<uint32_t> next_int_range)
+        : next_int_range(next_int_range)
     {
         this->parent = parent;
         
@@ -77,6 +78,8 @@ namespace data {
             .add("name", name)
             .add("type", type)
             .add("weight", weight)
+            .add("min_next_int", next_int_range.min)
+            .add("max_next_int", next_int_range.max)
             .finish();
 
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
@@ -121,12 +124,21 @@ namespace data {
         this->parent = parent;
         int index = 0;
         for (auto &entry : json["entries"]) {
-            this->children.push_back(new LootEntry(this, entry));
-            for (int w = 0; w < (entry.contains("weight") ? (int)entry["weight"] : 1); w++) {
+            uint32_t entry_weight = (entry.contains("weight") ? static_cast<uint32_t>(entry["weight"]) : 1);
+            uint32_t start_weight = entry_lookup.size();
+            uint32_t end_weight = start_weight + entry_weight - 1; // -1 accounts for range being inclusive-inclusive
+
+            for (uint32_t w = 0; w < entry_weight; w++) {
                 this->entry_lookup.push_back(index);
             }
-                        index++;
+                        
+            this->children.push_back(new LootEntry(this, entry, {start_weight, end_weight}));
+            index++;
         }   
+    }
+
+    uint32_t LootPool::get_total_weight() const {
+        return entry_lookup.size();
     }
 
     void LootPool::print(int indentation) const
@@ -136,6 +148,7 @@ namespace data {
         util::DebugStruct(std::cout, "LootPool")
             .add("min_rolls", rolls.min)
             .add("max_rolls", rolls.max)
+            .add("total_weight", get_total_weight())
             .finish();
 
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);

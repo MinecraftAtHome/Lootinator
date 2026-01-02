@@ -15,21 +15,6 @@ namespace data {
         LootTreeNode *parent;
         std::vector<LootTreeNode *> children;
         std::vector<loot::Constraint> constraints;
-        // constraint holder here
-
-        // >=2 g pick
-        // >=1 g pick
-
-        // >= 2 effi pick
-        // >= 3 effi 5 pick
-
-        // Pool {
-        // ---- LootEntry g pick <-- {}
-        // ---- LootEntry g shovel {}
-        // ---- LootEntry g axe {}
-        // here 
-        // }
-        // ...
 
         mc::VersionRange get_version();
         virtual int get_item_index(const std::string& item_name) const;
@@ -45,8 +30,10 @@ namespace data {
         mc::ItemType type;
         std::string name;
         int weight;
+        // the range of nextInt values that produce this entry
+        util::RangeInclusive<uint32_t> next_int_range;
 
-        LootEntry(LootTreeNode *parent, const nlohmann::json &json);
+        LootEntry(LootTreeNode *parent, const nlohmann::json &json, const util::RangeInclusive<uint32_t> next_int_range);
         virtual void print(int indentation) const override;
     };
 
@@ -56,6 +43,7 @@ namespace data {
         std::vector<int> entry_lookup; // goes straight into shared memory
         
         LootPool(LootTreeNode *parent, const nlohmann::json &json);
+        uint32_t get_total_weight() const;
         virtual void print(int indentation) const override;
     };
     

@@ -286,10 +286,8 @@ namespace data {
             return set_count.min == set_count.max ? 0 : 1;
         case ENCHANT_RANDOMLY:
             return get_enchant_randomly_advancement(std::min, true);
-
         case ENCHANT_WITH_LEVELS:
-            // nice TODO 
-
+            return enchant_with_levels.level.min == enchant_with_levels.level.max ? 6 : 6+1; 
         default:
             return 0;
         }
@@ -303,16 +301,29 @@ namespace data {
             return set_count.min == set_count.max ? 0 : 1;
         case ENCHANT_RANDOMLY:
             return get_enchant_randomly_advancement(std::max, false);
-
         case ENCHANT_WITH_LEVELS:
-            // nice TODO 
-
+            return get_enchant_with_levels_max_advancement();
         default:
             return 0;
         }
     }
 
     // function parsing helpers
+
+    uint32_t LootFunctionData::get_enchant_with_levels_max_advancement() const {
+        uint32_t max_unamplified = enchant_with_levels.level.max + 1 + (enchant_with_levels.enchantability / 4) * 2;
+        uint32_t effective_max = static_cast<uint32_t>(std::ceil(1.15f * max_unamplified));
+        uint32_t min_unamplified = enchant_with_levels.level.min + 1;
+        uint32_t effective_min = static_cast<uint32_t>(std::floor(0.85f * min_unamplified));
+
+        uint32_t max_groups = 0; // enchantment groups for max case
+        for (uint32_t lvl = effective_min; lvl <= effective_max; lvl++) {
+            max_groups = std::max(max_groups, static_cast<uint32_t>(shared_mem[lvl]));
+        }
+
+        uint32_t base_calls = enchant_with_levels.level.min == enchant_with_levels.level.max ? 5 : 6;
+        return base_calls + (max_groups-1) * 2 + 1;
+    }
 
     uint32_t LootFunctionData::get_enchant_randomly_advancement(const uint32_t& (*compare_func)(const uint32_t&, const uint32_t&), bool is_min) const {
         uint32_t total_advance = 1;

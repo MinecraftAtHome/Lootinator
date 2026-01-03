@@ -134,3 +134,56 @@ LootEntry:
 
 
 full-index_function-output
+
+
+
+
+
+
+
+
+
+
+
+
+int level = minLevel;
+if (minLevel != maxLevel)
+   level += nextInt(rand, maxLevel - minLevel + 1);
+
+const int delta = enchantability / 4 + 1;
+level += 1 + nextInt(rand, delta) + nextInt(rand, delta);
+const float amplifier = (nextFloat(rand) + nextFloat(rand) - 1.0F) * 0.15F;
+level = java_round_positive((float)level + (float)level * amplifier);
+
+// copy the available enchantment results to a local array
+is->enchantment_count = 0;
+const int enchant_vec_index = level + 1;
+int vecSize = varparams_int_arr[enchant_vec_index][0];     // there was a nasty bug here: 
+int totalWeight = varparams_int_arr[enchant_vec_index][1]; // don't forget about the first vector!!!
+if (vecSize == 0) return; // no enchantments available
+
+int enchantmentVec[128]; // holds triples (id, level, weight), max 42 * 3 = 126 elements
+memcpy(enchantmentVec, varparams_int_arr[enchant_vec_index] + 2, sizeof(int) * vecSize * 3);
+
+
+
+cnt = 0 1 2 3 4 5
+groups = 3 2 1 0
+
+int index = choose_enchantment(rand, enchantmentVec, vecSize, totalWeight);
+is->enchantments[0].enchantment = enchantmentVec[index];
+is->enchantments[0].level = enchantmentVec[index + 1];
+is->enchantment_count++;
+
+while (nextInt(rand, 50) <= level)
+{
+   remove_incompatible_enchantments(index, enchantmentVec, &vecSize, &totalWeight);
+   if (vecSize == 0) break;
+
+   index = choose_enchantment(rand, enchantmentVec, vecSize, totalWeight);
+   is->enchantments[is->enchantment_count].enchantment = enchantmentVec[index];
+   is->enchantments[is->enchantment_count].level = enchantmentVec[index + 1];
+   is->enchantment_count++;
+
+   level /= 2;
+}

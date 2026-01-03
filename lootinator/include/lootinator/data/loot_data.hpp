@@ -116,6 +116,7 @@ namespace data {
         virtual uint32_t get_max_lcg_advancement() const;
 
         private:
+        uint32_t get_enchant_with_levels_max_advancement() const;
         uint32_t get_enchant_randomly_advancement(const uint32_t& (*compare_func)(const uint32_t&, const uint32_t&), bool is_min) const;
 
         void create_list_enchant_randomly(const nlohmann::json &list);

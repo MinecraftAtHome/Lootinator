@@ -28,8 +28,7 @@ namespace data {
         return 0;
     }
 
-    int LootTreeNode::get_item_index(const std::string &item_name) const
-    {
+    int LootTreeNode::get_item_index(const std::string &item_name) const {
         if (parent != nullptr) {
             return parent->get_item_index(item_name);
         }
@@ -67,8 +66,7 @@ namespace data {
     }
 
     LootEntry::LootEntry(LootTreeNode *parent, const nlohmann::json &json, const util::RangeInclusive<uint32_t> next_int_range)
-        : next_int_range(next_int_range)
-    {
+        : next_int_range(next_int_range) {
         this->parent = parent;
         
         // entry parsing
@@ -134,8 +132,7 @@ namespace data {
         return -1;
     }
 
-    void LootTableRoot::print(int indentation) const
-    {
+    void LootTableRoot::print(int indentation) const {
         indent(indentation);
 
         util::DebugStruct(std::cout, "LootTableRoot")
@@ -143,6 +140,70 @@ namespace data {
             .finish();
 
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
+    }
+
+    bool LootEntry::matches_constraint(const loot::Constraint& constraint) const {
+        if (item != constraint.item) {
+            return false;
+        }
+
+        for (auto& attribute : constraint.attributes) {
+            bool any_matched = false;
+            for (auto& child : children) {
+                LootFunctionData* func = dynamic_cast<LootFunctionData*>(child);
+
+                if (attribute.get_category() == mc::AttributeCategory::ENCHANTMENT_ATTRIBUTE) {
+                    if (func->type == LootFunctionType::ENCHANT_WITH_LEVELS) {
+                        any_matched = true;
+                    }
+                    else if (func->type == LootFunctionType::ENCHANT_RANDOMLY) {
+                        auto& vec = func->enchant_randomly.enchantment_order;
+                        if (std::find(vec.begin(), vec.end(), mc::get_enchantment_from_attribute(attribute)) != vec.end()) {
+                            any_matched = true;
+                        }
+                    }
+                }
+            }
+            if (!any_matched) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool LootPool::matches_constraint(const loot::Constraint& constraint) const {
+        for (auto child : children) {
+            LootEntry* entry = dynamic_cast<LootEntry*>(child);
+            if (entry->matches_constraint(constraint)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void LootTableRoot::add_constraints(const std::vector<loot::Constraint> &constraints) {
+        for (const auto& constraint : constraints) {
+            std::vector<int> matching_pools;
+            int pool_idx = 0;
+            for (auto child : children) {
+                LootPool* pool = dynamic_cast<LootPool*>(child);
+                if (pool->matches_constraint(constraint)) {
+                    matching_pools.push_back(pool_idx);
+                }
+                pool_idx++;
+            }
+
+            if (matching_pools.empty()) {
+                throw "we messed up";
+            }
+            else if (matching_pools.size() > 1) {
+                this->constraints.push_back(constraint);
+            }
+            else {
+                children[matching_pools[0]]->constraints.push_back(constraint);
+            }
+        }
     }
 
     LootPool::LootPool(LootTreeNode *parent, const nlohmann::json &json) : rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {
@@ -159,7 +220,7 @@ namespace data {
                         
             this->children.push_back(new LootEntry(this, entry, {start_weight, end_weight}));
             index++;
-        }   
+        }
     }
 
     uint32_t LootPool::get_total_weight() const {
@@ -190,8 +251,7 @@ namespace data {
         return roll_count_advance + rolls.max * (max_among_children + item_choice_advance);
     }
 
-    void LootPool::print(int indentation) const
-    {
+    void LootPool::print(int indentation) const {
         indent(indentation);
 
         util::DebugStruct(std::cout, "LootPool")
@@ -237,8 +297,7 @@ namespace data {
         }
     }
 
-    void LootFunctionData::print(int indentation) const
-    {
+    void LootFunctionData::print(int indentation) const {
         indent(indentation);
 
         static const char* function_names[] = {"enchant_randomly", "enchant_with_levels", "set_count", "apply_damage", "NULL"};
@@ -343,8 +402,7 @@ namespace data {
      * The order is stored outside of shared memory and used by the compiler to map enchantment contraints to function-specific indices.
      * This variant of `enchant_randomly` uses a user-provided list of applicable enchantments.
      */
-    void LootFunctionData::create_list_enchant_randomly(const nlohmann::json &list) 
-    {
+    void LootFunctionData::create_list_enchant_randomly(const nlohmann::json &list) {
         for (auto& entry : list) {
             if (!entry.is_string()) {
                 std::fprintf(stderr, "create_list_enchant_randomly_vector(): got non-string enchant list element, skipped.\n");
@@ -369,8 +427,7 @@ namespace data {
      * The order is stored outside of shared memory and used by the compiler to map enchantment contraints to function-specific indices.
      * This variant of `enchant_randomly` uses the standard Minecraft enchantment order for the appropriate version range.
      */
-    void LootFunctionData::create_enchant_randomly(const nlohmann::json &function) 
-    {
+    void LootFunctionData::create_enchant_randomly(const nlohmann::json &function) {
         data::LootEntry* entry = dynamic_cast<data::LootEntry*>(parent);
         std::vector<mc::Enchantment> all_enchants = mc::get_enchantments_for_version(get_version());
         bool allow_treasure = function.contains("treasure") ? (bool)function["treasure"] : true;
@@ -392,8 +449,7 @@ namespace data {
     /**
      * LootFunctionData::create_enchant_with_levels helper. Returns the number of unique enchantment groups for a given item and a enchant_with_levels effective level. 
      */
-    static int get_enchant_with_levels_groups(const std::vector<mc::Enchantment>& enchants, int level, mc::ItemType item_type, bool allow_treasure)
-    {
+    static int get_enchant_with_levels_groups(const std::vector<mc::Enchantment>& enchants, int level, mc::ItemType item_type, bool allow_treasure) {
         std::vector<mc::Enchantment> applicable;
         for (const auto& ench : enchants) {
             if (!mc::is_enchantment_applicable(ench, item_type, false)) {
@@ -418,8 +474,7 @@ namespace data {
      * where `count_i` is the number of mutually-exclusive enchantment groups among all applicable enchantments, e.g. `{"fortune", "silk_touch"}`, for an effective enchanting level `i`. 
      * Enchantment indices are not stored; `enchant_with_levels` output filtering is currently unsupported.
      */
-    void LootFunctionData::create_enchant_with_levels(const nlohmann::json &function) 
-    {
+    void LootFunctionData::create_enchant_with_levels(const nlohmann::json &function) {
         data::LootEntry* entry = dynamic_cast<data::LootEntry*>(parent);
         std::vector<mc::Enchantment> all_enchants = mc::get_enchantments_for_version(get_version());
         bool allow_treasure = function.contains("treasure") ? (bool)function["treasure"] : true;
@@ -443,5 +498,3 @@ namespace data {
         type = data::LootFunctionType::ENCHANT_WITH_LEVELS;
     }
 }
-
-

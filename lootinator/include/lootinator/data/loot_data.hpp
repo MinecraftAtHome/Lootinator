@@ -39,6 +39,8 @@ namespace data {
         virtual uint32_t get_min_lcg_advancement() const;
         virtual uint32_t get_max_lcg_advancement() const;
 
+        bool matches_constraint(const loot::Constraint &constraint) const;
+
         LootEntry(LootTreeNode *parent, const nlohmann::json &json, const util::RangeInclusive<uint32_t> next_int_range);
         virtual void print(int indentation) const override;
     };
@@ -54,6 +56,8 @@ namespace data {
         virtual uint32_t get_min_lcg_advancement() const;
         virtual uint32_t get_max_lcg_advancement() const;
 
+        bool matches_constraint(const loot::Constraint &constraint) const;
+
         virtual void print(int indentation) const override;
     };
     
@@ -65,6 +69,8 @@ namespace data {
 	    LootTableRoot(const nlohmann::json &json, const std::string& item_map_filepath, mc::VersionRange version);
         virtual int get_item_index(const std::string& item_name) const override;
         virtual void print(int indentation) const override;
+
+        void add_constraints(const std::vector<loot::Constraint>& constraints);
     };
 
 // LOOT FUNCTION DATA

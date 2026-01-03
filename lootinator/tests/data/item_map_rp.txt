@@ -23,3 +23,4 @@ minecraft:obsidian
 minecraft:golden_sword
 minecraft:golden_apple
 minecraft:bell
+minecraft:lodestone

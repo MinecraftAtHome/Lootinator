@@ -1,5 +1,6 @@
 #include <vector>
 #include <fstream>
+#include <iostream>
 
 #include "lootinator/lootinator.h"
 #include "lootinator/utility/debug.h"
@@ -32,12 +33,14 @@ pool 0  {
 */
 
 int main() {
-	//std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
-    std::ifstream f("../../lootinator/tests/data/end_city_1_21_8.json");
+	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
+    std::ifstream f("../../example/src/ruined_portal.json");
 	nlohmann::json loot_table_json = nlohmann::json::parse(f);
 
-	data::LootTableRoot root = data::LootTableRoot(loot_table_json, "../../lootinator/tests/data/item_map_end_city.txt", mc::VersionRange::MC_1_21_TO_1_21_9);
-	//root.add_constraints(constr);
+	data::LootTableRoot root = data::LootTableRoot(loot_table_json, "../../example/src/item_map.txt", mc::VersionRange::MC_1_16_TO_1_20);
+	root.add_constraints(constr);
+	
+	//std::cout << root.children[1]->get_min_lcg_advancement() << '\n' << root.children[1]->get_max_lcg_advancement() << '\n';
 	
 	root.print(0);
 }

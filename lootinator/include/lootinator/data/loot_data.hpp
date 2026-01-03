@@ -25,6 +25,7 @@ namespace data {
 
         void indent(int indentation) const;
         virtual void print(int indentation) const;
+        void print_constraints(int indentation) const;
     };
 
     class LootEntry : public LootTreeNode {

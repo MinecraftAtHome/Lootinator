@@ -47,6 +47,21 @@ namespace data {
             child->print(indentation);
             //std::cout << '\n';
         }
+        print_constraints(indentation);
+    }
+
+    void LootTreeNode::print_constraints(int indentation) const {
+        indent(indentation);
+        std::cout << "Constraints: [";
+        for (auto& constraint : constraints) {
+            util::DebugStruct(std::cout, "Constraint")
+                .add("item", constraint.item)
+                .add("min_count", constraint.count_range.min)
+                .add("max_count", constraint.count_range.max)
+                .finish();
+            std::cout << ", ";
+        }
+        std::cout << ']';
     }
 
     uint32_t LootEntry::get_min_lcg_advancement() const {
@@ -195,7 +210,7 @@ namespace data {
             }
 
             if (matching_pools.empty()) {
-                throw "we messed up";
+                //throw "we messed up";
             }
             else if (matching_pools.size() > 1) {
                 this->constraints.push_back(constraint);
@@ -259,6 +274,8 @@ namespace data {
             .add("max_rolls", rolls.max)
             .add("total_weight", get_total_weight())
             .finish();
+
+        
 
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     }

@@ -54,11 +54,7 @@ namespace data {
         indent(indentation);
         std::cout << "Constraints: [";
         for (auto& constraint : constraints) {
-            util::DebugStruct(std::cout, "Constraint")
-                .add("item", constraint.item)
-                .add("min_count", constraint.count_range.min)
-                .add("max_count", constraint.count_range.max)
-                .finish();
+            std::cout << constraint; 
             std::cout << ", ";
         }
         std::cout << ']';
@@ -85,7 +81,7 @@ namespace data {
         this->parent = parent;
         
         // entry parsing
-        weight = json.contains("weight") ? json["weight"] : 1;
+        weight = json.contains("weight") ? static_cast<int>(json["weight"]) : 1;
 
         if (json["type"] == "minecraft:empty") {
             // empty entry
@@ -210,7 +206,7 @@ namespace data {
             }
 
             if (matching_pools.empty()) {
-                //throw "we messed up";
+                throw "we messed up";
             }
             else if (matching_pools.size() > 1) {
                 this->constraints.push_back(constraint);

@@ -39,12 +39,26 @@ int main() {
 
 	data::LootTableRoot root = data::LootTableRoot(loot_table_json, "../../example/src/item_map.txt", mc::VersionRange::MC_1_16_TO_1_20);
 
+/*
+BEFORE:
+Constraints: [
+	Constraint{item=23, count_range=RangeInclusive{min=0, max=0}, slot_id=0, attributes=[]}, 
+	Constraint{item=23, count_range=RangeInclusive{min=2, max=2}, slot_id=0, attributes=[ItemAttribute{type=21, level=3}]}, 
+	Constraint{item=23, count_range=RangeInclusive{min=1, max=100000}, slot_id=0, attributes=[ItemAttribute{type=21, level=-1}]}, ]
+
+AFTER:
+Constraints: [
+	Constraint{item=23, count_range=RangeInclusive{min=2, max=2}, slot_id=0, attributes=[ItemAttribute{type=21, level=3}]}, 
+	Constraint{item=23, count_range=RangeInclusive{min=1, max=100000}, slot_id=0, attributes=[ItemAttribute{type=21, level=-1}]}, 
+	Constraint{item=23, count_range=RangeInclusive{min=0, max=0}, slot_id=0, attributes=[]}, 
+*/
+
 	try {
 		root.add_constraints(constr);
 	}		
     catch (std::exception &ex) {
 		std::cout << ex.what() << "\n";
 	}
-	
+
 	root.print(0);
 }

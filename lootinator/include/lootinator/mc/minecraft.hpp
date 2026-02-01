@@ -113,10 +113,13 @@ namespace mc {
     // or type of music disc
     struct ItemAttribute {
         std::uint32_t type;
-        std::uint32_t level;
+        std::int32_t level;
 
         static ItemAttribute from_json(nlohmann::json json) {
-            return {json["type"], json["level"]};
+            if (json.contains("level")) {
+                return {json["type"], json["level"]};
+            }
+            return {json["type"], -1};
         }
 
         mc::AttributeCategory get_category() const;

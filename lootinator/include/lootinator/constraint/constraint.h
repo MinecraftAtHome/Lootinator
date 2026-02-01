@@ -19,7 +19,7 @@ namespace loot {
         std::uint32_t item;
         util::RangeInclusive<std::uint32_t> count_range;
         std::int32_t slot_id; // contraints are shared by cracking and finding kernels, finding won't use this
-        std::vector<mc::ItemAttribute> attributes;
+        std::vector<mc::ItemAttribute> attributes; // TODO: make this not a vector...
 
         bool item_equal(const Constraint& other) const;
 

@@ -54,11 +54,7 @@ namespace data {
         indent(indentation);
         std::cout << "Constraints: [";
         for (auto& constraint : constraints) {
-            util::DebugStruct(std::cout, "Constraint")
-                .add("item", constraint.item)
-                .add("min_count", constraint.count_range.min)
-                .add("max_count", constraint.count_range.max)
-                .finish();
+            std::cout << constraint; 
             std::cout << ", ";
         }
         std::cout << ']';
@@ -85,7 +81,7 @@ namespace data {
         this->parent = parent;
         
         // entry parsing
-        weight = json.contains("weight") ? json["weight"] : 1;
+        weight = json.contains("weight") ? static_cast<int>(json["weight"]) : 1;
 
         if (json["type"] == "minecraft:empty") {
             // empty entry
@@ -210,7 +206,7 @@ namespace data {
             }
 
             if (matching_pools.empty()) {
-                //throw "we messed up";
+                throw "we messed up";
             }
             else if (matching_pools.size() > 1) {
                 this->constraints.push_back(constraint);
@@ -219,6 +215,49 @@ namespace data {
                 children[matching_pools[0]]->constraints.push_back(constraint);
             }
         }
+        this->sort_constraints();
+    }
+
+    void LootTreeNode::sort_constraints() {
+        for (auto &child : this->children) {
+            child->sort_constraints();
+        }
+
+        /*
+            1) item type
+            2) attribute count (if none: last)
+            3) attribute 
+            4) is_level_specified
+            5) profit??
+        */
+        auto sort_lambda = [](loot::Constraint &a, loot::Constraint &b){
+            if (a.item < b.item) {
+                return true;
+            }
+            if (a.item > b.item) {
+                return false;
+            }
+            if (a.attributes.size() == 0) {
+                return false;
+            }
+            if (b.attributes.size() == 0) {
+                return true;
+            }
+            if (a.attributes[0].type > b.attributes[0].type) {
+                return false;
+            }
+            if (a.attributes[0].type < b.attributes[0].type) {
+                return true;
+            }
+            if (a.attributes[0].level == -1) {
+                return false;
+            }
+            if (b.attributes[0].level == -1) {
+                return true;
+            }
+            return false;
+        };
+        std::sort(this->constraints.begin(), this->constraints.end(), sort_lambda);
     }
 
     LootPool::LootPool(LootTreeNode *parent, const nlohmann::json &json) : rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {

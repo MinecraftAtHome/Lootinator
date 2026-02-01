@@ -5,7 +5,8 @@ path_pfx = pathlib.Path(__file__).parent.resolve()
 
 
 def get_file_list(dirname, flag):
-    file_list = list(filter(lambda x: '.' in x, glob.glob(str(dirname), recursive=True)))
+    file_list_unfiltered = list(filter(lambda x: '.' in x, glob.glob(str(dirname), recursive=True)))
+    file_list = list(filter(lambda x: x.endswith('.h') or x.endswith('.hpp') or x.endswith('.c') or x.endswith('.cpp'), file_list_unfiltered))
     result = ''
     list_len = len(file_list)
     i = 0
@@ -19,6 +20,7 @@ def get_file_list(dirname, flag):
 
 includes = get_file_list(path_pfx / pathlib.Path('include') / pathlib.Path('**'), flag=True)
 sources = get_file_list(path_pfx / pathlib.Path('src') / pathlib.Path('**'), flag=False)
+tests = get_file_list(path_pfx / pathlib.Path('tests') / pathlib.Path('**'), flag=False)
 
 cmake = \
 """add_library(lootinator
@@ -29,10 +31,7 @@ cmake = \
 target_include_directories(lootinator PUBLIC include)
 
 set(TEST_FILES
-    tests/constraint_test.cpp
-    tests/constraint_json_test.cpp
-    tests/filter_test.cpp
-    tests/loot_functions_test.cpp
+@TESTS
 )
 
 # TODO: compiler flags, (-O3, warnings, etc)
@@ -54,7 +53,7 @@ foreach(test_file ${TEST_FILES})
 endforeach()
 """
 
-final_cmake = cmake.replace('@INCLUDES', includes).replace('@SOURCES', sources)
+final_cmake = cmake.replace('@INCLUDES', includes).replace('@SOURCES', sources).replace('@TESTS', tests)
 cmake_filepath = path_pfx / pathlib.Path('CMakeLists.txt')
 print(cmake_filepath)
      

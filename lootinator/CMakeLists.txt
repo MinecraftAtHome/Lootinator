@@ -1,10 +1,9 @@
 add_library(lootinator
 	include/lootinator/assertions.h
 	include/lootinator/constraint/constraint.h
-	include/lootinator/cuda/bruteforce_kernel.hpp
-	include/lootinator/cuda/kernel.hpp
-	include/lootinator/cuda/kernel_structure.h
 	include/lootinator/data/loot_data.hpp
+	include/lootinator/kgen/bruteforce_kernel.hpp
+	include/lootinator/kgen/kernel.hpp
 	include/lootinator/lootinator.h
 	include/lootinator/mc/minecraft.hpp
 	include/lootinator/template/helpers.h
@@ -18,6 +17,8 @@ add_library(lootinator
 
 	src/constraint/constraint.cpp
 	src/data/loot_data.cpp
+	src/kgen/bruteforce_kernel.cpp
+	src/kgen/kernel.cpp
 	src/lootinator.cpp
 	src/mc/minecraft.cpp
 	src/template/helpers.cpp
@@ -30,9 +31,9 @@ add_library(lootinator
 target_include_directories(lootinator PUBLIC include)
 
 set(TEST_FILES
-    tests/constraint_test.cpp
-    tests/constraint_json_test.cpp
-    tests/loot_functions_test.cpp
+	tests/constraint_json_test.cpp
+	tests/constraint_test.cpp
+	tests/loot_functions_test.cpp
 )
 
 # TODO: compiler flags, (-O3, warnings, etc)

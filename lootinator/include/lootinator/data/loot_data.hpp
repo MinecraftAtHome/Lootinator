@@ -17,6 +17,7 @@ namespace data {
         std::vector<loot::Constraint> constraints;
 
         mc::VersionRange get_version();
+        virtual LootTreeNode* get_root_node();
         virtual int get_item_index(const std::string& item_name) const;
         virtual ~LootTreeNode();
 
@@ -66,6 +67,7 @@ namespace data {
     
     class LootTableRoot : public LootTreeNode {
         public:
+        int id_counter; // bleh
         mc::VersionRange version;
         std::unordered_map<std::string, int> item_map;
 
@@ -111,6 +113,7 @@ namespace data {
      */
     class LootFunctionData : public LootTreeNode {
         public:
+        uint32_t id;
         std::vector<int> shared_mem;
         data::LootFunctionType type;
 

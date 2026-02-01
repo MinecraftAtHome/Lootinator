@@ -14,7 +14,16 @@ namespace data {
         return dynamic_cast<LootTableRoot*>(next)->version;
     }
 
-    LootTreeNode::~LootTreeNode() {
+    LootTreeNode* LootTreeNode::get_root_node() {
+        LootTreeNode* current = this;
+        while (current->parent != nullptr) {
+            current = current->parent;
+        }
+        return current;
+    }
+
+    LootTreeNode::~LootTreeNode()
+    {
         for (auto& child : children) {
             delete child;
         }
@@ -223,13 +232,6 @@ namespace data {
             child->sort_constraints();
         }
 
-        /*
-            1) item type
-            2) attribute count (if none: last)
-            3) attribute 
-            4) is_level_specified
-            5) profit??
-        */
         auto sort_lambda = [](loot::Constraint &a, loot::Constraint &b){
             if (a.item < b.item) {
                 return true;
@@ -324,6 +326,9 @@ namespace data {
 
     LootFunctionData::LootFunctionData(LootTreeNode *parent, const nlohmann::json &json) {
         this->parent = parent;
+        LootTableRoot* root = dynamic_cast<LootTableRoot*>(get_root_node());
+        this->id = root->id_counter;
+        root->id_counter++;
 
         // function parsing
         std::string function_name = mc::strip_prefix(json["function"]); 

@@ -16,7 +16,15 @@ namespace kgen {
     };
 
     class Kernel {
+    public:
+        std::vector<uint32_t> pool_memory_offsets;
+        std::vector<uint32_t> function_memory_offsets;
+        std::vector<uint32_t> combined_shared_memory; // final final
+
+        Kernel(data::LootTableRoot &root_node);
+
     protected:
+        void fill_function_shared_mem(data::LootTreeNode *current);
         virtual ConfiguredKernel generate() const = 0;
     };
 }

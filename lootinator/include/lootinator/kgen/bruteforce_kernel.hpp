@@ -13,6 +13,7 @@ namespace kgen {
         virtual ConfiguredKernel generate() const override;
         
         std::string to_string() const;
+        void generate_helper_functions(std::ostream& out) const;
         void generate_forward_filter(std::ostream& out) const;
     };
 }

@@ -2,6 +2,7 @@ add_library(lootinator
 	include/lootinator/assertions.h
 	include/lootinator/constraint/constraint.h
 	include/lootinator/data/loot_data.hpp
+	include/lootinator/global_settings.hpp
 	include/lootinator/kgen/bruteforce_kernel.hpp
 	include/lootinator/kgen/kernel.hpp
 	include/lootinator/lootinator.h
@@ -17,6 +18,7 @@ add_library(lootinator
 
 	src/constraint/constraint.cpp
 	src/data/loot_data.cpp
+	src/global_settings.cpp
 	src/kgen/bruteforce_kernel.cpp
 	src/kgen/kernel.cpp
 	src/lootinator.cpp

@@ -22,7 +22,7 @@ namespace kgen {
             to_string(),
             UINT64_C(1) << 48,
             UINT64_C(1) << 32,
-            GlobalSettings::THREADS_PER_BLOCK,
+            global_settings.THREADS_PER_BLOCK,
             combined_shared_memory
         };
     }

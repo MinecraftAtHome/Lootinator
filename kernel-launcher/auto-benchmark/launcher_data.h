@@ -7,7 +7,7 @@
 
 namespace launcher {
     // The actual kernels will use different definitions provided by the
-    // GlobalSettings class. Our assumption here is that the GlobalSettings
+    // Settings class. Our assumption here is that the Settings
     // class will be configured correctly for the target environment.
     typedef uint64_t u64;
     typedef uint32_t u32;

@@ -6,6 +6,7 @@
 #include "lootinator/utility/debug.h"
 
 #include "lootinator/data/loot_data.hpp"
+#include "lootinator/kgen/bruteforce_kernel.hpp"
 
 /*
 loot table: ruined portal
@@ -59,6 +60,12 @@ Constraints: [
     catch (std::exception &ex) {
 		std::cout << ex.what() << "\n";
 	}
+
+	std::vector<kgen::ConfiguredKernel> kernels;
+	
+	kgen::BruteforceKernel::gen_kernels(root, kernels);
+	//kgen::StatePredictionKernel::gen_kernels(root, kernels);
+	//...
 
 	root.print(0);
 }

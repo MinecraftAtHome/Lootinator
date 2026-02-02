@@ -49,10 +49,10 @@ namespace kgen {
     void Kernel::write_shared_definitions(std::ostream& out) {
         out << "#ifndef SHARED_DEFINITIONS\n"
             << "//@SharedDefinitionsStart\n"
-            << "typedef " << GlobalSettings::UNSIGNED_32_TYPE << " u32\n"
-            << "typedef " << GlobalSettings::SIGNED_32_TYPE << " i32\n"
-            << "typedef " << GlobalSettings::UNSIGNED_64_TYPE << " u64\n"
-            << "typedef " << GlobalSettings::SIGNED_64_TYPE << " i64\n\n";
+            << "typedef " << global_settings.UNSIGNED_32_TYPE << " u32\n"
+            << "typedef " << global_settings.SIGNED_32_TYPE << " i32\n"
+            << "typedef " << global_settings.UNSIGNED_64_TYPE << " u64\n"
+            << "typedef " << global_settings.SIGNED_64_TYPE << " i64\n\n";
 
         out <<
 R"(constexpr u64 JRAND_MULTIPLIER = 0x5deece66d;

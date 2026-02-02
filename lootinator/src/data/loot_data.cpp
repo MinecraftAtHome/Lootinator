@@ -163,7 +163,7 @@ namespace data {
     }
 
     bool LootEntry::matches_constraint(const loot::Constraint& constraint) const {
-        if (item != constraint.item) {
+        if (item < 0 || static_cast<uint32_t>(item) != constraint.item) {
             return false;
         }
 
@@ -202,8 +202,8 @@ namespace data {
         return false;
     }
 
-    void LootTableRoot::add_constraints(const std::vector<loot::Constraint> &constraints) {
-        for (const auto& constraint : constraints) {
+    void LootTableRoot::add_constraints(const std::vector<loot::Constraint> &new_constraints) {
+        for (const auto& constraint : new_constraints) {
             std::vector<int> matching_pools;
             int pool_idx = 0;
             for (auto child : children) {
@@ -218,13 +218,13 @@ namespace data {
                 throw "we messed up";
             }
             else if (matching_pools.size() > 1) {
-                this->constraints.push_back(constraint);
+                constraints.push_back(constraint);
             }
             else {
                 children[matching_pools[0]]->constraints.push_back(constraint);
             }
         }
-        this->sort_constraints();
+        sort_constraints();
     }
 
     void LootTreeNode::sort_constraints() {
@@ -267,7 +267,7 @@ namespace data {
         int index = 0;
         for (auto &entry : json["entries"]) {
             uint32_t entry_weight = (entry.contains("weight") ? static_cast<uint32_t>(entry["weight"]) : 1);
-            uint32_t start_weight = entry_lookup.size();
+            uint32_t start_weight = static_cast<uint32_t>(entry_lookup.size());
             uint32_t end_weight = start_weight + entry_weight - 1; // -1 accounts for range being inclusive-inclusive
 
             for (uint32_t w = 0; w < entry_weight; w++) {
@@ -280,7 +280,7 @@ namespace data {
     }
 
     uint32_t LootPool::get_total_weight() const {
-        return entry_lookup.size();
+        return static_cast<uint32_t>(entry_lookup.size());
     }
 
     uint32_t LootPool::get_min_lcg_advancement() const {

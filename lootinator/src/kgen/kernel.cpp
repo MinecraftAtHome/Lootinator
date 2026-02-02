@@ -12,7 +12,7 @@ namespace kgen {
             }
         }
         else {
-            uint32_t size = func->shared_mem.size();
+            uint32_t size = static_cast<uint32_t>(func->shared_mem.size());
             uint32_t last = function_memory_offsets.back();
             function_memory_offsets.push_back(last + size);
 
@@ -28,9 +28,9 @@ namespace kgen {
         pool_memory_offsets.push_back(0);
 
         // parse shared mem for pools
-        for (auto pool : root_node.children) {
-            data::LootPool* pool = dynamic_cast<data::LootPool*>(pool);
-            uint32_t size = pool->entry_lookup.size();
+        for (auto child : root_node.children) {
+            data::LootPool* pool = dynamic_cast<data::LootPool*>(child);
+            uint32_t size = static_cast<uint32_t>(pool->entry_lookup.size());
             uint32_t last = pool_memory_offsets.back();
             pool_memory_offsets.push_back(last + size);
             

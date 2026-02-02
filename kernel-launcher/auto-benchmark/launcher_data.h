@@ -3,20 +3,19 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 namespace launcher {
-    // in nvrtc-compiled code, the stdint.h header is not directly available, 
-    // so this approach should be better for portability across standard systems
-    typedef unsigned long long u64;
-    typedef unsigned int u32;
-    typedef int i32;
+    // The actual kernels will use different definitions provided by the
+    // GlobalSettings class. Our assumption here is that the GlobalSettings
+    // class will be configured correctly for the target environment.
+    typedef uint64_t u64;
+    typedef uint32_t u32;
+    typedef int32_t i32;
 
     // these can be command line args if necessary
     constexpr const char* BENCHMARK_RESULTS_FILE = "benchmark_results.txt";
     constexpr const char* SOURCE_CODE_OUTPUT_FILE = "source.cu";
-
-    constexpr const char* HEADER_END_INDICATOR = "//@END_HEADER";
-    constexpr int HEADER_END_INDICATOR_LENGTH = 14;
 
     constexpr i32 UNSPECIFIED = -1;
     constexpr u32 RESULT_BUFFER_SIZE = 16u * 1024u; // max results per kernel launch

@@ -128,10 +128,7 @@ void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, co
         for (int k = 0; k < kernel_configs.size(); k++) {
             // each kernel gets its own namespace to avoid device helper conflicts
             out << "namespace kernel" << k << " {\n";
-            // shared header is stripped, for standard CUDA another header will be used
-            // and we don't want to declare it for each kernel individually 
-            size_t header_end = kernel_configs[k].kernel_code.find(HEADER_END_INDICATOR) + HEADER_END_INDICATOR_LENGTH;
-            out << kernel_configs[k].kernel_code.substr(header_end + 1);
+            out << kernel_configs[k].kernel_code;
             out << "\n} //namespace\n";
         }
     }
@@ -254,7 +251,7 @@ R"(        const LaunchParameters& config = configs[k];
         single_kernel.push_back(lp);
 
         std::ofstream fout(launcher::SOURCE_CODE_OUTPUT_FILE);
-        print_preamble(fout);
+        print_preamble(fout, lp);
         print_kernels(fout, single_kernel);
         print_kernel_launchers(fout, single_kernel);
 
@@ -281,8 +278,12 @@ R"(    const KernelMemory mem(config);
     }
 
     int generate_benchmarker_source(std::vector<launcher::LaunchParameters> kernel_configs) {
+        if (kernel_configs.size() == 0) {
+            std::cerr << "ERROR: No kernels provided.\n"
+        }
+        
         std::ofstream fout(launcher::SOURCE_CODE_OUTPUT_FILE);
-        print_preamble(fout);
+        print_preamble(fout, kernel_configs[0]);
         print_kernels(fout, kernel_configs);
         print_kernel_launchers(fout, kernel_configs);
 

@@ -95,17 +95,14 @@ void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, co
 }
 )" << "\n\n";
 
-        std::string preamble = sout.to_string();
+        std::string preamble = sout.str();
         size_t inject_start = preamble.find("//@InjectSharedDefinitions");
         size_t inject_size = std::string("//@InjectSharedDefinitions").length();
         size_t definitions_start = reference_kernel.kernel_code.find("//@SharedDefinitionsStart");
         size_t definitions_end = reference_kernel.kernel_code.find("//@SharedDefinitionsEnd");
         size_t definitions_size = definitions_end - definitions_start + 1;
 
-        if (inject_start == preamble.end() 
-            || definitions_start == reference_kernel.kernel_code.end() 
-            || definitions_end == reference_kernel.kernel_code.end()
-            ) {
+        if (inject_start == std::string::npos || definitions_start == std::string::npos || definitions_end == std::string::npos) {
             std::cerr << "WARN: Missing injection annotations! Inject step skipped.\n";
             out << preamble;
             return;
@@ -279,7 +276,8 @@ R"(    const KernelMemory mem(config);
 
     int generate_benchmarker_source(std::vector<launcher::LaunchParameters> kernel_configs) {
         if (kernel_configs.size() == 0) {
-            std::cerr << "ERROR: No kernels provided.\n"
+            std::cerr << "ERROR: No kernels provided.\n";
+            return 1;
         }
         
         std::ofstream fout(launcher::SOURCE_CODE_OUTPUT_FILE);

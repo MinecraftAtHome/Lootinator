@@ -1,11 +1,14 @@
 /*
+Compile CMD:
+nvcc .\kernel_launcher.cpp .\cuda_source_generator.cpp -lcuda -lnvrtc -o launcher
+
 This will be compiled as a standalone application.
 It's going to be an multi-feature executable that will enable:
-- automated benchmarking of a provided list of kernels (core feature)
-- launching any single kernel with provided parameters (feature of simple launcher)
+- automated benchmarking of a provided list of kernels (implemented)
+- launching any single kernel with provided parameters (implemented)
 - exporting either a single kernel or a fully automated benchmark-based
-  kernel runner as CUDA source files (additional feature, for remote computing)
-- (extra) launching any single kernel with workload split evenly(?) across several GPUs
+  kernel runner as CUDA source files (implemented)
+- (extra, TODO) launching any single kernel with workload split evenly(?) across several GPUs
 */
 
 #include <cuda.h>  // driver API

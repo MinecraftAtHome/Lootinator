@@ -1,4 +1,5 @@
 #include "lootinator/kgen/bruteforce_kernel.hpp"
+#include "lootinator/global_settings.hpp"
 #include "stdlib.h"
 
 
@@ -21,7 +22,7 @@ namespace kgen {
             to_string(),
             UINT64_C(1) << 48,
             UINT64_C(1) << 32,
-            256,
+            GlobalSettings::THREADS_PER_BLOCK,
             combined_shared_memory
         };
     }

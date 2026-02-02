@@ -8,8 +8,9 @@ namespace launcher {
     int generate_benchmarker_source(std::vector<launcher::LaunchParameters> kernel_configs);
     int generate_runner_source(launcher::LaunchParameters& kernel_config);
 
-    void print_preamble(std::ostream& out) {
-        out << 
+    void print_preamble(std::ostream& out, const launcher::LaunchParameters& reference_kernel) {
+        std::stringstream sout;
+        sout << 
 R"(#include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
@@ -22,20 +23,7 @@ R"(#include "cuda_runtime.h"
 
 // start of shared definitions block
 #define SHARED_DEFINITIONS
-typedef unsigned int u32;
-typedef int i32;
-typedef unsigned long long u64;
-typedef long long i64;
-
-constexpr u64 JRAND_MULTIPLIER = 0x5deece66d;
-constexpr u64 MASK_48 = ((1ULL << 48) - 1);
-
-__device__ inline void setSeed(uint64_t* rand, uint64_t value){ *rand = (value ^ 0x5deece66d) & ((1ULL << 48) - 1); }
-__device__ inline int next(uint64_t* rand, const int bits){ *rand = (*rand * 0x5deece66d + 0xb) & ((1ULL << 48) - 1); return (int)((int64_t)*rand >> (48 - bits)); }
-__device__ inline int nextInt(uint64_t* rand, const int n){ if ((n-1 & n) == 0) {uint64_t x = n * (uint64_t)next(rand, 31); return (int)((int64_t)x >> 31);} else {return (int)(next(rand, 31) % n);} }
-__device__ inline float nextFloat(uint64_t* rand){ return next(rand, 24) / (float)(1 << 24) }; 
-__device__ inline int nextIntBounded(uint64_t* rand, const int min, const int max) {if (min >= max) {return min;} return nextInt(rand, max - min + 1) + min;}
-__device__ inline int nextIntNoAdvance(uint64_t *rand, const int n) {if ((n-1 & n) == 0) {uint64_t x = n * *rand; return (int)((int64_t)x >> 31);} else {return (int)(*rand % n);}}
+//@InjectSharedDefinitions
 // end of shared definitions block
 
 #define CUDA_CHECK(ans) do { gpuAssert((ans), __FILE__, __LINE__); } while(false)
@@ -106,6 +94,26 @@ void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, co
     }
 }
 )" << "\n\n";
+
+        std::string preamble = sout.to_string();
+        size_t inject_start = preamble.find("//@InjectSharedDefinitions");
+        size_t inject_size = std::string("//@InjectSharedDefinitions").length();
+        size_t definitions_start = reference_kernel.kernel_code.find("//@SharedDefinitionsStart");
+        size_t definitions_end = reference_kernel.kernel_code.find("//@SharedDefinitionsEnd");
+        size_t definitions_size = definitions_end - definitions_start + 1;
+
+        if (inject_start == preamble.end() 
+            || definitions_start == reference_kernel.kernel_code.end() 
+            || definitions_end == reference_kernel.kernel_code.end()
+            ) {
+            std::cerr << "WARN: Missing injection annotations! Inject step skipped.\n";
+            out << preamble;
+            return;
+        }
+
+        std::string definitions = reference_kernel.kernel_code.substr(definitions_start, definitions_size);
+        preamble.replace(inject_start, inject_size, definitions);
+        out << preamble;
     }
 
     void print_shared_mem(std::ostream& out, const launcher::LaunchParameters& kernel_config) {

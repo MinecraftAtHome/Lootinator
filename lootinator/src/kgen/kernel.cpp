@@ -1,4 +1,6 @@
-#include "lootinator/kgen/bruteforce_kernel.hpp"
+#include "lootinator/kgen/kernel.hpp"
+#include "lootinator/global_settings.hpp"
+#include <cinttypes>
 
 
 namespace kgen {
@@ -45,22 +47,24 @@ namespace kgen {
     }
 
     void Kernel::write_shared_definitions(std::ostream& out) {
-        return
-R"(#ifndef SHARED_DEFINITIONS
-typedef unsigned int u32;
-typedef int i32;
-typedef unsigned long long u64;
-typedef long long i64;
+        out << "#ifndef SHARED_DEFINITIONS\n"
+            << "//@SharedDefinitionsStart\n"
+            << "typedef " << GlobalSettings::UNSIGNED_32_TYPE << " u32\n"
+            << "typedef " << GlobalSettings::SIGNED_32_TYPE << " i32\n"
+            << "typedef " << GlobalSettings::UNSIGNED_64_TYPE << " u64\n"
+            << "typedef " << GlobalSettings::SIGNED_64_TYPE << " i64\n\n";
 
-constexpr u64 JRAND_MULTIPLIER = 0x5deece66d;
-constexpr u64 MASK_48 = ((1ULL << 48) - 1);
+        out <<
+R"(constexpr u64 JRAND_MULTIPLIER = 0x5deece66d;
+constexpr u64 MASK_48 = 0xffffffffffff;
 
-__device__ inline void setSeed(uint64_t* rand, uint64_t value){ *rand = (value ^ 0x5deece66d) & ((1ULL << 48) - 1); }
-__device__ inline int next(uint64_t* rand, const int bits){ *rand = (*rand * 0x5deece66d + 0xb) & ((1ULL << 48) - 1); return (int)((int64_t)*rand >> (48 - bits)); }
-__device__ inline int nextInt(uint64_t* rand, const int n){ if ((n-1 & n) == 0) {uint64_t x = n * (uint64_t)next(rand, 31); return (int)((int64_t)x >> 31);} else {return (int)(next(rand, 31) % n);} }
-__device__ inline float nextFloat(uint64_t* rand){ return next(rand, 24) / (float)(1 << 24) }; 
-__device__ inline int nextIntBounded(uint64_t* rand, const int min, const int max) {if (min >= max) {return min;} return nextInt(rand, max - min + 1) + min;}
-__device__ inline int nextIntNoAdvance(uint64_t *rand, const int n) {if ((n-1 & n) == 0) {uint64_t x = n * *rand; return (int)((int64_t)x >> 31);} else {return (int)(*rand % n);}} 
+__device__ inline void setSeed(u64* rand, u64 value){ *rand = (value ^ JRAND_MULTIPLIER) & MASK_48; }
+__device__ inline i32 next(u64* rand, const i32 bits){ *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48; return (i32)((i64)*rand >> (48 - bits)); }
+__device__ inline i32 nextInt(u64* rand, const i32 n){ if ((n-1 & n) == 0) {u64 x = n * (u64)next(rand, 31); return (i32)((i64)x >> 31);} else {return (i32)(next(rand, 31) % n);} }
+__device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 << 24) }; 
+__device__ inline i32 nextIntBounded(u64* rand, const i32 min, const i32 max) {if (min >= max) {return min;} return nextInt(rand, max - min + 1) + min;}
+__device__ inline i32 nextIntNoAdvance(u64 *rand, const i32 n) {if ((n-1 & n) == 0) {u64 x = n * *rand; return (i32)((i64)x >> 31);} else {return (i32)(*rand % n);}} 
+//@SharedDefinitionsEnd
 #endif
 )";
     }

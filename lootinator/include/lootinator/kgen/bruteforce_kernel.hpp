@@ -11,8 +11,9 @@ namespace kgen {
 
     protected:
         virtual ConfiguredKernel generate() const override;
+        
         std::string to_string() const;
-        std::string generate_forward_filter() const;
+        void generate_forward_filter(std::ostream& out) const;
     };
 }
 

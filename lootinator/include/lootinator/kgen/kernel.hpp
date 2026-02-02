@@ -2,6 +2,7 @@
 #define LOOTINATOR_KERNGEN_KERNEL_H
 
 #include "lootinator/data/loot_data.hpp"
+#include <ostream>
 
 namespace kgen {
     struct ConfiguredKernel {
@@ -24,6 +25,7 @@ namespace kgen {
         Kernel(data::LootTableRoot &root_node);
 
     protected:
+        static void write_shared_definitions(std::ostream& out);
         void fill_function_shared_mem(data::LootTreeNode *current);
         virtual ConfiguredKernel generate() const = 0;
     };

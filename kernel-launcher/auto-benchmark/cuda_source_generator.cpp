@@ -20,13 +20,23 @@ R"(#include "cuda_runtime.h"
 #include <cinttypes>
 #include <iostream>
 
-typedef uint32_t u32;
-typedef int32_t i32;
-typedef uint64_t u64;
-typedef int64_t i64;
+// start of shared definitions block
+#define SHARED_DEFINITIONS
+typedef unsigned int u32;
+typedef int i32;
+typedef unsigned long long u64;
+typedef long long i64;
 
 constexpr u64 JRAND_MULTIPLIER = 0x5deece66d;
 constexpr u64 MASK_48 = ((1ULL << 48) - 1);
+
+__device__ inline void setSeed(uint64_t* rand, uint64_t value){ *rand = (value ^ 0x5deece66d) & ((1ULL << 48) - 1); }
+__device__ inline int next(uint64_t* rand, const int bits){ *rand = (*rand * 0x5deece66d + 0xb) & ((1ULL << 48) - 1); return (int)((int64_t)*rand >> (48 - bits)); }
+__device__ inline int nextInt(uint64_t* rand, const int n){ if ((n-1 & n) == 0) {uint64_t x = n * (uint64_t)next(rand, 31); return (int)((int64_t)x >> 31);} else {return (int)(next(rand, 31) % n);} }
+__device__ inline float nextFloat(uint64_t* rand){ return next(rand, 24) / (float)(1 << 24) }; 
+__device__ inline int nextIntBounded(uint64_t* rand, const int min, const int max) {if (min >= max) {return min;} return nextInt(rand, max - min + 1) + min;}
+__device__ inline int nextIntNoAdvance(uint64_t *rand, const int n) {if ((n-1 & n) == 0) {uint64_t x = n * *rand; return (int)((int64_t)x >> 31);} else {return (int)(*rand % n);}}
+// end of shared definitions block
 
 #define CUDA_CHECK(ans) do { gpuAssert((ans), __FILE__, __LINE__); } while(false)
 void gpuAssert(cudaError_t code, const char *file, int line) {
@@ -95,11 +105,6 @@ void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, co
         std::cout << std::flush;
     }
 }
-
-__device__ inline void setSeed(u64* rand, u64 value){ *rand = (value ^ JRAND_MULTIPLIER) & MASK_48; }
-__device__ inline int next(u64* rand, const int bits){ *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48; return (int)((i64)*rand >> (48 - bits)); }
-__device__ inline int nextInt(u64* rand, const int n){ if ((n-1 & n) == 0) {u64 x = n * (u64)next(rand, 31); return (int)((i64)x >> 31);} else {return (int)(next(rand, 31) % n);} }
-__device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 << 24); }
 )" << "\n\n";
     }
 

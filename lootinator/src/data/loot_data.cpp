@@ -193,13 +193,15 @@ namespace data {
     }
 
     bool LootPool::matches_constraint(const loot::Constraint& constraint) const {
+        bool matches = false;
         for (auto child : children) {
             LootEntry* entry = dynamic_cast<LootEntry*>(child);
             if (entry->matches_constraint(constraint)) {
-                return true;
+                entry->constraints.push_back(constraint);
+                matches = true;
             }
         }
-        return false;
+        return matches;
     }
 
     void LootTableRoot::add_constraints(const std::vector<loot::Constraint> &new_constraints) {

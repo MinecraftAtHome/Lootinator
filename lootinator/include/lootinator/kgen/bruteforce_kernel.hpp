@@ -11,7 +11,9 @@ namespace kgen {
 
     protected:
         virtual ConfiguredKernel generate() const override;
-        
+     
+        std::unordered_map<std::string, std::pair<std::string, int>> var_name_map;
+
         std::string to_string() const;
         void generate_helper_functions(std::ostream& out) const;
         void generate_forward_filter(std::ostream& out) const;

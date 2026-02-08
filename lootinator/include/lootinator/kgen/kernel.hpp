@@ -22,6 +22,11 @@ namespace kgen {
         std::vector<uint32_t> function_memory_offsets;
         std::vector<uint32_t> combined_shared_memory; // final final
 
+        static std::string generate_skip(std::string var, int amount);
+
+        static int kernel_index = 0;
+        std::string name;
+
         Kernel(data::LootTableRoot &root_node);
 
     protected:

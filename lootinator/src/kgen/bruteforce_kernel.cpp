@@ -1,7 +1,7 @@
 #include "lootinator/kgen/bruteforce_kernel.hpp"
 #include "lootinator/global_settings.hpp"
-#include "stdlib.h"
 
+#include <sstream>
 
 namespace kgen {
     void BruteforceKernel::gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out) {
@@ -9,16 +9,16 @@ namespace kgen {
         out.push_back(bk.generate());
     }
 
-    BruteforceKernel::BruteforceKernel(data::LootTableRoot &root_node) : Kernel(root_node) {}
-
+    BruteforceKernel::BruteforceKernel(data::LootTableRoot &root_node) : Kernel(root_node) {
+        this->name = "kernel_" + std::to_string(Kernel::kernel_index);
+    }
+    
     // -----------------------------------------------------
-
+    
     ConfiguredKernel BruteforceKernel::generate() const
     {
-        uint32_t idx = (rand() << 15) | rand();
-
         return ConfiguredKernel{
-            "kernel_" + std::to_string(idx),
+            ths->name,
             to_string(),
             UINT64_C(1) << 48,
             UINT64_C(1) << 32,
@@ -28,11 +28,29 @@ namespace kgen {
     }
 
     std::string BruteforceKernel::to_string() const {
-        return 
+        std::stringstream result;
+        this->generate_forward_filter(result);
+
+        result << 
+R"(__global__ void )" << this->name << "(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 shared_mem_contents_length, u64 offset) {";
+        result <<
 R"(
-This is where the next session should start!
-Put the source code for a bruteforce kernel here, make use of generate_forward_filter()
+    extern __shared__ u32 data[];
+    if (threadIdx.x < shared_mem_contents_length) {
+        for (int i = threadIdx.x; i < shared_mem_contents_length; i += blockDim.x) {
+            data[i] = shared_mem_contents[i];
+        }
+    }
+    __syncthreads();
+
+    u64 input_seed = (u64)blockIdx.x * blockDim.x + threadIdx.x + offset;
+    
+    if (forward_filter(input_seed)) {
+        write_result(input_seed, result_array, result_count);
+    }
+}
 )";
+        return result.str();
     }
 
     void BruteforceKernel::generate_helper_functions(std::ostream& out) const {
@@ -43,10 +61,78 @@ Put the source code for a bruteforce kernel here, make use of generate_forward_f
         // - save signature: SaveType save_loot_function_name(u64*)
     }
 
+    static std::string constraint_to_item_identifier(const Constraint &con) {
+        std::stringstream item_identifier; 
+        item_identifier << constraint.item << "_";
+        if (constraint.attributes.size() > 0) {
+            item_identifier << constraint.attributes[0].type; 
+            if (constraint.attributes[0].level != -1) {
+                item_identifier << "_" << constraint.attributes[0].level; 
+            }
+        }
+        return item_identifier.str();
+    }
+ 
+    void materialize_level(LootTreeNode *node) {
+        std::string level = dynamic_cast<LootPool *>(node) != nullptr ? "local_" : "global_";
+        int index = 0;
+        for (const auto &constraint : node->constraints) {
+            std::string accumulator_identifier = level + "constraints[" + index + "]"; 
+            std::string item_identifier = constraint_to_item_identifier(constraint);
+            this->var_name_map[item_identifier] = std::make_pair<std::string, int>(accumulator_identifier, index++);
+        }
+    }
+
+    void emit_cuda_for_entry(std::ostream &out, LootEntry *entry) {
+        // entry->constraints
+        // std::vector<LootFunction *> = dynamic_cast<std::vector<LootFunction *>>(entry->children);
+        for (const auto child : entry->children) {            
+            LootFunction *function = dynamic_cast<LootFunction *>(child);
+            switch (function->type) {
+                case APPLY_DAMAGE: {
+                    out << Kernel::generate_skip("loot_seed", 1);
+                    break;
+                }
+                case SET_COUNT: {
+                    // out << ""; this is where we will pickup from tomorrow, this just needs to make the needed calls, the constraint stuff will be done in a seperate for loop afterwards
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+    }
+
+    void emit_cuda_for_pool(std::ostream &out, LootPool *pool, int pool_idx) {
+        materialize_level(pool);
+        out << "{";
+        out << "int local_constraints[" << pool->constraints.size() << "];";
+        out << "int rolls = nextIntBounded(" << pool->rolls.min << "," << pool->rolls.max << ");";
+        out << "for (int roll = 0; roll < rolls; roll++) {";
+        out << "int item = data[" << this->pool_memory_offsets[pool_idx] << "+" << "nextInt(" << pool->get_total_weight() << ")];";
+        out << "switch (item) {"
+        for (const auto child : pool->children) {
+            LootEntry *entry = dynamic_cast<LootEntry *>(child);
+            out << "case " << entry->item << ": {";
+            emit_cuda_for_entry(out, entry);     
+            out << "break;}"
+        }
+        out << "}}}";
+    }
+
     void BruteforceKernel::generate_forward_filter(std::ostream& out) const {
         // TODO Create check_lootseed(u64) -> bool
         //      The function should use available loot pool information combined
         //      with existing implementations of loot functions and form a full,
         //      isolated boolean check of specified constraints
+        materialize_level(this->root_node);
+        out << "__device__ bool forward_filter(uint64_t loot_seed) {";
+        out << "int global_constraints[" << this->root_node.constraints.size() << "];";
+        int pool_idx = 0;
+        for (const auto child : this->root_node.children) {
+            LootPool *pool = dynamic_cast<LootPool *>(child);
+            emit_cuda_for_pool(out, pool, pool_idx++);
+        }
     }
 }

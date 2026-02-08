@@ -22,8 +22,31 @@ namespace kgen {
         }
     }
 
+    static std::string generate_skip(std::string var, int amount) {
+        // thanks cubitect :) https://github.com/Cubitect/cubiomes/blob/e61f90580cbdd883214a8054670dacae655e59c0/rng.h#L152
+        uint64_t m = 1;
+        uint64_t a = 0;
+        uint64_t im = 0x5deece66dULL;
+        uint64_t ia = 0xb;
+        uint64_t k;
+
+        for (k = n; k; k >>= 1)
+        {
+            if (k & 1)
+            {
+                m *= im;
+                a = im * a + ia;
+            }
+            ia = (im + 1) * ia;
+            im *= im;
+        }
+
+        return var + "= (" + var + "*" + m + "+" + a + ") & MASK_48"
+    }
+
     Kernel::Kernel(data::LootTableRoot &root_node)
     {
+        Kernel::kernel_index++;
         function_memory_offsets.push_back(0);
         pool_memory_offsets.push_back(0);
 
@@ -64,6 +87,7 @@ __device__ inline i32 nextInt(u64* rand, const i32 n){ if ((n-1 & n) == 0) {u64 
 __device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 << 24) }; 
 __device__ inline i32 nextIntBounded(u64* rand, const i32 min, const i32 max) {if (min >= max) {return min;} return nextInt(rand, max - min + 1) + min;}
 __device__ inline i32 nextIntNoAdvance(u64 *rand, const i32 n) {if ((n-1 & n) == 0) {u64 x = n * *rand; return (i32)((i64)x >> 31);} else {return (i32)(*rand % n);}} 
+__device__ inline void write_result(u64 input_seed, u64 *result_array, u32 *result_count) {result_array[atomicAdd(result_count, 1)] = input_seed;}
 //@SharedDefinitionsEnd
 #endif
 )";

@@ -10,13 +10,16 @@ namespace kgen {
         BruteforceKernel(data::LootTableRoot &root_node);
 
     protected:
-        virtual ConfiguredKernel generate() const override;
+        virtual ConfiguredKernel generate() override;
      
         std::unordered_map<std::string, std::pair<std::string, int>> var_name_map;
 
-        std::string to_string() const;
+        std::string to_string();
         void generate_helper_functions(std::ostream& out) const;
-        void generate_forward_filter(std::ostream& out) const;
+        void emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx);
+        void generate_forward_filter(std::ostream &out);
+
+        void materialize_level(data::LootTreeNode *node);
     };
 }
 

@@ -18,13 +18,14 @@ namespace kgen {
 
     class Kernel {
     public:
+        data::LootTableRoot& root_node;
+
         std::vector<uint32_t> pool_memory_offsets;
         std::vector<uint32_t> function_memory_offsets;
         std::vector<uint32_t> combined_shared_memory; // final final
 
         static std::string generate_skip(std::string var, int amount);
 
-        static int kernel_index = 0;
         std::string name;
 
         Kernel(data::LootTableRoot &root_node);
@@ -32,7 +33,7 @@ namespace kgen {
     protected:
         static void write_shared_definitions(std::ostream& out);
         void fill_function_shared_mem(data::LootTreeNode *current);
-        virtual ConfiguredKernel generate() const = 0;
+        virtual ConfiguredKernel generate() = 0;
     };
 }
 

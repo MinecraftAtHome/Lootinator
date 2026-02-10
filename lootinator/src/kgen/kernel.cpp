@@ -22,7 +22,7 @@ namespace kgen {
         }
     }
 
-    static std::string generate_skip(std::string var, int amount) {
+    std::string Kernel::generate_skip(std::string var, int amount) {
         // thanks cubitect :) https://github.com/Cubitect/cubiomes/blob/e61f90580cbdd883214a8054670dacae655e59c0/rng.h#L152
         uint64_t m = 1;
         uint64_t a = 0;
@@ -30,7 +30,7 @@ namespace kgen {
         uint64_t ia = 0xb;
         uint64_t k;
 
-        for (k = n; k; k >>= 1)
+        for (k = amount; k; k >>= 1)
         {
             if (k & 1)
             {
@@ -41,12 +41,15 @@ namespace kgen {
             im *= im;
         }
 
-        return var + "= (" + var + "*" + m + "+" + a + ") & MASK_48"
+        return var + "= (" + var + "*" + std::to_string(m) + "+" + std::to_string(a) + ") & MASK_48";
     }
 
-    Kernel::Kernel(data::LootTableRoot &root_node)
+    Kernel::Kernel(data::LootTableRoot &root_node) : root_node(root_node)
     {
-        Kernel::kernel_index++;
+        static int kernel_index = 0;
+        kernel_index++;
+        name = "kernel_" + std::to_string(kernel_index);
+
         function_memory_offsets.push_back(0);
         pool_memory_offsets.push_back(0);
 

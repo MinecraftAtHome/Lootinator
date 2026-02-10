@@ -75,10 +75,10 @@ namespace kgen {
     void Kernel::write_shared_definitions(std::ostream& out) {
         out << "#ifndef SHARED_DEFINITIONS\n"
             << "//@SharedDefinitionsStart\n"
-            << "typedef " << global_settings.UNSIGNED_32_TYPE << " u32\n"
-            << "typedef " << global_settings.SIGNED_32_TYPE << " i32\n"
-            << "typedef " << global_settings.UNSIGNED_64_TYPE << " u64\n"
-            << "typedef " << global_settings.SIGNED_64_TYPE << " i64\n\n";
+            << "typedef " << global_settings.UNSIGNED_32_TYPE << " u32;\n"
+            << "typedef " << global_settings.SIGNED_32_TYPE << " i32;\n"
+            << "typedef " << global_settings.UNSIGNED_64_TYPE << " u64;\n"
+            << "typedef " << global_settings.SIGNED_64_TYPE << " i64;\n\n";
 
         out <<
 R"(constexpr u64 JRAND_MULTIPLIER = 0x5deece66d;
@@ -87,7 +87,7 @@ constexpr u64 MASK_48 = 0xffffffffffff;
 __device__ inline void setSeed(u64* rand, u64 value){ *rand = (value ^ JRAND_MULTIPLIER) & MASK_48; }
 __device__ inline i32 next(u64* rand, const i32 bits){ *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48; return (i32)((i64)*rand >> (48 - bits)); }
 __device__ inline i32 nextInt(u64* rand, const i32 n){ if ((n-1 & n) == 0) {u64 x = n * (u64)next(rand, 31); return (i32)((i64)x >> 31);} else {return (i32)(next(rand, 31) % n);} }
-__device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 << 24) }; 
+__device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 << 24); }; 
 __device__ inline i32 nextIntBounded(u64* rand, const i32 min, const i32 max) {if (min >= max) {return min;} return nextInt(rand, max - min + 1) + min;}
 __device__ inline i32 nextIntNoAdvance(u64 *rand, const i32 n) {if ((n-1 & n) == 0) {u64 x = n * *rand; return (i32)((i64)x >> 31);} else {return (i32)(*rand % n);}} 
 __device__ inline void write_result(u64 input_seed, u64 *result_array, u32 *result_count) {result_array[atomicAdd(result_count, 1)] = input_seed;}

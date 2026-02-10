@@ -34,25 +34,11 @@ pool 0  {
 */
 
 int main() {
-	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/example_constraints.json");
+	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/simple_constraints.json");
     std::ifstream f("../../example/src/ruined_portal.json");
 	nlohmann::json loot_table_json = nlohmann::json::parse(f);
 
-	data::LootTableRoot root = data::LootTableRoot(loot_table_json, "../../example/src/item_map.txt", mc::VersionRange::MC_1_16_TO_1_20);
-
-/*
-BEFORE:
-Constraints: [
-	Constraint{item=23, count_range=RangeInclusive{min=0, max=0}, slot_id=0, attributes=[]}, 
-	Constraint{item=23, count_range=RangeInclusive{min=2, max=2}, slot_id=0, attributes=[ItemAttribute{type=21, level=3}]}, 
-	Constraint{item=23, count_range=RangeInclusive{min=1, max=100000}, slot_id=0, attributes=[ItemAttribute{type=21, level=-1}]}, ]
-
-AFTER:
-Constraints: [
-	Constraint{item=23, count_range=RangeInclusive{min=2, max=2}, slot_id=0, attributes=[ItemAttribute{type=21, level=3}]}, 
-	Constraint{item=23, count_range=RangeInclusive{min=1, max=100000}, slot_id=0, attributes=[ItemAttribute{type=21, level=-1}]}, 
-	Constraint{item=23, count_range=RangeInclusive{min=0, max=0}, slot_id=0, attributes=[]}, 
-*/
+	data::LootTableRoot root = data::LootTableRoot(loot_table_json, "../../example/src/item_map.txt", mc::VersionRange::MC_1_21_TO_1_21_9);
 
 	try {
 		root.add_constraints(constr);
@@ -62,10 +48,14 @@ Constraints: [
 	}
 
 	std::vector<kgen::ConfiguredKernel> kernels;
-	
 	kgen::BruteforceKernel::gen_kernels(root, kernels);
+
+	std::ofstream fout("first_cuda.cu");
+	fout << kernels[0].code << '\n';
+	fout.close();
+
 	//kgen::StatePredictionKernel::gen_kernels(root, kernels);
 	//...
 
-	root.print(0);
+	//root.print(0);
 }

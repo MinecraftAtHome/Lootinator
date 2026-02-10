@@ -2,6 +2,8 @@
 #include "lootinator/global_settings.hpp"
 
 #include <sstream>
+#include <iostream>
+#include <fstream>
 
 namespace kgen {
     void BruteforceKernel::gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out) {
@@ -14,6 +16,11 @@ namespace kgen {
     // -----------------------------------------------------
     
     ConfiguredKernel BruteforceKernel::generate() {
+        std::ofstream fout("kernel.shm");//TODO UNDO
+        for (auto v : combined_shared_memory) {
+            fout << v << " ";
+        }
+
         return ConfiguredKernel{
             this->name,
             to_string(),
@@ -26,7 +33,8 @@ namespace kgen {
 
     std::string BruteforceKernel::to_string() {
         std::stringstream result;
-        this->generate_forward_filter(result);
+        Kernel::write_shared_definitions(result);
+        generate_forward_filter(result);
 
         result << 
 R"(__global__ void )" << this->name << "(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 shared_mem_contents_length, u64 offset) {";
@@ -75,14 +83,45 @@ R"(
         int index = 0;
         for (const auto &constraint : node->constraints) {
             std::string accumulator_identifier = level + "constraints[" + std::to_string(index) + "]"; 
+            index++;
             std::string item_identifier = constraint_to_item_identifier(constraint);
-            this->var_name_map[item_identifier] = std::make_pair<>(accumulator_identifier, index++);
+            this->var_name_map[item_identifier] = accumulator_identifier;
         }
     }
 
-    void emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry) {
+    static std::string get_if_guard(loot::Constraint& constraint, data::LootFunctionData* lfd_enchant_randomly) {
+        // easy case - no enchantment, no if guard
+        if (constraint.attributes.empty()) {
+            return "";
+        }
+
+        // TODO make sure this actually works
+        mc::Enchantment ench = mc::get_enchantment_from_attribute(constraint.attributes[0]);
+        int i = 0;
+        auto& vec = lfd_enchant_randomly->enchant_randomly.enchantment_order;
+        for (; i < vec.size(); i++) {
+            if (vec[i] == ench) break;
+        }
+        if (i == vec.size()) {
+            throw std::exception("messed up, need to fix :)");
+        }
+
+        // enchantment, but no level - if guard only on enchantment id
+        if (constraint.attributes[0].level == -1) {
+            return "if (enchantment == " + std::to_string(i) + ") ";
+        }
+
+        // enchantment & level
+        return "if (enchantment == " + std::to_string(i) + " && " + std::to_string(constraint.attributes[0].level) + ") ";
+    }
+
+    void BruteforceKernel::emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry) {
         // entry->constraints
         // std::vector<LootFunction *> = dynamic_cast<std::vector<LootFunction *>>(entry->children);
+        data::LootFunctionData* ench_func = nullptr;
+
+        out << "i32 item_count = 1;";
+
         for (const auto child : entry->children) {            
             data::LootFunctionData *function = dynamic_cast<data::LootFunctionData *>(child);
             switch (function->type) {
@@ -91,7 +130,23 @@ R"(
                     break;
                 }
                 case data::SET_COUNT: {
-                    // out << ""; this is where we will pickup from tomorrow, this just needs to make the needed calls, the constraint stuff will be done in a seperate for loop afterwards
+                    if (function->set_count.min == function->set_count.max) {
+                        out << "item_count = " << function->set_count.min << ";";
+                    }
+                    else {
+                        int bound = function->set_count.max - function->set_count.min + 1;
+                        out << "item_count = " << function->set_count.min << " + nextInt(&loot_seed, " << bound << ");";
+                    }
+                    break;
+                }
+                case data::ENCHANT_RANDOMLY: {
+                    ench_func = function;
+                    out << "i32 enchantment = nextInt(&loot_seed, " << function->enchant_randomly.enchantment_order.size() << ");\n";
+                    std::cout << "accessing function mem offset...\n" << function->id;
+                    int offset = function_memory_offsets[function->id];
+                    std::cout << "...done!\n";
+                    out << "u32 max_level = data[" << offset << "+ enchantment];\n";
+                    out << "i32 level = nextIntBounded(&loot_seed, 1, max_level);\n";
                     break;
                 }
                 default: {
@@ -99,23 +154,46 @@ R"(
                 }
             }
         }
+
+        // now update accumulators
+        for (auto& constraint : entry->constraints) {
+            std::string if_guard = get_if_guard(constraint, ench_func);
+            std::string item_ident = constraint_to_item_identifier(constraint);
+            std::string arrayPlusIndex = var_name_map[item_ident];
+            out << if_guard << arrayPlusIndex << " += item_count;"; 
+        }
     }
 
     void BruteforceKernel::emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx) {
         materialize_level(pool);
-        out << "{";
-        out << "int local_constraints[" << pool->constraints.size() << "];";
-        out << "int rolls = nextIntBounded(" << pool->rolls.min << "," << pool->rolls.max << ");";
-        out << "for (int roll = 0; roll < rolls; roll++) {";
-        out << "int item = data[" << this->pool_memory_offsets[pool_idx] << "+" << "nextInt(" << pool->get_total_weight() << ")];";
-        out << "switch (item) {";
+        out << "{\n";
+        if (!pool->constraints.empty()) {
+            out << "i32 local_constraints[" << pool->constraints.size() << "] = {0};\n";
+        }
+        out << "i32 rolls = nextIntBounded(&loot_seed, " << pool->rolls.min << "," << pool->rolls.max << ");\n";
+        out << "for (i32 roll = 0; roll < rolls; roll++) {\n";
+        out << "int item = data[" << this->pool_memory_offsets[pool_idx] << "+ nextInt(&loot_seed, " << pool->get_total_weight() << ")];\n";
+        out << "switch (item) {\n";
         for (const auto child : pool->children) {
             data::LootEntry *entry = dynamic_cast<data::LootEntry *>(child);
-            out << "case " << entry->item << ": {";
+            out << "case " << entry->item << ": {\n";
             emit_cuda_for_entry(out, entry); 
-            out << "break;}";
+            out << "break;}\n";
+
+            // TODO POOL SKIPPING
+            //if ()
         }
-        out << "}}}";
+        out << "}}\n";
+
+         // check constraint sat
+        for (auto& constraint : pool->constraints) {
+            std::string item_ident = constraint_to_item_identifier(constraint);
+            std::string arrayPlusIndex = var_name_map[item_ident];
+            std::string comp = constraint.count_range.min == constraint.count_range.max ? " == " : ">=";
+            out << "if (!(" << arrayPlusIndex << comp << constraint.count_range.min << ")) return false;\n";
+        }
+
+        out << "}\n";
     }
 
     void BruteforceKernel::generate_forward_filter(std::ostream& out) {
@@ -124,12 +202,25 @@ R"(
         //      with existing implementations of loot functions and form a full,
         //      isolated boolean check of specified constraints
         materialize_level(&root_node);
-        out << "__device__ bool forward_filter(uint64_t loot_seed) {";
-        out << "int global_constraints[" << this->root_node.constraints.size() << "];";
+
+        out << "__device__ bool forward_filter(uint64_t loot_seed) {\n";
+        out << "extern __shared__ u32 data[];\n";
+        if (!this->root_node.constraints.empty()) {
+            out << "int global_constraints[" << this->root_node.constraints.size() << "] = {0};\n";
+        }
         int pool_idx = 0;
         for (const auto child : this->root_node.children) {
             data::LootPool *pool = dynamic_cast<data::LootPool *>(child);
             emit_cuda_for_pool(out, pool, pool_idx++);
         }
+
+        // check constraint sat
+        for (auto& constraint : root_node.constraints) {
+            std::string item_ident = constraint_to_item_identifier(constraint);
+            std::string arrayPlusIndex = var_name_map[item_ident];
+            std::string comp = constraint.count_range.min == constraint.count_range.max ? " == " : ">=";
+            out << "if (!(" << arrayPlusIndex << comp << constraint.count_range.min << ")) return false;\n";
+        }
+        out << "return true;\n}";
     }
 }

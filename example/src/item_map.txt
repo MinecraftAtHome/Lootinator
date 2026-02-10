@@ -23,3 +23,4 @@ minecraft:fire_charge
 minecraft:glistering_melon_slice
 minecraft:golden_pickaxe
 minecraft:light_weighted_pressure_plate
+minecraft:lodestone

@@ -12,10 +12,13 @@ namespace kgen {
     protected:
         virtual ConfiguredKernel generate() override;
      
-        std::unordered_map<std::string, std::pair<std::string, int>> var_name_map;
+        // maps constraint signatures (combinations of item type, enchantment, ench level)
+        // to array names + indices like this: array[idx]
+        std::unordered_map<std::string, std::string> var_name_map;
 
         std::string to_string();
         void generate_helper_functions(std::ostream& out) const;
+        void emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry);
         void emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx);
         void generate_forward_filter(std::ostream &out);
 

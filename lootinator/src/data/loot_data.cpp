@@ -129,6 +129,7 @@ namespace data {
     }
 
     LootTableRoot::LootTableRoot(const nlohmann::json &json, const std::string& item_map_filepath, mc::VersionRange version) {
+        this->id_counter = 0;
         this->parent = nullptr;
         this->version = version;
 

@@ -203,7 +203,7 @@ R"(
         //      isolated boolean check of specified constraints
         materialize_level(&root_node);
 
-        out << "__device__ bool forward_filter(uint64_t loot_seed) {\n";
+        out << "__device__ bool forward_filter(u64 loot_seed) {\n";
         out << "extern __shared__ u32 data[];\n";
         if (!this->root_node.constraints.empty()) {
             out << "int global_constraints[" << this->root_node.constraints.size() << "] = {0};\n";

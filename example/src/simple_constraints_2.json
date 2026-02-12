@@ -1,0 +1,13 @@
+[
+	{
+		"item": 13,
+		"range": {
+			"min": 4,
+			"max": 1000
+		},
+		"slot": 0,
+		"attributes": [
+			{"type": 8, "level": 3}
+		]
+	}
+]

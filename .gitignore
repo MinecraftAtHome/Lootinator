@@ -2,3 +2,4 @@
 /.vscode
 /.cache
 /build
+kernel-launcher/auto-benchmark/run.bat

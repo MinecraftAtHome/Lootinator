@@ -8,13 +8,26 @@
 #include <cinttypes>
 #include <iostream>
 
-typedef uint32_t u32;
-typedef int32_t i32;
-typedef uint64_t u64;
-typedef int64_t i64;
+// start of shared definitions block
+#define SHARED_DEFINITIONS
+//@SharedDefinitionsStart
+typedef unsigned int u32;
+typedef int i32;
+typedef unsigned long long u64;
+typedef long long i64;
 
 constexpr u64 JRAND_MULTIPLIER = 0x5deece66d;
-constexpr u64 MASK_48 = ((1ULL << 48) - 1);
+constexpr u64 MASK_48 = 0xffffffffffff;
+
+__device__ inline void setSeed(u64* rand, u64 value){ *rand = (value ^ JRAND_MULTIPLIER) & MASK_48; }
+__device__ inline i32 next(u64* rand, const i32 bits){ *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48; return (i32)((i64)*rand >> (48 - bits)); }
+__device__ inline i32 nextInt(u64* rand, const i32 n){ if ((n-1 & n) == 0) {u64 x = n * (u64)next(rand, 31); return (i32)((i64)x >> 31);} else {return (i32)(next(rand, 31) % n);} }
+__device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 << 24); }; 
+__device__ inline i32 nextIntBounded(u64* rand, const i32 min, const i32 max) {if (min >= max) {return min;} return nextInt(rand, max - min + 1) + min;}
+__device__ inline i32 nextIntNoAdvance(u64 *rand, const i32 n) {if ((n-1 & n) == 0) {u64 x = n * *rand; return (i32)((i64)x >> 31);} else {return (i32)(*rand % n);}} 
+__device__ inline void write_result(u64 input_seed, u64 *result_array, u32 *result_count) {result_array[atomicAdd(result_count, 1)] = input_seed;}
+
+// end of shared definitions block
 
 #define CUDA_CHECK(ans) do { gpuAssert((ans), __FILE__, __LINE__); } while(false)
 void gpuAssert(cudaError_t code, const char *file, int line) {
@@ -84,251 +97,156 @@ void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, co
     }
 }
 
+
+namespace kernel0 {
+#ifndef SHARED_DEFINITIONS
+//@SharedDefinitionsStart
+typedef unsigned int u32;
+typedef int i32;
+typedef unsigned long long u64;
+typedef long long i64;
+
+constexpr u64 JRAND_MULTIPLIER = 0x5deece66d;
+constexpr u64 MASK_48 = 0xffffffffffff;
+
 __device__ inline void setSeed(u64* rand, u64 value){ *rand = (value ^ JRAND_MULTIPLIER) & MASK_48; }
-__device__ inline int next(u64* rand, const int bits){ *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48; return (int)((i64)*rand >> (48 - bits)); }
-__device__ inline int nextInt(u64* rand, const int n){ if ((n-1 & n) == 0) {u64 x = n * (u64)next(rand, 31); return (int)((i64)x >> 31);} else {return (int)(next(rand, 31) % n);} }
-__device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 << 24); }
-
-
-namespace kernel0 {
-extern "C" {
-// end of base class
-
-    // start of StatePredictionSingleItemKernelWhatever
-    __global__ void state_prediction_rolls( 
-        u64* result_array, u32* result_count, 
-        u32* shared_mem_contents, u32 shared_mem_contents_length, 
-        u64 offset)
-    {
-        extern __shared__ u32 data[];
-        if (threadIdx.x < shared_mem_contents_length) {
-            for (int i = threadIdx.x; i < shared_mem_contents_length; i += blockDim.x) {
-                data[i] = shared_mem_contents[i];
-            }
-        }
-        __syncthreads();
-        
-        const u64 tid = blockIdx.x * blockDim.x + threadIdx.x + offset;
-        u64 base_state = tid * (5U << 17);
-
-        for (u32 rem = 2U; rem < 5U; rem++) {
-            u64 state = base_state + rem<<17;
-            u64* rand = &state;
-
-            int counter = 0;
-            for (u32 r = 0; r < rem+4; r++) {
-                int item = data[nextInt(rand, 28)];
-                if (item == 3)
-                    counter += nextInt(rand, 2) + 1;
-                else if (item < 2) {
-                    state = (state * JRAND_MULTIPLIER + 11) & MASK_48;
-                }
-            }
-
-            if (counter >= 11) {
-                u32 ix = atomicAdd(result_count, 1);
-                result_array[ix] = tid ^ JRAND_MULTIPLIER;
-            }
+__device__ inline i32 next(u64* rand, const i32 bits){ *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48; return (i32)((i64)*rand >> (48 - bits)); }
+__device__ inline i32 nextInt(u64* rand, const i32 n){ if ((n-1 & n) == 0) {u64 x = n * (u64)next(rand, 31); return (i32)((i64)x >> 31);} else {return (i32)(next(rand, 31) % n);} }
+__device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 << 24); }; 
+__device__ inline i32 nextIntBounded(u64* rand, const i32 min, const i32 max) {if (min >= max) {return min;} return nextInt(rand, max - min + 1) + min;}
+__device__ inline i32 nextIntNoAdvance(u64 *rand, const i32 n) {if ((n-1 & n) == 0) {u64 x = n * *rand; return (i32)((i64)x >> 31);} else {return (i32)(*rand % n);}} 
+__device__ inline void write_result(u64 input_seed, u64 *result_array, u32 *result_count) {result_array[atomicAdd(result_count, 1)] = input_seed;}
+//@SharedDefinitionsEnd
+#endif
+__device__ bool forward_filter(u64 loot_seed, u32 data[]) {
+{
+i32 local_constraints[1] = {0};
+i32 rolls = nextIntBounded(&loot_seed, 4,8);
+for (i32 roll = 0; roll < rolls; roll++) {
+int item = data[0+ nextInt(&loot_seed, 398)];
+switch (item) {
+case 8: { //minecraft:obsidian
+i32 item_count = 1;item_count = 1 + nextInt(&loot_seed, 2);break;}
+case 0: { //minecraft:flint
+i32 item_count = 1;item_count = 1 + nextInt(&loot_seed, 4);break;}
+case 18: { //minecraft:iron_nugget
+i32 item_count = 1;item_count = 9 + nextInt(&loot_seed, 10);break;}
+case 17: { //minecraft:flint_and_steel
+i32 item_count = 1;break;}
+case 21: { //minecraft:fire_charge
+i32 item_count = 1;break;}
+case 3: { //minecraft:golden_apple
+i32 item_count = 1;break;}
+case 5: { //minecraft:gold_nugget
+i32 item_count = 1;item_count = 4 + nextInt(&loot_seed, 21);break;}
+case 9: { //minecraft:golden_sword
+i32 item_count = 1;i32 enchantment = nextInt(&loot_seed, 10);
+u32 max_level = data[401+ enchantment];
+i32 level = nextIntBounded(&loot_seed, 1, max_level);
+break;}
+case 4: { //minecraft:golden_axe
+i32 item_count = 1;i32 enchantment = nextInt(&loot_seed, 9);
+u32 max_level = data[411+ enchantment];
+i32 level = nextIntBounded(&loot_seed, 1, max_level);
+break;}
+case 10: { //minecraft:golden_hoe
+i32 item_count = 1;i32 enchantment = nextInt(&loot_seed, 6);
+u32 max_level = data[420+ enchantment];
+i32 level = nextIntBounded(&loot_seed, 1, max_level);
+break;}
+case 7: { //minecraft:golden_shovel
+i32 item_count = 1;i32 enchantment = nextInt(&loot_seed, 6);
+u32 max_level = data[426+ enchantment];
+i32 level = nextIntBounded(&loot_seed, 1, max_level);
+break;}
+case 23: { //minecraft:golden_pickaxe
+i32 item_count = 1;i32 enchantment = nextInt(&loot_seed, 6);
+u32 max_level = data[432+ enchantment];
+i32 level = nextIntBounded(&loot_seed, 1, max_level);
+break;}
+case 19: { //minecraft:golden_boots
+i32 item_count = 1;i32 enchantment = nextInt(&loot_seed, 12);
+u32 max_level = data[438+ enchantment];
+i32 level = nextIntBounded(&loot_seed, 1, max_level);
+break;}
+case 13: { //minecraft:golden_chestplate
+i32 item_count = 1;i32 enchantment = nextInt(&loot_seed, 9);
+u32 max_level = data[450+ enchantment];
+i32 level = nextIntBounded(&loot_seed, 1, max_level);
+if (enchantment == 4 && level == 3) local_constraints[0] += item_count;break;}
+case 2: { //minecraft:golden_helmet
+i32 item_count = 1;i32 enchantment = nextInt(&loot_seed, 11);
+u32 max_level = data[459+ enchantment];
+i32 level = nextIntBounded(&loot_seed, 1, max_level);
+break;}
+case 6: { //minecraft:golden_leggings
+i32 item_count = 1;i32 enchantment = nextInt(&loot_seed, 9);
+u32 max_level = data[470+ enchantment];
+i32 level = nextIntBounded(&loot_seed, 1, max_level);
+break;}
+case 22: { //minecraft:glistering_melon_slice
+i32 item_count = 1;item_count = 4 + nextInt(&loot_seed, 9);break;}
+case 16: { //minecraft:golden_horse_armor
+i32 item_count = 1;break;}
+case 24: { //minecraft:light_weighted_pressure_plate
+i32 item_count = 1;break;}
+case 15: { //minecraft:golden_carrot
+i32 item_count = 1;item_count = 4 + nextInt(&loot_seed, 9);break;}
+case 12: { //minecraft:clock
+i32 item_count = 1;break;}
+case 14: { //minecraft:gold_ingot
+i32 item_count = 1;item_count = 2 + nextInt(&loot_seed, 7);break;}
+case 1: { //minecraft:bell
+i32 item_count = 1;break;}
+case 11: { //minecraft:enchanted_golden_apple
+i32 item_count = 1;break;}
+case 20: { //minecraft:gold_block
+i32 item_count = 1;item_count = 1 + nextInt(&loot_seed, 2);break;}
+}}
+if (!(local_constraints[0]>=4)) return false;
+}
+{
+i32 rolls = nextIntBounded(&loot_seed, 1,1);
+for (i32 roll = 0; roll < rolls; roll++) {
+int item = data[398+ nextInt(&loot_seed, 3)];
+switch (item) {
+case -1: { //
+i32 item_count = 1;break;}
+case 25: { //minecraft:lodestone
+i32 item_count = 1;item_count = 1 + nextInt(&loot_seed, 2);break;}
+}}
+}
+return true;
+}__global__ void kernel_1(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 shared_mem_contents_length, u64 offset) {
+    extern __shared__ u32 data[1024 * 16];
+    if (threadIdx.x < shared_mem_contents_length) {
+        for (int i = threadIdx.x; i < shared_mem_contents_length; i += blockDim.x) {
+            data[i] = shared_mem_contents[i];
         }
     }
+    __syncthreads();
 
-} // remember about this guy!
-} //namespace
-namespace kernel1 {
-extern "C" {
-    __global__ void naive_bruteforce(
-        u64* result_array, u32* result_count, 
-        u32* shared_mem_contents, u32 shared_mem_contents_length, 
-        u64 offset)
-    {
-        extern __shared__ u32 data[];
-        if (threadIdx.x < shared_mem_contents_length) {
-            for (int i = threadIdx.x; i < shared_mem_contents_length; i += blockDim.x) {
-                data[i] = shared_mem_contents[i];
-            }
-        }
-        __syncthreads();
-
-        const u64 tid = blockIdx.x * blockDim.x + threadIdx.x + offset;
-
-        u64 state = tid;
-        u64* rand = &state;
-
-        int rolls = 4 + nextInt(rand, 5);
-        int counter = 0;
-        for (int r = 0; r < rolls; r++) {
-            int item = data[nextInt(rand, 28)];
-            if (item == 3)
-                counter += nextInt(rand, 2) + 1;
-            else if (item < 2) {
-                state = (state * JRAND_MULTIPLIER + 11) & MASK_48;
-            }
-        }
-
-        if (counter >= 11) {
-            u32 ix = atomicAdd(result_count, 1);
-            result_array[ix] = tid ^ JRAND_MULTIPLIER;
-        }
+    u64 input_seed = (u64)blockIdx.x * blockDim.x + threadIdx.x + offset;
+    
+    if (forward_filter(input_seed, data)) {
+        write_result(input_seed ^ JRAND_MULTIPLIER, result_array, result_count);
     }
 }
-} //namespace
-namespace kernel2 {
-extern "C" {
-    __global__ void state_prediction_item(
-        u64* result_array, u32* result_count, 
-        u32* shared_mem_contents, u32 shared_mem_contents_length, 
-        u64 offset)
-    {
-        extern __shared__ u32 data[];
-        if (threadIdx.x < shared_mem_contents_length) {
-            for (int i = threadIdx.x; i < shared_mem_contents_length; i += blockDim.x) {
-                data[i] = shared_mem_contents[i];
-            }
-        }
-        __syncthreads();
 
-        const u64 tid = blockIdx.x * blockDim.x + threadIdx.x + offset;
-        u64 state = tid * (28U << 17) + (25U << 17);
-        u64* rand = &state;
-        int counter = 1 + nextInt(rand, 2);
 
-        for (int r = 0; r < 7; r++) {
-            int item = data[nextInt(rand, 28)];
-            if (item == 3)
-                counter += nextInt(rand, 2) + 1;
-            else if (item < 2) {
-                state = (state * JRAND_MULTIPLIER + 11) & MASK_48;
-            }
-        }
-        if (counter < 11)
-            return;
-
-        state = tid * (28U << 17) + (25U << 17);
-        for (int back = 0; back < 10; back++) {
-            state = (state * (-35320271006875LL) - 174426972345687LL) & MASK_48;
-            u64 state2 = state;
-
-            int rolls = nextInt(&state2, 5) + 4;
-            int counter2 = 0;
-
-            for (int r = 0; r < rolls; r++) {
-                int item = data[nextInt(&state2, 28)];
-                if (item == 3)
-                    counter += nextInt(&state2, 2) + 1;
-                else if (item < 2) {
-                    state2 = (state2 * JRAND_MULTIPLIER + 11) & MASK_48;
-                }
-            }
-            if (counter2 >= 11) {
-                u32 ix = atomicAdd(result_count, 1);
-                result_array[ix] = tid ^ JRAND_MULTIPLIER;
-            }
-        }
-    }
-}
 } //namespace
 namespace kernel0 {
 void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
 {
-    state_prediction_rolls<<< num_blocks, lp.threads_per_block, mem.shared_mem_bytes >>> (
-        mem.d_result_array, mem.d_result_count, mem.d_shared_mem_contents, mem.shared_mem_contents_length, offset
-    );
-}} //namespace
-namespace kernel1 {
-void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
-{
-    naive_bruteforce<<< num_blocks, lp.threads_per_block, mem.shared_mem_bytes >>> (
-        mem.d_result_array, mem.d_result_count, mem.d_shared_mem_contents, mem.shared_mem_contents_length, offset
-    );
-}} //namespace
-namespace kernel2 {
-void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
-{
-    state_prediction_item<<< num_blocks, lp.threads_per_block, mem.shared_mem_bytes >>> (
+    kernel_1<<< num_blocks, lp.threads_per_block >>> (
         mem.d_result_array, mem.d_result_count, mem.d_shared_mem_contents, mem.shared_mem_contents_length, offset
     );
 }} //namespace
 
 int main() {
-    constexpr int num_kernels = 3;
-    std::vector<launch_function> launchers;
-    std::vector<LaunchParameters> configs;
-    launchers.push_back(kernel0::launch);
-    configs.push_back({"state_prediction_rolls", std::vector<u32>(), 56294995342132ULL, 4294967296ULL, 256U, 0U, 0, 13108});
-    launchers.push_back(kernel1::launch);
-    configs.push_back({"naive_bruteforce", std::vector<u32>(), 281474976710656ULL, 4294967296ULL, 256U, 0U, 0, 65536});
-    launchers.push_back(kernel2::launch);
-    configs.push_back({"state_prediction_item", std::vector<u32>(), 10052677739667ULL, 4294967296ULL, 256U, 0U, 0, 2341});
-    {uint32_t shmem[] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5}; for (int k = 0; k < 28; k++) configs[0].kernel_shared_memory.push_back(shmem[k]);}
-    {uint32_t shmem[] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5}; for (int k = 0; k < 28; k++) configs[1].kernel_shared_memory.push_back(shmem[k]);}
-    {uint32_t shmem[] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5}; for (int k = 0; k < 28; k++) configs[2].kernel_shared_memory.push_back(shmem[k]);}
-
-    BenchmarkResults result_array[num_kernels];
-    for (int k = 0; k < num_kernels; k++) {
-        const LaunchParameters& config = configs[k];
-        LaunchParameters work_config = config;
-        KernelMemory kernel_memory(config);
-        BenchmarkResults results{config.kernel_name, false, 0.0f, 0.0f};
-
-        const i32 middle_batch = (config.start_batch + config.end_batch) / 2;
-        work_config.threads_per_batch /= 4;
-
-        // warmup (to get more accurate measurements)
-        work_config.start_batch = middle_batch;
-        work_config.end_batch = middle_batch + 1;
-
-        CUDA_CHECK(cudaDeviceSynchronize());
-        for (u32 i = 0; i < 3; i++) {
-            launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
-        }
-
-        // benchmarking with auto-tuning
-        i32 batches = 1;
-        float elapsed_ms = 0.0f;
-        while (elapsed_ms < 100.0f) {
-            work_config.end_batch = work_config.start_batch + batches;
-
-            auto t0 = std::chrono::high_resolution_clock::now();
-            launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
-            auto t1 = std::chrono::high_resolution_clock::now();
-            elapsed_ms = (t1-t0).count() * 1e-6f;
-            if (elapsed_ms < 100.0f)
-                batches *= 2;
-        }
-
-        // results
-        results.success = true;
-        results.ms_per_batch = elapsed_ms * 4 / batches;
-        results.ms_total_estimate = results.ms_per_batch * (config.end_batch - config.start_batch);
-        result_array[k] = results;
-    }
-    
-    int best_kernel = -1;
-    double best_perf = result_array[0].ms_total_estimate;
-    for (int k = 0; k < num_kernels; k++) {
-        if (result_array[k].success && result_array[k].ms_total_estimate < best_perf) {
-            best_perf = result_array[k].ms_total_estimate;
-            best_kernel = k;
-        }
-    }
-    if (best_kernel == -1) {
-        std::cerr << "All kernels failed. Aborting...\n";
-        return 1;
-    }
-    for (int k = 0; k < num_kernels; k++) {
-        std::cerr << (k == best_kernel ? "BEST> " : "      ");
-        if (result_array[k].success)
-            std::cerr << configs[k].kernel_name << ", ETA = " << result_array[k].ms_total_estimate << " ms.\n";
-        else
-            std::cerr << configs[k].kernel_name << " (failed!)\n";
-    }
-    
-    std::cerr << "Running kernel " << configs[best_kernel].kernel_name << "...\n";
-    {
-        const LaunchParameters& config = configs[best_kernel];
-        KernelMemory kernel_memory(config);
-        launch_configured_kernel(launchers[best_kernel], config, kernel_memory, true);
-        std::cerr << "Finished.\n";
-    }
+    LaunchParameters config = {"kernel_1", std::vector<u32>(), 68719476736ULL, 4294967296ULL, 256U, 0U, 0, 16};
+    {uint32_t shmem[] = {8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,22,22,22,22,22,16,16,16,16,16,24,24,24,24,24,15,15,15,15,15,12,12,12,12,12,14,14,14,14,14,1,11,20,4294967295,25,25,5,5,5,2,2,3,3,3,1,1,5,5,5,5,1,3,3,1,1,5,1,3,3,1,1,5,1,3,3,1,1,5,1,3,3,1,1,4,4,4,4,4,3,3,3,1,1,2,1,4,4,4,4,3,3,1,1,1,4,4,4,4,3,1,3,3,1,1,1,4,4,4,4,3,3,1,1,1}; for (int k = 0; k < 479; k++) config.kernel_shared_memory.push_back(shmem[k]);}
+    const KernelMemory mem(config);
+    launch_configured_kernel(kernel0::launch, config, mem, true);
     return 0;
 }

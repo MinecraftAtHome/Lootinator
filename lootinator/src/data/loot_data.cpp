@@ -267,18 +267,16 @@ namespace data {
 
     LootPool::LootPool(LootTreeNode *parent, const nlohmann::json &json) : rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {
         this->parent = parent;
-        int index = 0;
         for (auto &entry : json["entries"]) {
             uint32_t entry_weight = (entry.contains("weight") ? static_cast<uint32_t>(entry["weight"]) : 1);
             uint32_t start_weight = static_cast<uint32_t>(entry_lookup.size());
             uint32_t end_weight = start_weight + entry_weight - 1; // -1 accounts for range being inclusive-inclusive
-
-            for (uint32_t w = 0; w < entry_weight; w++) {
-                this->entry_lookup.push_back(index);
-            }
                         
             this->children.push_back(new LootEntry(this, entry, {start_weight, end_weight}));
-            index++;
+            
+            for (uint32_t w = 0; w < entry_weight; w++) {
+                this->entry_lookup.push_back(dynamic_cast<LootEntry*>(this->children.back())->item);
+            }
         }
     }
 

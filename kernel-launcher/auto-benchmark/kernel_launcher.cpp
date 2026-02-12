@@ -71,7 +71,7 @@ namespace launcher {
             CUDA_CHECK(cuDeviceGet(&device, config.device_id));
             CUDA_CHECK(cuCtxCreate(&context, 0, device));
             CUDA_CHECK(cuModuleLoadData(&module, config.kernel_code.c_str()));
-            CUDA_CHECK(cuModuleGetFunction(&kernel, module, config.kernel_name.c_str()));
+            CUDA_CHECK(cuModuleGetFunction(&kernel, module, (std::string("kernel0::") + config.kernel_name).c_str()));
 
             CUDA_CHECK(cuMemAlloc(&d_result_array, RESULT_BUFFER_SIZE * sizeof(u64)));
             CUDA_CHECK(cuMemAlloc(&d_result_count, sizeof(u32)));

@@ -50,8 +50,8 @@ R"(
 
     u64 input_seed = (u64)blockIdx.x * blockDim.x + threadIdx.x + offset;
     
-    if (forward_filter(input_seed)) {
-        write_result(input_seed, result_array, result_count);
+    if (forward_filter(input_seed, data)) {
+        write_result(input_seed ^ JRAND_MULTIPLIER, result_array, result_count);
     }
 }
 )";
@@ -112,7 +112,7 @@ R"(
         }
 
         // enchantment & level
-        return "if (enchantment == " + std::to_string(i) + " && " + std::to_string(constraint.attributes[0].level) + ") ";
+        return "if (enchantment == " + std::to_string(i) + " && level == " + std::to_string(constraint.attributes[0].level) + ") ";
     }
 
     void BruteforceKernel::emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry) {
@@ -176,7 +176,7 @@ R"(
         out << "switch (item) {\n";
         for (const auto child : pool->children) {
             data::LootEntry *entry = dynamic_cast<data::LootEntry *>(child);
-            out << "case " << entry->item << ": {\n";
+            out << "case " << entry->item << ": { //" << entry->name << '\n';
             emit_cuda_for_entry(out, entry); 
             out << "break;}\n";
 
@@ -203,8 +203,8 @@ R"(
         //      isolated boolean check of specified constraints
         materialize_level(&root_node);
 
-        out << "__device__ bool forward_filter(u64 loot_seed) {\n";
-        out << "extern __shared__ u32 data[];\n";
+        out << "__device__ bool forward_filter(u64 loot_seed, u32 data[]) {\n";
+        //out << "extern __shared__ u32 data[];\n";
         if (!this->root_node.constraints.empty()) {
             out << "int global_constraints[" << this->root_node.constraints.size() << "] = {0};\n";
         }

@@ -100,7 +100,7 @@ void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, co
         size_t inject_size = std::string("//@InjectSharedDefinitions").length();
         size_t definitions_start = reference_kernel.kernel_code.find("//@SharedDefinitionsStart");
         size_t definitions_end = reference_kernel.kernel_code.find("//@SharedDefinitionsEnd");
-        size_t definitions_size = definitions_end - definitions_start + 1;
+        size_t definitions_size = definitions_end - definitions_start;
 
         if (inject_start == std::string::npos || definitions_start == std::string::npos || definitions_end == std::string::npos) {
             std::cerr << "WARN: Missing injection annotations! Inject step skipped.\n";

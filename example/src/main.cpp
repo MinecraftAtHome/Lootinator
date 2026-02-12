@@ -34,7 +34,7 @@ pool 0  {
 */
 
 int main() {
-	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/simple_constraints.json");
+	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/simple_constraints_2.json");
     std::ifstream f("../../example/src/ruined_portal.json");
 	nlohmann::json loot_table_json = nlohmann::json::parse(f);
 

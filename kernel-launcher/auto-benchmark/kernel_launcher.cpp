@@ -303,6 +303,8 @@ namespace launcher {
         NVRTC_CHECK(nvrtcGetPTX(prog, &ptx[0]));
         nvrtcDestroyProgram(&prog);
 
+        //printf("%s\n", ptx.c_str());
+
         config.kernel_code = ptx;
         return 0;
     }

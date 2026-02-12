@@ -218,7 +218,7 @@ i32 item_count = 1;item_count = 1 + nextInt(&loot_seed, 2);break;}
 }
 return true;
 }__global__ void kernel_1(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 shared_mem_contents_length, u64 offset) {
-    extern __shared__ u32 data[1024 * 16];
+    extern __shared__ u32 data[];
     if (threadIdx.x < shared_mem_contents_length) {
         for (int i = threadIdx.x; i < shared_mem_contents_length; i += blockDim.x) {
             data[i] = shared_mem_contents[i];
@@ -238,7 +238,7 @@ return true;
 namespace kernel0 {
 void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
 {
-    kernel_1<<< num_blocks, lp.threads_per_block >>> (
+    kernel_1<<< num_blocks, lp.threads_per_block, mem.shared_mem_bytes >>> (
         mem.d_result_array, mem.d_result_count, mem.d_shared_mem_contents, mem.shared_mem_contents_length, offset
     );
 }} //namespace

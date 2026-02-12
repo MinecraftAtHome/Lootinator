@@ -34,10 +34,11 @@ namespace kgen {
     std::string BruteforceKernel::to_string() {
         std::stringstream result;
         Kernel::write_shared_definitions(result);
+
         generate_forward_filter(result);
 
         result << 
-R"(__global__ void )" << this->name << "(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 shared_mem_contents_length, u64 offset) {";
+R"(extern "C" __global__ void )" << this->name << "(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 shared_mem_contents_length, u64 offset) {";
         result <<
 R"(
     extern __shared__ u32 data[];

@@ -116,7 +116,10 @@ i32 item_count = 1;item_count = 1 + nextInt(&loot_seed, 2);break;}
 }}
 }
 return true;
-}__global__ void kernel_1(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 shared_mem_contents_length, u64 offset) {
+}
+
+extern "C" {
+__global__ void kernel_1(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 shared_mem_contents_length, u64 offset) {
     extern __shared__ u32 data[];
     if (threadIdx.x < shared_mem_contents_length) {
         for (int i = threadIdx.x; i < shared_mem_contents_length; i += blockDim.x) {
@@ -130,5 +133,6 @@ return true;
     if (forward_filter(input_seed, data)) {
         write_result(input_seed ^ JRAND_MULTIPLIER, result_array, result_count);
     }
+}
 }
 

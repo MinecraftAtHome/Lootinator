@@ -6,9 +6,9 @@
 namespace kgen {
     class BruteforceKernel : public Kernel {
     public:
-        static void gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out);
-        BruteforceKernel(data::LootTableRoot &root_node);
-
+        static void gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config);
+        BruteforceKernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
+        
     protected:
         virtual ConfiguredKernel generate() override;
      

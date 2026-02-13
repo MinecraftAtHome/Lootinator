@@ -5,6 +5,10 @@
 #include <ostream>
 
 namespace kgen {
+    struct KernelGenConfig {
+        bool seedcracking;
+    };
+
     struct ConfiguredKernel {
         std::string kernel_name;
         std::string code;
@@ -23,6 +27,7 @@ namespace kgen {
     class Kernel {
     public:
         data::LootTableRoot& root_node;
+        kgen::KernelGenConfig kgen_config;
 
         std::vector<uint32_t> pool_memory_offsets;
         std::vector<uint32_t> function_memory_offsets;
@@ -31,8 +36,9 @@ namespace kgen {
         static std::string generate_skip(std::string var, int amount);
 
         std::string name;
+        int flags;
 
-        Kernel(data::LootTableRoot &root_node);
+        Kernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
 
     protected:
         static void write_shared_definitions(std::ostream& out);

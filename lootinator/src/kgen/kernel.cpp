@@ -81,8 +81,8 @@ namespace kgen {
             << "typedef " << global_settings.SIGNED_64_TYPE << " i64;\n\n";
 
         out <<
-R"(constexpr u64 JRAND_MULTIPLIER = 0x5deece66d;
-constexpr u64 MASK_48 = 0xffffffffffff;
+R"(#define JRAND_MULTIPLIER (0x5deece66d)
+#define MASK_48 (0xffffffffffff)
 
 __device__ inline void setSeed(u64* rand, u64 value){ *rand = (value ^ JRAND_MULTIPLIER) & MASK_48; }
 __device__ inline i32 next(u64* rand, const i32 bits){ *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48; return (i32)((i64)*rand >> (48 - bits)); }

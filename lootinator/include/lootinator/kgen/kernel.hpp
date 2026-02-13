@@ -14,6 +14,10 @@ namespace kgen {
         uint32_t threads_per_block;
 
         std::vector<uint32_t> shared_mem;
+
+        uint32_t device_id;
+        uint32_t start_batch;
+        uint32_t end_batch;
     };
 
     class Kernel {

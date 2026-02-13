@@ -27,7 +27,10 @@ namespace kgen {
             UINT64_C(1) << 48,
             UINT64_C(1) << 32,
             global_settings.THREADS_PER_BLOCK,
-            combined_shared_memory
+            combined_shared_memory,
+            0,
+            0,
+            UINT64_C(1) << 16,
         };
     }
 
@@ -104,7 +107,7 @@ R"(
             if (vec[i] == ench) break;
         }
         if (i == vec.size()) {
-            throw std::exception("messed up, need to fix :)");
+            throw "messed up, need to fix :)";
         }
 
         // enchantment, but no level - if guard only on enchantment id

@@ -7,31 +7,7 @@
 
 #include "lootinator/data/loot_data.hpp"
 #include "lootinator/kgen/bruteforce_kernel.hpp"
-
-/*
-loot table: ruined portal
-constraints:
-[
-	{
-		"item": 4,
-		"range": {
-            "min": 20,
-            "max": 100000
-        }
-	}
-]
-
-pool 0  {
-	lcg-advance 1;
-	roll 0 {
-		//...
-		case 4 {
-			pool-assert >= 20;
-		}
-		//...
-	}
-}
-*/
+#include "lootinator/kgen/cuda_source_gen.hpp"
 
 int main() {
 	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/simple_constraints_2.json");
@@ -51,11 +27,6 @@ int main() {
 	kgen::BruteforceKernel::gen_kernels(root, kernels);
 
 	std::ofstream fout("first_cuda.cu");
-	fout << kernels[0].code << '\n';
+    generate_runner_source(kernels[0], fout);
 	fout.close();
-
-	//kgen::StatePredictionKernel::gen_kernels(root, kernels);
-	//...
-
-	//root.print(0);
 }

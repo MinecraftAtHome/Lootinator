@@ -2,13 +2,14 @@
 #include <sstream>
 #include <fstream>
 
-#include "launcher_data.h"
+#include "lootinator/kgen/cuda_source_gen.hpp"
 
-namespace launcher {
-    int generate_benchmarker_source(std::vector<launcher::LaunchParameters> kernel_configs);
-    int generate_runner_source(launcher::LaunchParameters& kernel_config);
+namespace kgen {
+    typedef uint32_t u32;
 
-    void print_preamble(std::ostream& out, const launcher::LaunchParameters& reference_kernel) {
+    constexpr u32 RESULT_BUFFER_SIZE = 16u * 1024u; // max results per kernel launch
+
+    void print_preamble(std::ostream& out, const kgen::ConfiguredKernel& reference_kernel) {
         std::stringstream sout;
         sout << 
 R"(#include "cuda_runtime.h"
@@ -34,10 +35,10 @@ void gpuAssert(cudaError_t code, const char *file, int line) {
     }
 }
 
-struct LaunchParameters {
+struct ConfiguredKernel {
     std::string kernel_name;
-    std::vector<u32> kernel_shared_memory;
-    u64 threads_total;
+    std::vector<u32> shared_memory;
+    u64 total_threads;
     u64 threads_per_batch;
     u32 threads_per_block;
     u32 device_id;
@@ -51,13 +52,13 @@ struct KernelMemory {
     u64* d_result_array;
     u32* d_result_count;
 
-    KernelMemory(const LaunchParameters& lp) {
-        shared_mem_contents_length = lp.kernel_shared_memory.size();
-        shared_mem_bytes = lp.kernel_shared_memory.size() * sizeof(u32);
+    KernelMemory(const ConfiguredKernel& lp) {
+        shared_mem_contents_length = lp.shared_memory.size();
+        shared_mem_bytes = lp.shared_memory.size() * sizeof(u32);
         cudaMalloc(&d_shared_mem_contents, shared_mem_bytes);
-        cudaMalloc(&d_result_array, )" << launcher::RESULT_BUFFER_SIZE << R"( * sizeof(u64));
+        cudaMalloc(&d_result_array, )" << kgen::RESULT_BUFFER_SIZE << R"( * sizeof(u64));
         cudaMalloc(&d_result_count, sizeof(u32));
-        cudaMemcpy(d_shared_mem_contents, lp.kernel_shared_memory.data(), shared_mem_bytes, cudaMemcpyHostToDevice);
+        cudaMemcpy(d_shared_mem_contents, lp.shared_memory.data(), shared_mem_bytes, cudaMemcpyHostToDevice);
     }
     ~KernelMemory() {
         cudaFree(d_shared_mem_contents);
@@ -72,10 +73,10 @@ struct BenchmarkResults {
     float ms_total_estimate;
 };
 
-typedef void (*launch_function)(const LaunchParameters&, const KernelMemory&, u32, u64);
+typedef void (*launch_function)(const ConfiguredKernel&, const KernelMemory&, u32, u64);
 
-void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, const KernelMemory& mem, bool print_results) {
-    u64 h_result_array[)" << launcher::RESULT_BUFFER_SIZE << R"(];
+void launch_configured_kernel(launch_function lf, const ConfiguredKernel& lp, const KernelMemory& mem, bool print_results) {
+    u64 h_result_array[)" << kgen::RESULT_BUFFER_SIZE << R"(];
     const u32 num_blocks = lp.threads_per_batch / lp.threads_per_block;
     for (u32 b = lp.start_batch; b < lp.end_batch; b++) {
         u32 h_result_count = 0;
@@ -98,8 +99,8 @@ void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, co
         std::string preamble = sout.str();
         size_t inject_start = preamble.find("//@InjectSharedDefinitions");
         size_t inject_size = std::string("//@InjectSharedDefinitions").length();
-        size_t definitions_start = reference_kernel.kernel_code.find("//@SharedDefinitionsStart");
-        size_t definitions_end = reference_kernel.kernel_code.find("//@SharedDefinitionsEnd");
+        size_t definitions_start = reference_kernel.code.find("//@SharedDefinitionsStart");
+        size_t definitions_end = reference_kernel.code.find("//@SharedDefinitionsEnd");
         size_t definitions_size = definitions_end - definitions_start;
 
         if (inject_start == std::string::npos || definitions_start == std::string::npos || definitions_end == std::string::npos) {
@@ -108,35 +109,35 @@ void launch_configured_kernel(launch_function lf, const LaunchParameters& lp, co
             return;
         }
 
-        std::string definitions = reference_kernel.kernel_code.substr(definitions_start, definitions_size);
+        std::string definitions = reference_kernel.code.substr(definitions_start, definitions_size);
         preamble.replace(inject_start, inject_size, definitions);
         out << preamble;
     }
 
-    void print_shared_mem(std::ostream& out, const launcher::LaunchParameters& kernel_config) {
+    void print_shared_mem(std::ostream& out, const kgen::ConfiguredKernel& kernel_config) {
         out << "{";
-        const std::vector<u32>& shmem = kernel_config.kernel_shared_memory;
+        const std::vector<u32>& shmem = kernel_config.shared_mem;
         for (size_t i = 0; i < shmem.size(); i++) {
-            out << kernel_config.kernel_shared_memory[i] << (i == shmem.size()-1 ? "};" : ",");
+            out << kernel_config.shared_mem[i] << (i == shmem.size()-1 ? "};" : ",");
         }
     }
 
-    void print_kernels(std::ostream& out, const std::vector<launcher::LaunchParameters>& kernel_configs) {
+    void print_kernels(std::ostream& out, const std::vector<kgen::ConfiguredKernel>& kernel_configs) {
         for (int k = 0; k < kernel_configs.size(); k++) {
             // each kernel gets its own namespace to avoid device helper conflicts
             out << "namespace kernel" << k << " {\n";
-            out << kernel_configs[k].kernel_code;
+            out << kernel_configs[k].code;
             out << "\n} //namespace\n";
         }
     }
 
-    void print_kernel_launchers(std::ostream& out, const std::vector<launcher::LaunchParameters>& kernel_configs) {
+    void print_kernel_launchers(std::ostream& out, const std::vector<kgen::ConfiguredKernel>& kernel_configs) {
         for (int k = 0; k < kernel_configs.size(); k++) {
             const auto& conf = kernel_configs.at(k);
             out << "namespace kernel" << k << " {";
             out << 
 R"(
-void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
+void launch(const ConfiguredKernel& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
 {
     )" << conf.kernel_name << R"(<<< num_blocks, lp.threads_per_block, mem.shared_mem_bytes >>> (
         mem.d_result_array, mem.d_result_count, mem.d_shared_mem_contents, mem.shared_mem_contents_length, offset
@@ -146,35 +147,35 @@ void launch(const LaunchParameters& lp, const KernelMemory& mem, u32 num_blocks,
         }
     }
 
-    void print_benchmarker(std::ostream& out, const std::vector<launcher::LaunchParameters>& kernel_configs) {
+    void print_benchmarker(std::ostream& out, const std::vector<kgen::ConfiguredKernel>& kernel_configs) {
         out << 
 R"(
 int main() {
     constexpr int num_kernels = )" << kernel_configs.size() << R"(;
     std::vector<launch_function> launchers;
-    std::vector<LaunchParameters> configs;
+    std::vector<ConfiguredKernel> configs;
 )";
 
         for (int i = 0; i < kernel_configs.size(); i++) {
-            const LaunchParameters& lp = kernel_configs[i];
+            const ConfiguredKernel& lp = kernel_configs[i];
             out << "    launchers.push_back(kernel" << i << "::launch);\n";
             out << "    configs.push_back({\"" << lp.kernel_name << "\", ";
-            out << "std::vector<u32>(), " << lp.threads_total << "ULL, " << lp.threads_per_batch << "ULL, " << lp.threads_per_block << "U, ";
+            out << "std::vector<u32>(), " << lp.total_threads << "ULL, " << lp.threads_per_batch << "ULL, " << lp.threads_per_block << "U, ";
             out << lp.device_id << "U, " << lp.start_batch << ", " << lp.end_batch;
             out << "});\n"; 
         }
         for (int i = 0; i < kernel_configs.size(); i++) {
             out << "    {uint32_t shmem[] = ";
             print_shared_mem(out, kernel_configs.at(i));
-            out << " for (int k = 0; k < " << kernel_configs.at(i).kernel_shared_memory.size() 
-                << "; k++) configs[" << i << "].kernel_shared_memory.push_back(shmem[k]);}\n";
+            out << " for (int k = 0; k < " << kernel_configs.at(i).shared_mem.size() 
+                << "; k++) configs[" << i << "].shared_memory.push_back(shmem[k]);}\n";
         }
         out << "\n";
         out << "    BenchmarkResults result_array[num_kernels];\n";
         out << "    for (int k = 0; k < num_kernels; k++) {\n";
         out <<
-R"(        const LaunchParameters& config = configs[k];
-        LaunchParameters work_config = config;
+R"(        const ConfiguredKernel& config = configs[k];
+        ConfiguredKernel work_config = config;
         KernelMemory kernel_memory(config);
         BenchmarkResults results{config.kernel_name, false, 0.0f, 0.0f};
 
@@ -233,7 +234,7 @@ R"(        const LaunchParameters& config = configs[k];
     
     std::cerr << "Running kernel " << configs[best_kernel].kernel_name << "...\n";
     {
-        const LaunchParameters& config = configs[best_kernel];
+        const ConfiguredKernel& config = configs[best_kernel];
         KernelMemory kernel_memory(config);
         launch_configured_kernel(launchers[best_kernel], config, kernel_memory, true);
         std::cerr << "Finished.\n";
@@ -243,11 +244,10 @@ R"(        const LaunchParameters& config = configs[k];
 )";
     }
 
-    int generate_runner_source(launcher::LaunchParameters& lp) {
-        std::vector<launcher::LaunchParameters> single_kernel;
+    void generate_runner_source(kgen::ConfiguredKernel& lp, std::ostream &fout) {
+        std::vector<kgen::ConfiguredKernel> single_kernel;
         single_kernel.push_back(lp);
 
-        std::ofstream fout(launcher::SOURCE_CODE_OUTPUT_FILE);
         print_preamble(fout, lp);
         print_kernels(fout, single_kernel);
         print_kernel_launchers(fout, single_kernel);
@@ -255,15 +255,15 @@ R"(        const LaunchParameters& config = configs[k];
         fout << 
 R"(
 int main() {
-    LaunchParameters config = {")" << lp.kernel_name << "\", "
-        << "std::vector<u32>(), " << lp.threads_total << "ULL, " 
+    ConfiguredKernel config = {")" << lp.kernel_name << "\", "
+        << "std::vector<u32>(), " << lp.total_threads << "ULL, " 
         << lp.threads_per_batch << "ULL, " << lp.threads_per_block << "U, "
         << lp.device_id << "U, " << lp.start_batch << ", " << lp.end_batch
         << "};\n"; 
 
         fout << "    {uint32_t shmem[] = ";
         print_shared_mem(fout, lp);
-        fout << " for (int k = 0; k < " << lp.kernel_shared_memory.size() << "; k++) config.kernel_shared_memory.push_back(shmem[k]);}\n";
+        fout << " for (int k = 0; k < " << lp.shared_mem.size() << "; k++) config.shared_memory.push_back(shmem[k]);}\n";
 
         fout << 
 R"(    const KernelMemory mem(config);
@@ -271,16 +271,14 @@ R"(    const KernelMemory mem(config);
     return 0;
 }
 )";
-        return 0;
     }
 
-    int generate_benchmarker_source(std::vector<launcher::LaunchParameters> kernel_configs) {
+    int generate_benchmarker_source(std::vector<kgen::ConfiguredKernel> kernel_configs, std::ostream &fout) {
         if (kernel_configs.size() == 0) {
             std::cerr << "ERROR: No kernels provided.\n";
             return 1;
         }
         
-        std::ofstream fout(launcher::SOURCE_CODE_OUTPUT_FILE);
         print_preamble(fout, kernel_configs[0]);
         print_kernels(fout, kernel_configs);
         print_kernel_launchers(fout, kernel_configs);

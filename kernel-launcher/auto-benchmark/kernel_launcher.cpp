@@ -108,11 +108,6 @@ namespace launcher {
 }
 
 namespace launcher {
-    extern int generate_benchmarker_source(std::vector<launcher::LaunchParameters> kernel_configs);
-    extern int generate_runner_source(launcher::LaunchParameters& kernel_config);
-}
-
-namespace launcher {
     int finalize_config(LaunchParameters& config, const AppParameters& app_params) {
         // assert that grid size is ok
         const launcher::u32 n_blocks = static_cast<launcher::u32>(config.threads_per_batch / config.threads_per_block);
@@ -295,6 +290,8 @@ namespace launcher {
         }
 
         nvrtcProgram prog;
+
+        // std::cout << kernel_source << "\n";
         NVRTC_CHECK(nvrtcCreateProgram(&prog, kernel_source.c_str(), "internal.cu", 0, nullptr, nullptr));
         NVRTC_CHECK(nvrtcCompileProgram(prog, 0, nullptr));
         size_t ptxSize;
@@ -443,13 +440,13 @@ int main(int argc, char** argv) {
     if (app_params.mode == launcher::AppMode::BENCHMARK) {
         DEBUG(app_params.debug_info) << "selected benchmark mode.\n";
 
-        if (app_params.generate_cuda_source) {
-            return launcher::generate_benchmarker_source(kernel_configs);
-        }
-        else {
-            launcher::benchmark_all(app_params, kernel_configs);
-            return 0;
-        }
+        // if (app_params.generate_cuda_source) {
+            // return launcher::generate_benchmarker_source(kernel_configs);
+        // }
+        // else {
+        launcher::benchmark_all(app_params, kernel_configs);
+        return 0;
+        // }
     }
     else { // app mode = run single
         DEBUG(app_params.debug_info) << "selected run-single mode.\n";
@@ -457,12 +454,12 @@ int main(int argc, char** argv) {
         if (launcher::finalize_config(config, app_params))
             return 1;
 
-        if (app_params.generate_cuda_source) {
-            return launcher::generate_runner_source(config);
-        }
-        else {
-            launcher::KernelData kdata(config);
-            return launcher::launch_kernel(kdata, config, app_params);
-        }
+        // if (app_params.generate_cuda_source) {
+        //     return launcher::generate_runner_source(config);
+        // }
+        // else {
+        launcher::KernelData kdata(config);
+        return launcher::launch_kernel(kdata, config, app_params);
+        // }
     }
 }

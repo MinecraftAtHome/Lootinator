@@ -119,11 +119,53 @@ R"(
         return "if (enchantment == " + std::to_string(i) + " && level == " + std::to_string(constraint.attributes[0].level) + ") ";
     }
 
-    void BruteforceKernel::emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry) {
-        // entry->constraints
-        // std::vector<LootFunction *> = dynamic_cast<std::vector<LootFunction *>>(entry->children);
-        data::LootFunctionData* ench_func = nullptr;
+    void BruteforceKernel::emit_skip_for_entry(std::ostream &out, data::LootEntry *entry) {
+        for (const auto child : entry->children) {            
+            data::LootFunctionData *function = dynamic_cast<data::LootFunctionData *>(child);
+            switch (function->type) {
+                case data::APPLY_DAMAGE: {
+                    out << Kernel::generate_skip("loot_seed", 1) << ";\n";
+                    break;
+                }
+                case data::SET_COUNT: {
+                    if (function->set_count.min != function->set_count.max) {
+                        out << Kernel::generate_skip("loot_seed", 1) << ";\n";
+                    }
+                    break;
+                }
+                case data::ENCHANT_RANDOMLY: {
+                    // TODO remove awful code
+                    auto& vec = function->enchant_randomly.enchantment_order;
+                    std::string bitmask = "0b";
+                    for (int bit = vec.size()-1; bit >= 0; bit--) {
+                        int max_level = mc::get_max_level(vec[bit]);
+                        bitmask += (max_level > 1 ? "1" : "0");
+                    }
+                    std::string one = "1";
+                    if (vec.size() > 32) {
+                        bitmask += "ULL";
+                        one += "ULL";
+                    }
+                    out << "u32 eid = nextInt(&loot_seed, " << vec.size() << ");\n";
+                    out << "if (" << bitmask << " & (" << one << " << eid)) " << Kernel::generate_skip("loot_seed", 1) << ";\n";
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+    }
 
+    void BruteforceKernel::emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry) {
+        // SKIP
+        if (entry->constraints.empty()) {
+            emit_skip_for_entry(out, entry);
+            return;
+        }
+
+        // STORE
+        data::LootFunctionData* ench_func = nullptr;
         out << "i32 item_count = 1;";
 
         for (const auto child : entry->children) {            
@@ -146,9 +188,9 @@ R"(
                 case data::ENCHANT_RANDOMLY: {
                     ench_func = function;
                     out << "i32 enchantment = nextInt(&loot_seed, " << function->enchant_randomly.enchantment_order.size() << ");\n";
-                    std::cout << "accessing function mem offset...\n" << function->id;
+                    //std::cout << "accessing function mem offset...\n" << function->id;
                     int offset = function_memory_offsets[function->id];
-                    std::cout << "...done!\n";
+                    //std::cout << "...done!\n";
                     out << "u32 max_level = data[" << offset << "+ enchantment];\n";
                     out << "i32 level = nextIntBounded(&loot_seed, 1, max_level);\n";
                     break;

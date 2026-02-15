@@ -10,7 +10,7 @@
 #include "lootinator/kgen/cuda_source_gen.hpp"
 
 int main() {
-	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/simple_constraints_2.json");
+	std::vector<loot::Constraint> constr = loot::parse_constraints_from_json("../../example/src/simple_constraints.json");
     std::ifstream f("../../example/src/ruined_portal.json");
 	nlohmann::json loot_table_json = nlohmann::json::parse(f);
 
@@ -23,10 +23,14 @@ int main() {
 		std::cout << ex.what() << "\n";
 	}
 
-	std::vector<kgen::ConfiguredKernel> kernels;
-	kgen::BruteforceKernel::gen_kernels(root, kernels);
+	kgen::KernelGenConfig kgen_config = {
+		.seedcracking=true,
+	};	
 
-	std::ofstream fout("first_cuda.cu");
+	std::vector<kgen::ConfiguredKernel> kernels;
+	kgen::BruteforceKernel::gen_kernels(root, kernels, kgen_config);
+
+	std::ofstream fout("simple_life.cu");
     generate_runner_source(kernels[0], fout);
 	fout.close();
 }

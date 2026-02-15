@@ -44,11 +44,13 @@ namespace kgen {
         return var + "= (" + var + "*" + std::to_string(m) + "+" + std::to_string(a) + ") & MASK_48";
     }
 
-    Kernel::Kernel(data::LootTableRoot &root_node) : root_node(root_node)
+    Kernel::Kernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config) : root_node(root_node)
     {
         static int kernel_index = 0;
         kernel_index++;
         name = "kernel_" + std::to_string(kernel_index);
+
+        this->kgen_config = kgen_config;
 
         function_memory_offsets.push_back(0);
         pool_memory_offsets.push_back(0);

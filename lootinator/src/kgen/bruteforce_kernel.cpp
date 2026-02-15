@@ -93,7 +93,7 @@ R"(
         }
     }
 
-    static std::string get_if_guard(loot::Constraint& constraint, data::LootFunctionData* lfd_enchant_randomly) {
+    static std::string get_branchless_if_guard(loot::Constraint& constraint, data::LootFunctionData* lfd_enchant_randomly) {
         // easy case - no enchantment, no if guard
         if (constraint.attributes.empty()) {
             return "";
@@ -112,11 +112,11 @@ R"(
 
         // enchantment, but no level - if guard only on enchantment id
         if (constraint.attributes[0].level == -1) {
-            return "if (enchantment == " + std::to_string(i) + ") ";
+            return "item_count += (enchantment == " + std::to_string(i) + ") * ";
         }
 
         // enchantment & level
-        return "if (enchantment == " + std::to_string(i) + " && level == " + std::to_string(constraint.attributes[0].level) + ") ";
+        return "item_count += (enchantment == " + std::to_string(i) + " && level == " + std::to_string(constraint.attributes[0].level) + ") * ";
     }
 
     void BruteforceKernel::emit_skip_for_entry(std::ostream &out, data::LootEntry *entry) {
@@ -147,7 +147,8 @@ R"(
                         one += "ULL";
                     }
                     out << "u32 eid = nextInt(&loot_seed, " << vec.size() << ");\n";
-                    out << "if (" << bitmask << " & (" << one << " << eid)) " << Kernel::generate_skip("loot_seed", 1) << ";\n";
+                    out << "bool r = (" << bitmask << " & (" << one << " << eid));\nuint64_t m = !r - 1;\n";
+                    out << "loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;\n";
                     break;
                 }
                 default: {
@@ -203,7 +204,7 @@ R"(
 
         // now update accumulators
         for (auto& constraint : entry->constraints) {
-            std::string if_guard = get_if_guard(constraint, ench_func);
+            std::string if_guard = get_branchless_if_guard(constraint, ench_func);
             std::string item_ident = constraint_to_item_identifier(constraint);
             std::string arrayPlusIndex = var_name_map[item_ident];
             out << if_guard << arrayPlusIndex << " += item_count;"; 

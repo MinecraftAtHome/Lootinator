@@ -1,4 +1,4 @@
-#include "lootinator/kgen/bruteforce_kernel.hpp"
+#include "lootinator/kgen/main_bruteforce_kernel.hpp"
 #include "lootinator/global_settings.hpp"
 
 #include <sstream>
@@ -6,16 +6,16 @@
 #include <fstream>
 
 namespace kgen {
-    void BruteforceKernel::gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
-        BruteforceKernel bk(root_node, kgen_config);
+    void MainBruteforceKernel::gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
+        MainBruteforceKernel bk(root_node, kgen_config);
         out.push_back(bk.generate());
     }
 
-    BruteforceKernel::BruteforceKernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config) : Kernel(root_node, kgen_config) {}
+    MainBruteforceKernel::MainBruteforceKernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config) : Kernel(root_node, kgen_config) {}
     
     // -----------------------------------------------------
     
-    ConfiguredKernel BruteforceKernel::generate() {
+    ConfiguredKernel MainBruteforceKernel::generate() {
         std::ofstream fout("kernel.shm");
         for (auto v : combined_shared_memory) {
             fout << v << " ";
@@ -34,7 +34,7 @@ namespace kgen {
         };
     }
 
-    std::string BruteforceKernel::to_string() {
+    std::string MainBruteforceKernel::to_string() {
         std::stringstream result;
         Kernel::write_shared_definitions(result);
 
@@ -74,7 +74,7 @@ R"(
         return item_identifier.str();
     }
 
-    void BruteforceKernel::materialize_level(data::LootTreeNode *node) {
+    void MainBruteforceKernel::materialize_level(data::LootTreeNode *node) {
         std::string level = dynamic_cast<data::LootPool *>(node) != nullptr ? "local_" : "global_";
         int index = 0;
         for (const auto &constraint : node->constraints) {
@@ -111,7 +111,7 @@ R"(
         return "item_count += (enchantment == " + std::to_string(i) + " && level == " + std::to_string(constraint.attributes[0].level) + ") * ";
     }
 
-    void BruteforceKernel::emit_skip_for_entry(std::ostream &out, data::LootEntry *entry) {
+    void MainBruteforceKernel::emit_skip_for_entry(std::ostream &out, data::LootEntry *entry) {
         for (const auto child : entry->children) {            
             data::LootFunctionData *function = dynamic_cast<data::LootFunctionData *>(child);
             switch (function->type) {
@@ -150,7 +150,7 @@ R"(
         }
     }
 
-    void BruteforceKernel::emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry) {
+    void MainBruteforceKernel::emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry) {
         // SKIP
         if (entry->constraints.empty()) {
             emit_skip_for_entry(out, entry);
@@ -212,7 +212,7 @@ R"(
         return false;
     }
 
-    void BruteforceKernel::emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx) {
+    void MainBruteforceKernel::emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx) {
         materialize_level(pool);
         out << "{\n";
         if (!pool->constraints.empty()) {
@@ -245,7 +245,7 @@ R"(
         out << "}\n";
     }
 
-    void BruteforceKernel::generate_forward_filter(std::ostream& out) {
+    void MainBruteforceKernel::generate_forward_filter(std::ostream& out) {
         // TODO Create check_lootseed(u64) -> bool
         //      The function should use available loot pool information combined
         //      with existing implementations of loot functions and form a full,

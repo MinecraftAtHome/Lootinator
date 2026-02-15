@@ -203,15 +203,6 @@ R"(
         }
     }
 
-    static bool has_constraint(const std::vector<loot::Constraint> &cons, const data::LootEntry *entry) {
-        for (const auto &c : cons) {
-            if (c.item == entry->item) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     void BruteforceKernel::emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx) {
         materialize_level(pool);
         out << "{\n";
@@ -224,7 +215,7 @@ R"(
         out << "switch (item) {\n";
         for (const auto child : pool->children) {
             data::LootEntry *entry = dynamic_cast<data::LootEntry *>(child);
-            if (this->kgen_config.seedcracking && !has_constraint(pool->constraints, entry)) {
+            if (this->kgen_config.seedcracking && entry->constraints.empty()) {
                 continue;
             }
             out << "case " << entry->item << ": { //" << entry->name << '\n';

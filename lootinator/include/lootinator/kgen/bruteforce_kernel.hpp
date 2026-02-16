@@ -25,6 +25,7 @@ namespace kgen {
 
         void materialize_level(data::LootTreeNode *node);
 
+        void setup_entry_memory(data::LootPool* pool);
         virtual void setup_shared_memory() override;
         virtual void fill_function_shared_mem(data::LootTreeNode* current) override;
     };

@@ -66,9 +66,36 @@ R"(
         std::string level = dynamic_cast<data::LootPool *>(node) != nullptr ? "local_" : "global_";
         int index = 0;
         for (const auto &constraint : node->constraints) {
-            std::string accumulator_identifier = level + "constraints[" + std::to_string(index) + "]"; 
+            int entry_ix = 0;
+            for (auto child : node->children) {
+                // each entry will only have one constraint at this point (operating solely on item type)
+                if (child->constraints.empty()) {
+                    entry_ix++;
+                    continue;
+                }
+                if (child->constraints[0] == constraint) {
+                    break;
+                }
+                entry_ix++;
+            }
+            std::string accumulator_identifier = level + "constraints[" + std::to_string(index) + "]";
+            
+            int pool_idx = 0;
+            for (auto child : root_node.children) {
+                if (static_cast<void*>(child) == static_cast<void*>(node)) {
+                    break;
+                }
+                pool_idx++;
+            }
+            int offset = pool_memory_offsets[pool_idx];
+
+            CAST_CHILD(entry, data::LootEntry, node->children[entry_ix]);
+            for (int w = entry->next_int_range.min; w <= entry->next_int_range.max; w++) {
+                combined_shared_memory[offset + w*3] |= (index << 8);
+            }
+            
             index++;
-            std::string item_identifier = std::to_string(constraint.item);
+            std::string item_identifier = std::to_string(entry_ix);
             this->var_name_map[item_identifier] = accumulator_identifier;
         }
     }
@@ -134,8 +161,6 @@ local_constraints[counter_idx] += item_count;
     }
 
     void BruteforceKernel::generate_forward_filter(std::ostream& out) {
-        materialize_level(&root_node);
-
         out << "__device__ bool forward_filter(u64 loot_seed, u32 data[]) {\n";
         int pool_idx = 0;
         for (const auto child : this->root_node.children) {
@@ -158,20 +183,58 @@ local_constraints[counter_idx] += item_count;
         return;
     }
 
+    void BruteforceKernel::setup_entry_memory(data::LootPool* pool) {
+        for (auto child2 : pool->children) {
+            CAST_CHILD(entry, data::LootEntry, child2);
+            uint32_t basic_info = 0;
+            uint64_t enchant_mask = 0;
+
+            basic_info |= (entry->get_count_range().min << 24) | (entry->get_count_range().max << 16);
+            // counters not materialized, just ignore them :)
+            
+            // find an enchant randomly thing
+            data::LootFunctionData* enchant_rand_func = nullptr;
+            for (auto child3 : entry-> children) {
+                CAST_CHILD(lf, data::LootFunctionData, child3);
+                if (lf->type != data::ENCHANT_RANDOMLY) {
+                    continue;
+                }
+                enchant_rand_func = lf;
+                break;
+            }
+
+            if (enchant_rand_func != nullptr) {
+                basic_info |= enchant_rand_func->enchant_randomly.enchantment_order.size();
+
+                int i = 0;
+                for (auto ench : enchant_rand_func->enchant_randomly.enchantment_order) {
+                    int max_level = mc::get_max_level(ench);
+                    enchant_mask |= (max_level > 1) ? (1ULL << i) : 0;
+                    i++;
+                }
+            }
+
+            combined_shared_memory.push_back(basic_info);
+            combined_shared_memory.push_back(enchant_mask >> 32);
+            combined_shared_memory.push_back(enchant_mask & 0xFFFF'FFFF);
+        }
+    }
+
     void BruteforceKernel::setup_shared_memory() {
+        // constraint merging thing
+
+
         function_memory_offsets.push_back(0);
         pool_memory_offsets.push_back(0);
 
         // parse shared mem for pools
         for (auto child : root_node.children) {
             data::LootPool* pool = dynamic_cast<data::LootPool*>(child);
-            uint32_t size = static_cast<uint32_t>(pool->entry_lookup.size());
-            uint32_t last = pool_memory_offsets.back();
-            pool_memory_offsets.push_back(last + size);
             
-            for (auto i : pool->entry_lookup) {
-                combined_shared_memory.push_back(i);
-            }
+            setup_entry_memory(pool);
+
+            uint32_t size = static_cast<uint32_t>(combined_shared_memory.size());
+            pool_memory_offsets.push_back(size);
         }
     }
 }

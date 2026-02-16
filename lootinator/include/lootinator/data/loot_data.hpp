@@ -8,6 +8,8 @@
 #include "nlohmann/json.hpp"
 
 namespace data {
+    #define CAST_CHILD(name, type, child) type* name = dynamic_cast<type*>(child)
+
     class LootTreeNode {
         public:
         static const int INDENT_SIZE = 4;
@@ -44,6 +46,7 @@ namespace data {
         virtual uint32_t get_max_lcg_advancement() const;
 
         bool matches_constraint(const loot::Constraint &constraint) const;
+        util::RangeInclusive<uint32_t> get_count_range() const;
 
         LootEntry(LootTreeNode *parent, const nlohmann::json &json, const util::RangeInclusive<uint32_t> next_int_range);
         virtual void print(int indentation) const override;
@@ -74,6 +77,8 @@ namespace data {
 	    LootTableRoot(const nlohmann::json &json, const std::string& item_map_filepath, mc::VersionRange version);
         virtual int get_item_index(const std::string& item_name) const override;
         virtual void print(int indentation) const override;
+
+        LootTableRoot copy() const;
 
         void add_constraints(const std::vector<loot::Constraint>& constraints);
     };

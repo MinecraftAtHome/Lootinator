@@ -26,7 +26,7 @@ namespace kgen {
 
     class Kernel {
     public:
-        data::LootTableRoot& root_node;
+        data::LootTableRoot root_node;
         kgen::KernelGenConfig kgen_config;
 
         std::vector<uint32_t> pool_memory_offsets;
@@ -38,7 +38,7 @@ namespace kgen {
         std::string name;
         int flags;
 
-        Kernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
+        Kernel(const data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
 
     protected:
         static void write_shared_definitions(std::ostream& out);

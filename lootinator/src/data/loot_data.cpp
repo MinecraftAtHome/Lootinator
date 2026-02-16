@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include "loot_data.hpp"
 
 
 namespace data {
@@ -163,6 +164,30 @@ namespace data {
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     }
 
+    LootTableRoot LootTableRoot::copy() const {
+        LootTableRoot new_root;
+
+        for (auto child1 : children) {
+            CAST_CHILD(pool, data::LootPool, child1);
+            data::LootPool* new_pool = new data::LootPool(*pool);
+            new_root.children.push_back(new_pool);
+
+            for (auto child2 : child1->children) {
+                CAST_CHILD(entry, data::LootEntry, child2);
+                data::LootEntry* new_entry = new data::LootEntry(*entry);
+                new_pool->children.push_back(new_pool);
+
+                for (auto child3 : child2->children) {
+                    CAST_CHILD(func, data::LootFunctionData, child3);
+                    data::LootFunctionData* new_func = new data::LootFunctionData(*func);
+                    new_entry->children.push_back(new_func);
+                }
+            }
+        }
+
+        return new_root; 
+    }
+
     bool LootEntry::matches_constraint(const loot::Constraint& constraint) const {
         if (item < 0 || static_cast<uint32_t>(item) != constraint.item) {
             return false;
@@ -193,10 +218,20 @@ namespace data {
         return true;
     }
 
-    bool LootPool::matches_constraint(const loot::Constraint& constraint) const {
+    util::RangeInclusive<uint32_t> LootEntry::get_count_range() const {
+        for (auto child : children) {
+            CAST_CHILD(lf, data::LootFunctionData, child);
+            if (lf->type == data::SET_COUNT) {
+                return lf->set_count;
+            }
+        }
+        return {1,1};
+    }
+
+    bool LootPool::matches_constraint(const loot::Constraint &constraint) const {
         bool matches = false;
         for (auto child : children) {
-            LootEntry* entry = dynamic_cast<LootEntry*>(child);
+            LootEntry *entry = dynamic_cast<LootEntry *>(child);
             if (entry->matches_constraint(constraint)) {
                 entry->constraints.push_back(constraint);
                 matches = true;
@@ -227,42 +262,6 @@ namespace data {
                 children[matching_pools[0]]->constraints.push_back(constraint);
             }
         }
-        sort_constraints();
-    }
-
-    void LootTreeNode::sort_constraints() {
-        for (auto &child : this->children) {
-            child->sort_constraints();
-        }
-
-        auto sort_lambda = [](loot::Constraint &a, loot::Constraint &b){
-            if (a.item < b.item) {
-                return true;
-            }
-            if (a.item > b.item) {
-                return false;
-            }
-            if (a.attributes.size() == 0) {
-                return false;
-            }
-            if (b.attributes.size() == 0) {
-                return true;
-            }
-            if (a.attributes[0].type > b.attributes[0].type) {
-                return false;
-            }
-            if (a.attributes[0].type < b.attributes[0].type) {
-                return true;
-            }
-            if (a.attributes[0].level == -1) {
-                return false;
-            }
-            if (b.attributes[0].level == -1) {
-                return true;
-            }
-            return false;
-        };
-        std::sort(this->constraints.begin(), this->constraints.end(), sort_lambda);
     }
 
     LootPool::LootPool(LootTreeNode *parent, const nlohmann::json &json) : rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {

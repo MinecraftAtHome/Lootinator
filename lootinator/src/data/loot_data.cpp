@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <fstream>
-#include "loot_data.hpp"
 
 
 namespace data {
@@ -165,7 +164,7 @@ namespace data {
     }
 
     LootTableRoot LootTableRoot::copy() const {
-        LootTableRoot new_root;
+        LootTableRoot new_root(*this);
 
         for (auto child1 : children) {
             CAST_CHILD(pool, data::LootPool, child1);

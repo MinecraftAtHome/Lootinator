@@ -6,7 +6,7 @@ add_library(lootinator
 	include/lootinator/kgen/bruteforce_kernel.hpp
 	include/lootinator/kgen/cuda_source_gen.hpp
 	include/lootinator/kgen/kernel.hpp
-	include/lootinator/kgen/main_bruteforce_kernel.hpp
+	include/lootinator/kgen/secondary_bruteforce_kernel.hpp
 	include/lootinator/lootinator.h
 	include/lootinator/mc/minecraft.hpp
 	include/lootinator/template/helpers.h
@@ -24,7 +24,7 @@ add_library(lootinator
 	src/kgen/bruteforce_kernel.cpp
 	src/kgen/cuda_source_gen.cpp
 	src/kgen/kernel.cpp
-	src/kgen/main_bruteforce_kernel.cpp
+	src/kgen/secondary_bruteforce_kernel.cpp
 	src/lootinator.cpp
 	src/mc/minecraft.cpp
 	src/template/helpers.cpp

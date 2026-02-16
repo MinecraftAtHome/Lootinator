@@ -4,10 +4,10 @@
 #include "lootinator/kgen/kernel.hpp"
 
 namespace kgen {
-    class MainBruteforceKernel : public Kernel {
+    class SecondaryBruteforceKernel : public Kernel {
     public:
         static void gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config);
-        MainBruteforceKernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
+        SecondaryBruteforceKernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
         
     protected:
         virtual ConfiguredKernel generate() override;
@@ -17,7 +17,6 @@ namespace kgen {
         std::unordered_map<std::string, std::string> var_name_map;
 
         std::string to_string();
-        std::string create_forbidden_item_mask(data::LootPool *pool);
         void emit_skip_for_entry(std::ostream &out, data::LootEntry *entry);
         void emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry);
         void emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx);

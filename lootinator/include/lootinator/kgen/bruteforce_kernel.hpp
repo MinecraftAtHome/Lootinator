@@ -17,6 +17,7 @@ namespace kgen {
         std::unordered_map<std::string, std::string> var_name_map;
 
         std::string to_string();
+        std::string create_forbidden_item_mask(data::LootPool *pool);
         void emit_skip_for_entry(std::ostream &out, data::LootEntry *entry);
         void emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry);
         void emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx);

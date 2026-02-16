@@ -28,7 +28,7 @@ int main() {
 	};	
 
 	std::vector<kgen::ConfiguredKernel> kernels;
-	kgen::BruteforceKernel::gen_kernels(root, kernels, kgen_config);
+	kgen::SecondaryBruteforceKernel::gen_kernels(root, kernels, kgen_config);
 
 	std::ofstream fout("simple_life.cu");
     generate_runner_source(kernels[0], fout);

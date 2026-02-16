@@ -24,6 +24,9 @@ namespace kgen {
         void generate_forward_filter(std::ostream &out);
 
         void materialize_level(data::LootTreeNode *node);
+
+        virtual void setup_shared_memory() override;
+        virtual void fill_function_shared_mem(data::LootTreeNode* current) override;
     };
 }
 

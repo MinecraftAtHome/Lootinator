@@ -44,14 +44,7 @@ namespace kgen {
         return var + "= (" + var + "*" + std::to_string(m) + "+" + std::to_string(a) + ") & MASK_48";
     }
 
-    Kernel::Kernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config) : root_node(root_node)
-    {
-        static int kernel_index = 0;
-        kernel_index++;
-        name = "kernel_" + std::to_string(kernel_index);
-
-        this->kgen_config = kgen_config;
-
+    void Kernel::setup_shared_memory() {
         function_memory_offsets.push_back(0);
         pool_memory_offsets.push_back(0);
 
@@ -74,6 +67,15 @@ namespace kgen {
         }
     }
 
+    Kernel::Kernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config) : root_node(root_node)
+    {
+        static int kernel_index = 0;
+        kernel_index++;
+        name = "kernel_" + std::to_string(kernel_index);
+
+        this->kgen_config = kgen_config;
+    }
+
     void Kernel::write_shared_definitions(std::ostream& out) {
         out << "#ifndef SHARED_DEFINITIONS\n"
             << "//@SharedDefinitionsStart\n"
@@ -93,6 +95,19 @@ __device__ inline float nextFloat(u64* rand){ return next(rand, 24) / (float)(1 
 __device__ inline i32 nextIntBounded(u64* rand, const i32 min, const i32 max) {if (min >= max) {return min;} return nextInt(rand, max - min + 1) + min;}
 __device__ inline i32 nextIntNoAdvance(u64 *rand, const i32 n) {if ((n-1 & n) == 0) {u64 x = n * *rand; return (i32)((i64)x >> 31);} else {return (i32)(*rand % n);}} 
 __device__ inline void write_result(u64 input_seed, u64 *result_array, u32 *result_count) {result_array[atomicAdd(result_count, 1)] = input_seed;}
+
+__device__ inline i32 bsNextInt(u64 *rand, const i32 n) {
+  bool r = (n - 1 & n);
+  bool r2 = n - 1;
+  u64 m = r - 1;
+  u64 m2 = !r2 - 1;
+  *rand = (*rand * (1|(25214903917&m2)) + (11&m2)) & MASK_48;
+  u64 x = ((m & n) | r) * (*rand >> 17);
+  return ((x&m2) >> (31&m)) % (n + (4294960000&m));
+}
+__device__ inline i32 bsBoundedNextInt(u64 *rand, const i32 min, const i32 max) {
+  return min + bsNextInt(rand, max - min + 1);
+}
 //@SharedDefinitionsEnd
 #endif
 )";

@@ -251,7 +251,15 @@ R"(
         int pool_idx = 0;
         for (const auto child : this->root_node.children) {
             data::LootPool *pool = dynamic_cast<data::LootPool *>(child);
+            bool empty = true;
+            for (int pool_idx_2 = pool_idx + 1; pool_idx_2 < this->root_node.children.size(); pool_idx_2++) {
+                if (!this->root_node.children[pool_idx_2]->constraints.empty()) {
+                    empty = false;
+                    break;
+                }
+            }
             emit_cuda_for_pool(out, pool, pool_idx++);
+            if (empty) break;
         }
 
         // check constraint sat

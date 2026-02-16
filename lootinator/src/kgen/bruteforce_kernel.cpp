@@ -78,7 +78,7 @@ R"(
         uint64_t bitmask = 0;
         for (auto child : pool->children) {
             data::LootEntry* entry = dynamic_cast<data::LootEntry*>(child);
-            if (entry->constraints.empty()) {
+            if (entry->constraints.empty() && entry->item >= 0) {
                 bitmask |= 1ULL << entry->item;
             }
         }
@@ -111,10 +111,10 @@ u32 max_count = (entry_data >> 16) & 0xff;
 u32 counter_idx = (entry_data >> 8) & 0xff;
 u32 enchantment_count = entry_data & 0xff;
 
-i32 item_count = branchlessBoundedNextInt(&loot_seed, min_count, max_count);
+i32 item_count = bsBoundedNextInt(&loot_seed, min_count, max_count);
+i32 enchant_id = bsNextInt(&loot_seed, enchantment_count);
 
-i32 enchant_id = branchlessNextInt(&loot_seed, enchantment_count);
-bool r = (enchantment_mask & (1 << eid));
+bool r = (enchantment_mask & (1 << enchant_id));
 u64 m = !r - 1;
 loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;
 
@@ -140,8 +140,38 @@ local_constraints[counter_idx] += item_count;
         int pool_idx = 0;
         for (const auto child : this->root_node.children) {
             data::LootPool *pool = dynamic_cast<data::LootPool *>(child);
+            bool empty = true;
+            for (int pool_idx_2 = pool_idx + 1; pool_idx_2 < this->root_node.children.size(); pool_idx_2++) {
+                if (!this->root_node.children[pool_idx_2]->constraints.empty()) {
+                    empty = false;
+                    break;
+                }
+            }
             emit_cuda_for_pool(out, pool, pool_idx++);
+            if (empty) break;
         }
         out << "return true;\n}";
+    }
+
+    void BruteforceKernel::fill_function_shared_mem(data::LootTreeNode* current) {
+        // this kernel doesn't really use this
+        return;
+    }
+
+    void BruteforceKernel::setup_shared_memory() {
+        function_memory_offsets.push_back(0);
+        pool_memory_offsets.push_back(0);
+
+        // parse shared mem for pools
+        for (auto child : root_node.children) {
+            data::LootPool* pool = dynamic_cast<data::LootPool*>(child);
+            uint32_t size = static_cast<uint32_t>(pool->entry_lookup.size());
+            uint32_t last = pool_memory_offsets.back();
+            pool_memory_offsets.push_back(last + size);
+            
+            for (auto i : pool->entry_lookup) {
+                combined_shared_memory.push_back(i);
+            }
+        }
     }
 }

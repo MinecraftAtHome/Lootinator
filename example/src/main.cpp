@@ -23,12 +23,10 @@ int main() {
 		std::cout << ex.what() << "\n";
 	}
 
-	kgen::KernelGenConfig kgen_config = {
-		.seedcracking=true,
-	};	
+	kgen::KernelGenConfig kgen_config = {/*seedcracking=*/true};	
 
 	std::vector<kgen::ConfiguredKernel> kernels;
-	kgen::SecondaryBruteforceKernel::gen_kernels(root, kernels, kgen_config);
+	kgen::BruteforceKernel::gen_kernels(root, kernels, kgen_config);
 
 	std::ofstream fout("simple_life.cu");
     generate_runner_source(kernels[0], fout);

@@ -42,6 +42,7 @@ namespace kgen {
 
     protected:
         static void write_shared_definitions(std::ostream& out);
+        virtual void setup_shared_memory();
         virtual void fill_function_shared_mem(data::LootTreeNode *current);
         virtual ConfiguredKernel generate() = 0;
     };

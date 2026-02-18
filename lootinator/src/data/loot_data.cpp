@@ -24,10 +24,10 @@ namespace data {
 
     LootTreeNode::~LootTreeNode()
     {
-        for (auto& child : children) {
-            delete child;
+        for (auto child : children) {
+            child->~LootTreeNode();
         }
-        children.clear();
+        //children.clear();
     }
 
     // assuming that the default loot tree node does not influence the lcg

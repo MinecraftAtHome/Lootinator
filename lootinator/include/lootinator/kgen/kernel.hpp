@@ -36,7 +36,6 @@ namespace kgen {
         static std::string generate_skip(std::string var, int amount);
 
         std::string name;
-        int flags;
 
         Kernel(const data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
 

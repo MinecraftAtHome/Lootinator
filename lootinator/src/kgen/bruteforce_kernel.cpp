@@ -7,6 +7,7 @@
 
 namespace kgen {
     void BruteforceKernel::gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
+        data::LootTableRoot root_copy = root_node.copy();
         BruteforceKernel bk(root_node, kgen_config);
         bk.setup_shared_memory();
         out.push_back(bk.generate());
@@ -95,7 +96,7 @@ R"(
             }
             
             index++;
-            std::string item_identifier = std::to_string(entry_ix);
+            std::string item_identifier = std::to_string(entry->item);
             this->var_name_map[item_identifier] = accumulator_identifier;
         }
     }
@@ -115,28 +116,34 @@ R"(
 
     void BruteforceKernel::emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx) {
         materialize_level(pool);
+
+        int pool_off = this->pool_memory_offsets[pool_idx];
+
         out << "{\n";
         if (!pool->constraints.empty()) {
             out << "i32 local_constraints[" << (pool->constraints.size() + 1) << "] = {0};\n";
         }
         out << "i32 rolls = nextIntBounded(&loot_seed, " << pool->rolls.min << "," << pool->rolls.max << ");\n";
         out << "for (i32 roll = 0; roll < rolls; roll++) {\n";
-        out << "int item = data[" << this->pool_memory_offsets[pool_idx] << "+ nextInt(&loot_seed, " << pool->get_total_weight() << ")];\n";
-        
+        out << "int item = nextInt(&loot_seed, " << pool->get_total_weight() << ");\n";
+
+        // TODO can the unpacking be done with an intrinsic function?
+        out <<
+            R"(u32 entry_data = data[)" << pool_off << R"( + item * 3]; // min_max_count__counter_index__enchantment_count
+u64 enchantment_mask = reinterpret_cast<u64*>(data)[)" << pool_off << R"( + item*3 + 1];
+u32 item_idx = entry_data >> 24; // [8b][6b][6b][4b][8b])";
+
         if (this->kgen_config.seedcracking) {
             std::string one = pool->children.size() > 32 ? "((u64)1)" : "((u32)1)";
             std::string forbidden_bitmask = create_forbidden_item_mask(pool);
-            out << "if (" << forbidden_bitmask << " & (" << one << " << item)) return false;\n";
+            out << "\nif (" << forbidden_bitmask << " & (" << one << " << item_idx)) return false;\n";
         }
 
-        // TODO can the unpacking be done with an intrinsic function?
-        out << 
-R"(u32 entry_data = data[398 + item*3]; // min_max_count__counter_index__enchantment_count
-u64 enchantment_mask = reinterpret_cast<u64*>(data)[398 + item*3 + 1];
-u32 min_count = entry_data >> 24;
-u32 max_count = (entry_data >> 16) & 0xff;
-u32 counter_idx = (entry_data >> 8) & 0xff;
-u32 enchantment_count = entry_data & 0xff;
+        out << R"(
+u32 min_count = (entry_data >> 18) & 0x3f; // [6b][6b][4b][8b]
+u32 max_count = (entry_data >> 12) & 0x3f; // [6b][4b][8b]
+u32 counter_idx = (entry_data >> 8) & 0xf; // [4b][8b]
+u32 enchantment_count = entry_data & 0xff; // [8b]
 
 i32 item_count = bsBoundedNextInt(&loot_seed, min_count, max_count);
 i32 enchant_id = bsNextInt(&loot_seed, enchantment_count);
@@ -189,7 +196,8 @@ local_constraints[counter_idx] += item_count;
             uint32_t basic_info = 0;
             uint64_t enchant_mask = 0;
 
-            basic_info |= (entry->get_count_range().min << 24) | (entry->get_count_range().max << 16);
+            // [8b]: item idx, ...[6b][6b][4b][8b]
+            basic_info |= ((entry->item & 0xff) << 24) | (entry->get_count_range().min << 18) | (entry->get_count_range().max << 12);
             // counters not materialized, just ignore them :)
             
             // find an enchant randomly thing
@@ -214,10 +222,12 @@ local_constraints[counter_idx] += item_count;
                 }
             }
 
-            combined_shared_memory.push_back(basic_info);
-            combined_shared_memory.push_back(enchant_mask >> 32);
-            combined_shared_memory.push_back(enchant_mask & 0xFFFFFFFF);
-            printf("%ld\n", combined_shared_memory.size());
+            for (int w = 0; w < entry->weight; w++) {
+                combined_shared_memory.push_back(basic_info);
+                combined_shared_memory.push_back(enchant_mask >> 32);
+                combined_shared_memory.push_back(enchant_mask & 0xFFFFFFFF);
+            }
+            //printf("%u\n", static_cast<unsigned int>(combined_shared_memory.size()));
         }
     }
 

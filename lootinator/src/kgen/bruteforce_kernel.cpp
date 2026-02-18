@@ -8,6 +8,7 @@
 namespace kgen {
     void BruteforceKernel::gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
         BruteforceKernel bk(root_node, kgen_config);
+        bk.setup_shared_memory();
         out.push_back(bk.generate());
     }
 
@@ -20,7 +21,6 @@ namespace kgen {
         for (auto v : combined_shared_memory) {
             fout << v << " ";
         }
-
         return ConfiguredKernel{
             this->name,
             to_string(),
@@ -216,21 +216,22 @@ local_constraints[counter_idx] += item_count;
 
             combined_shared_memory.push_back(basic_info);
             combined_shared_memory.push_back(enchant_mask >> 32);
-            combined_shared_memory.push_back(enchant_mask & 0xFFFF'FFFF);
+            combined_shared_memory.push_back(enchant_mask & 0xFFFFFFFF);
+            printf("%ld\n", combined_shared_memory.size());
         }
     }
 
     void BruteforceKernel::setup_shared_memory() {
         // constraint merging thing
 
-
         function_memory_offsets.push_back(0);
         pool_memory_offsets.push_back(0);
 
         // parse shared mem for pools
         for (auto child : root_node.children) {
-            data::LootPool* pool = dynamic_cast<data::LootPool*>(child);
-            
+            CAST_CHILD(pool, data::LootPool, child);
+            printf("%p\n", pool);
+
             setup_entry_memory(pool);
 
             uint32_t size = static_cast<uint32_t>(combined_shared_memory.size());

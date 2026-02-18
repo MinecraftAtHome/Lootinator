@@ -5,7 +5,7 @@
 
 namespace kgen {
     void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {
-        data::LootFunctionData* func = dynamic_cast<data::LootFunctionData*>(current);
+        CAST_CHILD(func, data::LootFunctionData, current);
         if (func == nullptr) {
             for (auto child : current->children) {
                 fill_function_shared_mem(child);
@@ -50,7 +50,7 @@ namespace kgen {
 
         // parse shared mem for pools
         for (auto child : root_node.children) {
-            data::LootPool* pool = dynamic_cast<data::LootPool*>(child);
+            CAST_CHILD(pool, data::LootPool, child);
             uint32_t size = static_cast<uint32_t>(pool->entry_lookup.size());
             uint32_t last = pool_memory_offsets.back();
             pool_memory_offsets.push_back(last + size);

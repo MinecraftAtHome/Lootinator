@@ -27,6 +27,7 @@ namespace data {
         for (auto& child : children) {
             delete child;
         }
+        children.clear();
     }
 
     // assuming that the default loot tree node does not influence the lcg
@@ -163,22 +164,26 @@ namespace data {
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     }
 
-    LootTableRoot LootTableRoot::copy() const {
+    LootTableRoot LootTableRoot::copy() const { 
         LootTableRoot new_root(*this);
+        new_root.children.clear();
 
         for (auto child1 : children) {
             CAST_CHILD(pool, data::LootPool, child1);
             data::LootPool* new_pool = new data::LootPool(*pool);
+            new_pool->children.clear();
             new_root.children.push_back(new_pool);
 
             for (auto child2 : child1->children) {
                 CAST_CHILD(entry, data::LootEntry, child2);
                 data::LootEntry* new_entry = new data::LootEntry(*entry);
-                new_pool->children.push_back(new_pool);
+                new_entry->children.clear();
+                new_pool->children.push_back(new_entry);
 
                 for (auto child3 : child2->children) {
                     CAST_CHILD(func, data::LootFunctionData, child3);
                     data::LootFunctionData* new_func = new data::LootFunctionData(*func);
+                    new_func->children.clear();
                     new_entry->children.push_back(new_func);
                 }
             }

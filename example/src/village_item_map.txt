@@ -1,0 +1,10 @@
+minecraft:emerald
+minecraft:dandelion
+minecraft:bread
+minecraft:feather
+minecraft:poppy
+minecraft:potato
+minecraft:book
+minecraft:gold_nugget
+minecraft:apple
+minecraft:oak_sapling

@@ -12,8 +12,8 @@
 
 int main() {	
 	kgen::KernelGenConfig kgen_config = {
-		true,
-		"../../example/src/simple_constraints.json",
+		false,
+		"../../example/src/simple_constraints_2.json",
 		"../../example/src/item_map.txt",
 		"../../example/src/ruined_portal.json",
 		mc::MC_1_21_TO_1_21_9

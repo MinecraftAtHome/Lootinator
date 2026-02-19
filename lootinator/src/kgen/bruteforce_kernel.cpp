@@ -57,9 +57,9 @@ namespace kgen {
 R"(extern "C" __global__ void )" << this->name << "(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 shared_mem_contents_length, u64 offset) {";
         result <<
 R"(
-    extern __shared__ u32 data[];
-    if (threadIdx.x < shared_mem_contents_length) {
-        for (int i = threadIdx.x; i < shared_mem_contents_length; i += blockDim.x) {
+    __shared__ u32 data[)" << combined_shared_memory.size() << R"(];
+    if (threadIdx.x < )" << combined_shared_memory.size() << R"() {
+        for (int i = threadIdx.x; i < )" << combined_shared_memory.size() << R"(; i += blockDim.x) {
             data[i] = shared_mem_contents[i];
         }
     }
@@ -77,7 +77,7 @@ R"(
 
     void BruteforceKernel::materialize_level(data::LootTreeNode *node) {
         std::string level = dynamic_cast<data::LootPool *>(node) != nullptr ? "local_" : "global_";
-        int index = 0;
+        int index = 1; // one based indexing because 0 is for the junk counter
         for (const auto &constraint : node->constraints) {
             int entry_ix = 0;
             for (auto child : node->children) {
@@ -157,8 +157,8 @@ u32 max_count = (entry_data >> 12) & 0x3f; // [6b][4b][8b]
 u32 counter_idx = (entry_data >> 8) & 0xf; // [4b][8b]
 u32 enchantment_count = entry_data & 0xff; // [8b]
 
-i32 item_count = bsBoundedNextInt(&loot_seed, min_count, max_count);
-i32 enchant_id = bsNextInt(&loot_seed, enchantment_count);
+i32 item_count = nextIntBounded(&loot_seed, min_count, max_count);
+i32 enchant_id = nextIntBounded(&loot_seed, 0, enchantment_count);
 
 bool r = (enchantment_mask & (1 << enchant_id));
 u64 m = !r - 1;

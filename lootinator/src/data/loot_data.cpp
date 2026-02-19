@@ -25,9 +25,8 @@ namespace data {
     LootTreeNode::~LootTreeNode()
     {
         for (auto child : children) {
-            child->~LootTreeNode();
+            delete child;
         }
-        //children.clear();
     }
 
     // assuming that the default loot tree node does not influence the lcg
@@ -125,6 +124,7 @@ namespace data {
             .add("min_next_int", next_int_range.min)
             .add("max_next_int", next_int_range.max)
             .finish();
+        printf(" %p", (void *)this);
 
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     }
@@ -160,36 +160,8 @@ namespace data {
         util::DebugStruct(std::cout, "LootTableRoot")
             .add("version", version)
             .finish();
-
+        printf(" %p", (void *)this);
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
-    }
-
-    LootTableRoot LootTableRoot::copy() const { 
-        LootTableRoot new_root(*this);
-        new_root.children.clear();
-
-        for (auto child1 : children) {
-            CAST_CHILD(pool, data::LootPool, child1);
-            data::LootPool* new_pool = new data::LootPool(*pool);
-            new_pool->children.clear();
-            new_root.children.push_back(new_pool);
-
-            for (auto child2 : child1->children) {
-                CAST_CHILD(entry, data::LootEntry, child2);
-                data::LootEntry* new_entry = new data::LootEntry(*entry);
-                new_entry->children.clear();
-                new_pool->children.push_back(new_entry);
-
-                for (auto child3 : child2->children) {
-                    CAST_CHILD(func, data::LootFunctionData, child3);
-                    data::LootFunctionData* new_func = new data::LootFunctionData(*func);
-                    new_func->children.clear();
-                    new_entry->children.push_back(new_func);
-                }
-            }
-        }
-
-        return new_root; 
     }
 
     bool LootEntry::matches_constraint(const loot::Constraint& constraint) const {
@@ -319,9 +291,7 @@ namespace data {
             .add("max_rolls", rolls.max)
             .add("total_weight", get_total_weight())
             .finish();
-
-        
-
+        printf(" %p", (void *)this);
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     }
 
@@ -333,6 +303,8 @@ namespace data {
         LootTableRoot* root = dynamic_cast<LootTableRoot*>(get_root_node());
         this->id = root->id_counter;
         root->id_counter++;
+
+        this->children = std::vector<LootTreeNode *>();
 
         // function parsing
         std::string function_name = mc::strip_prefix(json["function"]); 
@@ -369,7 +341,7 @@ namespace data {
         util::DebugStruct(std::cout, "LootFunction")
             .add("function_type", function_names[type])
             .finish();
-
+        printf(" %p", (void *)this);
         indent(indentation + LootTreeNode::INDENT_SIZE);
         std::cout << "SharedMemory: ";
         util::debug(std::cout, shared_mem);
@@ -398,7 +370,6 @@ namespace data {
 
             extra_data.finish();
         }
-        
         LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
     }
 

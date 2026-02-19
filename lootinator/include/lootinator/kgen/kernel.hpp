@@ -2,11 +2,16 @@
 #define LOOTINATOR_KERNGEN_KERNEL_H
 
 #include "lootinator/data/loot_data.hpp"
+#include "lootinator/mc/minecraft.hpp"
 #include <ostream>
 
 namespace kgen {
     struct KernelGenConfig {
         bool seedcracking;
+        std::string constraint_path;
+        std::string item_map_path;
+        std::string loot_table_path; 
+        mc::VersionRange version;
     };
 
     struct ConfiguredKernel {
@@ -26,7 +31,7 @@ namespace kgen {
 
     class Kernel {
     public:
-        data::LootTableRoot root_node;
+        data::LootTableRoot &root_node;
         kgen::KernelGenConfig kgen_config;
 
         std::vector<uint32_t> pool_memory_offsets;
@@ -37,7 +42,7 @@ namespace kgen {
 
         std::string name;
 
-        Kernel(const data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
+        Kernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
 
     protected:
         static void write_shared_definitions(std::ostream& out);

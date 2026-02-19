@@ -78,8 +78,6 @@ namespace data {
         virtual int get_item_index(const std::string& item_name) const override;
         virtual void print(int indentation) const override;
 
-        LootTableRoot copy() const;
-
         void add_constraints(const std::vector<loot::Constraint>& constraints);
     };
 

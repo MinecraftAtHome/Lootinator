@@ -6,9 +6,21 @@
 #include <fstream>
 
 namespace kgen {
-    void BruteforceKernel::gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
-        data::LootTableRoot root_copy = root_node.copy();
-        BruteforceKernel bk(root_node, kgen_config);
+    void BruteforceKernel::gen_kernels(std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
+        std::vector<loot::Constraint> constr = loot::parse_constraints_from_json(kgen_config.constraint_path.c_str());
+        std::ifstream f(kgen_config.loot_table_path);
+        nlohmann::json loot_table_json = nlohmann::json::parse(f);
+        
+        data::LootTableRoot root = data::LootTableRoot(loot_table_json, kgen_config.item_map_path, kgen_config.version);
+        
+        try {
+            root.add_constraints(constr);
+        }		
+        catch (std::exception &ex) {
+            std::cout << ex.what() << "\n";
+        }
+        
+        BruteforceKernel bk(root, kgen_config);
         bk.setup_shared_memory();
         out.push_back(bk.generate());
     }
@@ -240,7 +252,7 @@ local_constraints[counter_idx] += item_count;
         // parse shared mem for pools
         for (auto child : root_node.children) {
             CAST_CHILD(pool, data::LootPool, child);
-            printf("%p\n", pool);
+            // printf("%p\n", pool);
 
             setup_entry_memory(pool);
 

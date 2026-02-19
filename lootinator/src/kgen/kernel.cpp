@@ -67,7 +67,7 @@ namespace kgen {
         }
     }
 
-    Kernel::Kernel(const data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config) : root_node(root_node) {
+    Kernel::Kernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config) : root_node(root_node) {
         static int kernel_index = 0;
         kernel_index++;
         name = "kernel_" + std::to_string(kernel_index);

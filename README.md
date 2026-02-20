@@ -11,3 +11,6 @@
 GPU accelerated Minecraft loot finding
 </p>
 
+## About
+
+Lootinator on its own is not a program for finding loot, Lootinator's job is to generate an optimized self-contained CUDA kernel which can either be executed directly or elsewhere. 

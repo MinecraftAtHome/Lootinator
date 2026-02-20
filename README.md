@@ -1,5 +1,4 @@
-Lootinator will be the most awesome sauceuom Loot Program ever for Minecraft - work in progress. 
+# Lootinator
 
-- specifying seedfinding/cracking mode
-- saying what we're primarily filtering on
-- specifying loot pool
+## what is it?
+Lootinator is not a program for finding loot

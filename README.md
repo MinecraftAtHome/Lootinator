@@ -13,4 +13,22 @@ GPU accelerated Minecraft loot finding
 
 ## About
 
-Lootinator on its own is not a program for finding loot, Lootinator's job is to generate an optimized self-contained CUDA kernel which can either be executed directly or elsewhere. 
+Lootinator on its own is not a program for finding loot, Lootinator's job is to generate an optimized self-contained CUDA kernel(s) which can either be executed directly or elsewhere. Currently all interactions are done through the API, but the end goal is to support a wide range of frontends, native applications, discord bots, even web interfaces.
+```cpp
+int main() {
+  // config
+	kgen::KernelGenConfig kgen_config = {false,
+		"../../example/src/simple_constraints_2.json",
+		"../../example/src/item_map.txt",
+		"../../example/src/ruined_portal.json",
+		mc::MC_1_21_TO_1_21_9};
+	std::vector<kgen::ConfiguredKernel> kernels;
+
+  // generate all "bruteforce" kernels
+	kgen::BruteforceKernel::gen_kernels(kernels, kgen_config);
+}
+```
+
+## Warning
+
+Lootinator is still an active work in progress, the API could change at any moment and there are still plenty of features missing, development happens in frequent voice chats on the Minecraft@Home discord server (https://discord.gg/xArErFf) to report an issue head over to the Lootinator thread in #general-work 

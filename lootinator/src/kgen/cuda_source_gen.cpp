@@ -128,7 +128,7 @@ void launch_configured_kernel(launch_function lf, const ConfiguredKernel& lp, co
 
 	void print_kernels(
 		std::ostream& out, const std::vector<kgen::ConfiguredKernel>& kernel_configs) {
-		for (int k = 0; k < kernel_configs.size(); k++) {
+		for (int k = 0; k < (int)kernel_configs.size(); k++) {
 			// each kernel gets its own namespace to avoid device helper conflicts
 			out << "namespace kernel" << k << " {\n";
 			out << kernel_configs[k].code;
@@ -138,7 +138,7 @@ void launch_configured_kernel(launch_function lf, const ConfiguredKernel& lp, co
 
 	void print_kernel_launchers(
 		std::ostream& out, const std::vector<kgen::ConfiguredKernel>& kernel_configs) {
-		for (int k = 0; k < kernel_configs.size(); k++) {
+		for (int k = 0; k < (int)kernel_configs.size(); k++) {
 			const auto& conf = kernel_configs.at(k);
 			out << "namespace kernel" << k << " {";
 			out <<
@@ -165,7 +165,7 @@ int main() {
     std::vector<ConfiguredKernel> configs;
 )";
 
-		for (int i = 0; i < kernel_configs.size(); i++) {
+		for (int i = 0; i < (int)kernel_configs.size(); i++) {
 			const ConfiguredKernel& lp = kernel_configs[i];
 			out << "    launchers.push_back(kernel" << i << "::launch);\n";
 			out << "    configs.push_back({\"" << lp.kernel_name << "\", ";
@@ -174,7 +174,7 @@ int main() {
 			out << lp.device_id << "U, " << lp.start_batch << ", " << lp.end_batch;
 			out << "});\n";
 		}
-		for (int i = 0; i < kernel_configs.size(); i++) {
+		for (int i = 0; i < (int)kernel_configs.size(); i++) {
 			out << "    {uint32_t shmem[] = ";
 			print_shared_mem(out, kernel_configs.at(i));
 			out << " for (int k = 0; k < " << kernel_configs.at(i).shared_mem.size()

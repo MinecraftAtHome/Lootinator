@@ -2,89 +2,88 @@
 #include "lootinator/global_settings.hpp"
 #include <cinttypes>
 
-
 namespace kgen {
-    void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {
-        CAST_CHILD(func, data::LootFunctionData, current);
-        if (func == nullptr) {
-            for (auto child : current->children) {
-                fill_function_shared_mem(child);
-            }
-        }
-        else {
-            uint32_t size = static_cast<uint32_t>(func->shared_mem.size());
-            uint32_t last = function_memory_offsets.back();
-            function_memory_offsets.push_back(last + size);
+	void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {
+		CAST_CHILD(func, data::LootFunctionData, current);
+		if (func == nullptr) {
+			for (auto child : current->children) {
+				fill_function_shared_mem(child);
+			}
+		} else {
+			uint32_t size = static_cast<uint32_t>(func->shared_mem.size());
+			uint32_t last = function_memory_offsets.back();
+			function_memory_offsets.push_back(last + size);
 
-            for (auto i : func->shared_mem) {
-                combined_shared_memory.push_back(i);
-            }
-        }
-    }
+			for (auto i : func->shared_mem) {
+				combined_shared_memory.push_back(i);
+			}
+		}
+	}
 
-    std::string Kernel::generate_skip(std::string var, int amount) {
-        // thanks cubitect :) https://github.com/Cubitect/cubiomes/blob/e61f90580cbdd883214a8054670dacae655e59c0/rng.h#L152
-        uint64_t m = 1;
-        uint64_t a = 0;
-        uint64_t im = 0x5deece66dULL;
-        uint64_t ia = 0xb;
-        uint64_t k;
+	std::string Kernel::generate_skip(std::string var, int amount) {
+		// thanks cubitect :)
+		// https://github.com/Cubitect/cubiomes/blob/e61f90580cbdd883214a8054670dacae655e59c0/rng.h#L152
+		uint64_t m = 1;
+		uint64_t a = 0;
+		uint64_t im = 0x5deece66dULL;
+		uint64_t ia = 0xb;
+		uint64_t k;
 
-        for (k = amount; k; k >>= 1)
-        {
-            if (k & 1)
-            {
-                m *= im;
-                a = im * a + ia;
-            }
-            ia = (im + 1) * ia;
-            im *= im;
-        }
+		for (k = amount; k; k >>= 1) {
+			if (k & 1) {
+				m *= im;
+				a = im * a + ia;
+			}
+			ia = (im + 1) * ia;
+			im *= im;
+		}
 
-        return var + "= (" + var + "*" + std::to_string(m) + "+" + std::to_string(a) + ") & MASK_48";
-    }
+		return var + "= (" + var + "*" + std::to_string(m) + "+" + std::to_string(a) +
+			   ") & MASK_48";
+	}
 
-    void Kernel::setup_shared_memory() {
-        function_memory_offsets.push_back(0);
-        pool_memory_offsets.push_back(0);
+	void Kernel::setup_shared_memory() {
+		function_memory_offsets.push_back(0);
+		pool_memory_offsets.push_back(0);
 
-        // parse shared mem for pools
-        for (auto child : root_node.children) {
-            CAST_CHILD(pool, data::LootPool, child);
-            uint32_t size = static_cast<uint32_t>(pool->entry_lookup.size());
-            uint32_t last = pool_memory_offsets.back();
-            pool_memory_offsets.push_back(last + size);
-            
-            for (auto i : pool->entry_lookup) {
-                combined_shared_memory.push_back(i);
-            }
-        }
+		// parse shared mem for pools
+		for (auto child : root_node.children) {
+			CAST_CHILD(pool, data::LootPool, child);
+			uint32_t size = static_cast<uint32_t>(pool->entry_lookup.size());
+			uint32_t last = pool_memory_offsets.back();
+			pool_memory_offsets.push_back(last + size);
 
-        fill_function_shared_mem(&root_node);
-        uint32_t last_pool_offset = pool_memory_offsets.back();
-        for (auto& func_off : function_memory_offsets) {
-            func_off += last_pool_offset;
-        }
-    }
+			for (auto i : pool->entry_lookup) {
+				combined_shared_memory.push_back(i);
+			}
+		}
 
-    Kernel::Kernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config) : root_node(root_node) {
-        static int kernel_index = 0;
-        kernel_index++;
-        name = "kernel_" + std::to_string(kernel_index);
+		fill_function_shared_mem(&root_node);
+		uint32_t last_pool_offset = pool_memory_offsets.back();
+		for (auto& func_off : function_memory_offsets) {
+			func_off += last_pool_offset;
+		}
+	}
 
-        this->kgen_config = kgen_config;
-    }
+	Kernel::Kernel(data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config)
+		: root_node(root_node) {
+		static int kernel_index = 0;
+		kernel_index++;
+		name = "kernel_" + std::to_string(kernel_index);
 
-    void Kernel::write_shared_definitions(std::ostream& out) {
-        out << "#ifndef SHARED_DEFINITIONS\n"
-            << "//@SharedDefinitionsStart\n"
-            << "typedef " << global_settings.UNSIGNED_32_TYPE << " u32;\n"
-            << "typedef " << global_settings.SIGNED_32_TYPE << " i32;\n"
-            << "typedef " << global_settings.UNSIGNED_64_TYPE << " u64;\n"
-            << "typedef " << global_settings.SIGNED_64_TYPE << " i64;\n\n";
+		this->kgen_config = kgen_config;
+	}
 
-        out <<
-R"(#define JRAND_MULTIPLIER (0x5deece66d)
+	void Kernel::write_shared_definitions(std::ostream& out) {
+		out << "#ifndef SHARED_DEFINITIONS\n"
+			<< "//@SharedDefinitionsStart\n"
+			<< "typedef " << global_settings.UNSIGNED_32_TYPE << " u32;\n"
+			<< "typedef " << global_settings.SIGNED_32_TYPE << " i32;\n"
+			<< "typedef " << global_settings.UNSIGNED_64_TYPE << " u64;\n"
+			<< "typedef " << global_settings.SIGNED_64_TYPE << " i64;\n\n";
+
+		out <<
+			R"(#define JRAND_MULTIPLIER (0x5deece66d)
 #define MASK_48 (0xffffffffffff)
 
 __device__ inline void setSeed(u64* rand, u64 value){ *rand = (value ^ JRAND_MULTIPLIER) & MASK_48; }
@@ -110,5 +109,5 @@ __device__ inline i32 bsBoundedNextInt(u64 *rand, const i32 min, const i32 max) 
 //@SharedDefinitionsEnd
 #endif
 )";
-    }
-}
+	}
+} // namespace kgen

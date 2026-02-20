@@ -4,26 +4,28 @@
 #include "lootinator/kgen/kernel.hpp"
 
 namespace kgen {
-    class SecondaryBruteforceKernel : public Kernel {
-    public:
-        static void gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config);
-        SecondaryBruteforceKernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
-        
-    protected:
-        virtual ConfiguredKernel generate() override;
-     
-        // maps constraint signatures (combinations of item type, enchantment, ench level)
-        // to array names + indices like this: array[idx]
-        std::unordered_map<std::string, std::string> var_name_map;
+	class SecondaryBruteforceKernel : public Kernel {
+	  public:
+		static void gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out,
+			kgen::KernelGenConfig kgen_config);
+		SecondaryBruteforceKernel(
+			data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config);
 
-        std::string to_string();
-        void emit_skip_for_entry(std::ostream &out, data::LootEntry *entry);
-        void emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry);
-        void emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx);
-        void generate_forward_filter(std::ostream &out);
+	  protected:
+		virtual ConfiguredKernel generate() override;
 
-        void materialize_level(data::LootTreeNode *node);
-    };
-}
+		// maps constraint signatures (combinations of item type, enchantment, ench level)
+		// to array names + indices like this: array[idx]
+		std::unordered_map<std::string, std::string> var_name_map;
+
+		std::string to_string();
+		void emit_skip_for_entry(std::ostream& out, data::LootEntry* entry);
+		void emit_cuda_for_entry(std::ostream& out, data::LootEntry* entry);
+		void emit_cuda_for_pool(std::ostream& out, data::LootPool* pool, int pool_idx);
+		void generate_forward_filter(std::ostream& out);
+
+		void materialize_level(data::LootTreeNode* node);
+	};
+} // namespace kgen
 
 #endif

@@ -2,14 +2,13 @@
 
 #include <sstream>
 
-
 namespace loot {
-    Template::Template(const TemplateParameters &params) : params(params) {}
+	Template::Template(const TemplateParameters& params) : params(params) {
+	}
 
-    std::string Template::generate() const {
-        std::ostringstream oss;
-        generate(oss);
-        return oss.str();
-    }
-}
-
+	std::string Template::generate() const {
+		std::ostringstream oss;
+		generate(oss);
+		return oss.str();
+	}
+} // namespace loot

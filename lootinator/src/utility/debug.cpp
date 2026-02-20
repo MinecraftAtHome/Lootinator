@@ -1,19 +1,19 @@
 #include "lootinator/utility/debug.h"
 
 namespace util {
-    DebugArray::DebugArray(std::ostream& os) : os(&os) {
-        os << "[";
-    }
+	DebugArray::DebugArray(std::ostream& os) : os(&os) {
+		os << "[";
+	}
 
-    std::ostream& DebugArray::finish() {
-        return *os << "]";
-    }
+	std::ostream& DebugArray::finish() {
+		return *os << "]";
+	}
 
-    DebugStruct::DebugStruct(std::ostream& os, const char* name) : os(&os) {
-        os << name << "{";
-    }
+	DebugStruct::DebugStruct(std::ostream& os, const char* name) : os(&os) {
+		os << name << "{";
+	}
 
-    std::ostream& DebugStruct::finish() {
-        return *os << "}";
-    }
-}
+	std::ostream& DebugStruct::finish() {
+		return *os << "}";
+	}
+} // namespace util

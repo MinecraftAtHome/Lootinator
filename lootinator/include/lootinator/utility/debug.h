@@ -5,59 +5,53 @@
 #include <vector>
 
 namespace util {
-    template <class T>
-    std::ostream& debug(std::ostream& os, const T& value);
+	template <class T> std::ostream& debug(std::ostream& os, const T& value);
 
-    template <class T>
-    std::ostream& debug(std::ostream& os, const std::vector<T>& value);
+	template <class T> std::ostream& debug(std::ostream& os, const std::vector<T>& value);
 
-    struct DebugArray {
-        std::ostream* os;
-        const char* delim = "";
+	struct DebugArray {
+		std::ostream* os;
+		const char* delim = "";
 
-        DebugArray(std::ostream& os);
-        
-        template <class T>
-        util::DebugArray& add(const T& value) {
-            debug(*os << delim, value);
-            delim = ", ";
-            return *this;
-        }
+		DebugArray(std::ostream& os);
 
-        std::ostream& finish();
-    };
+		template <class T> util::DebugArray& add(const T& value) {
+			debug(*os << delim, value);
+			delim = ", ";
+			return *this;
+		}
 
-    struct DebugStruct {
-        std::ostream* os;
-        const char* delim = "";
+		std::ostream& finish();
+	};
 
-        DebugStruct(std::ostream& os, const char* name);
+	struct DebugStruct {
+		std::ostream* os;
+		const char* delim = "";
 
-        template <class T>
-        util::DebugStruct& add(const char* field, const T& value) {
-            debug(*os << delim << field << "=", value);
-            delim = ", ";
-            return *this;
-        }
+		DebugStruct(std::ostream& os, const char* name);
 
-        std::ostream& finish();
-    };
+		template <class T> util::DebugStruct& add(const char* field, const T& value) {
+			debug(*os << delim << field << "=", value);
+			delim = ", ";
+			return *this;
+		}
 
-    template <class T>
-    std::ostream& debug(std::ostream& os, const T& value) {
-        return os << value;
-    }
+		std::ostream& finish();
+	};
 
-    template <class T>
-    std::ostream& debug(std::ostream& os, const std::vector<T>& vector) {
-        util::DebugArray debug_array(os);
+	template <class T> std::ostream& debug(std::ostream& os, const T& value) {
+		return os << value;
+	}
 
-        for (const T& value : vector) {
-            debug_array.add(value);
-        }
+	template <class T> std::ostream& debug(std::ostream& os, const std::vector<T>& vector) {
+		util::DebugArray debug_array(os);
 
-        return debug_array.finish();
-    }
-}
+		for (const T& value : vector) {
+			debug_array.add(value);
+		}
+
+		return debug_array.finish();
+	}
+} // namespace util
 
 #endif

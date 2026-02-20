@@ -4,31 +4,32 @@
 #include "lootinator/kgen/kernel.hpp"
 
 namespace kgen {
-    class BruteforceKernel : public Kernel {
-    public:
-        static void gen_kernels(std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config);
-        BruteforceKernel(data::LootTableRoot &root_node, kgen::KernelGenConfig kgen_config);
-        
-    protected:
-        virtual ConfiguredKernel generate() override;
-     
-        // maps constraint signatures (combinations of item type, enchantment, ench level)
-        // to array names + indices like this: array[idx]
-        std::unordered_map<std::string, std::string> var_name_map;
+	class BruteforceKernel : public Kernel {
+	  public:
+		static void gen_kernels(
+			std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config);
+		BruteforceKernel(data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config);
 
-        std::string to_string();
-        std::string create_forbidden_item_mask(data::LootPool *pool);
-        void emit_skip_for_entry(std::ostream &out, data::LootEntry *entry);
-        void emit_cuda_for_entry(std::ostream &out, data::LootEntry *entry);
-        void emit_cuda_for_pool(std::ostream &out, data::LootPool *pool, int pool_idx);
-        void generate_forward_filter(std::ostream &out);
+	  protected:
+		virtual ConfiguredKernel generate() override;
 
-        void materialize_level(data::LootTreeNode *node);
+		// maps constraint signatures (combinations of item type, enchantment, ench level)
+		// to array names + indices like this: array[idx]
+		std::unordered_map<std::string, std::string> var_name_map;
 
-        void setup_entry_memory(data::LootPool* pool);
-        virtual void setup_shared_memory() override;
-        virtual void fill_function_shared_mem(data::LootTreeNode* current) override;
-    };
-}
+		std::string to_string();
+		std::string create_forbidden_item_mask(data::LootPool* pool);
+		void emit_skip_for_entry(std::ostream& out, data::LootEntry* entry);
+		void emit_cuda_for_entry(std::ostream& out, data::LootEntry* entry);
+		void emit_cuda_for_pool(std::ostream& out, data::LootPool* pool, int pool_idx);
+		void generate_forward_filter(std::ostream& out);
+
+		void materialize_level(data::LootTreeNode* node);
+
+		void setup_entry_memory(data::LootPool* pool);
+		virtual void setup_shared_memory() override;
+		virtual void fill_function_shared_mem(data::LootTreeNode* current) override;
+	};
+} // namespace kgen
 
 #endif

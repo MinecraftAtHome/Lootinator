@@ -9,13 +9,14 @@ namespace kgen {
 	void SecondaryBruteforceKernel::gen_kernels(
 		std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config
 	) {
-		std::vector<loot::Constraint> constr =
-			loot::parse_constraints_from_json(kgen_config.constraint_path.c_str());
 		std::ifstream f(kgen_config.loot_table_path);
 		nlohmann::json loot_table_json = nlohmann::json::parse(f);
 
 		data::LootTableRoot root =
 			data::LootTableRoot(loot_table_json, kgen_config.item_map_path, kgen_config.version);
+
+		std::vector<loot::Constraint> constr =
+			loot::parse_constraints_from_json(kgen_config.constraint_path.c_str(), root.item_map);
 
 		try {
 			root.add_constraints(constr);
@@ -24,6 +25,7 @@ namespace kgen {
 		}
 
 		SecondaryBruteforceKernel bk(root, kgen_config);
+		bk.setup_shared_memory();
 		out.push_back(bk.generate());
 	}
 
@@ -62,10 +64,10 @@ namespace kgen {
 
 		result << R"(extern "C" __global__ void )" << this->name
 			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents, "
-				  "u64 offset) {";
+				  "u64* kernel_1_out) {";
 		result <<
 			R"(
-    extern __shared__ u32 data[)" << combined_shared_memory.size() << R"(];
+    __shared__ u32 data[)" << combined_shared_memory.size() << R"(];
     if (threadIdx.x < )" << combined_shared_memory.size() << R"() {
         for (int i = threadIdx.x; i < )" << combined_shared_memory.size() << R"(; i += blockDim.x) {
             data[i] = shared_mem_contents[i];
@@ -73,10 +75,11 @@ namespace kgen {
     }
     __syncthreads();
 
-    u64 input_seed = (u64)blockIdx.x * blockDim.x + threadIdx.x + offset;
-    
-    if (forward_filter_full(input_seed, data)) {
-        write_result(input_seed ^ JRAND_MULTIPLIER, result_array, result_count);
+    u32 index = blockIdx.x * blockDim.x + threadIdx.x;
+    u64 internal_loot_seed = kernel_1_out[index] ^ JRAND_MULTIPLIER;
+
+    if (forward_filter_full(internal_loot_seed, data)) {
+        write_result(internal_loot_seed ^ JRAND_MULTIPLIER, result_array, result_count);
     }
 }
 )";

@@ -164,11 +164,13 @@ void launch(const KernelPipeline& pipeline, u32 num_blocks, u64 offset)
     CUDA_CHECK(cudaDeviceSynchronize());
 
     u32 result_count;
-    CUDA_CHECK(cudaMemcpy(&result_count, mem.d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(&result_count, pipeline[0].d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
 
     if (result_count != 0) {
         u32 n_blocks_2 = (result_count + pipeline[1].threads_per_block - 1) / pipeline[1].threads_per_block;
-        secondary<<< n_blocks_2, pipeline[1].threads_per_block, pipeline[1].shared_mem_bytes >>> ();
+        )" << pipeline[1].kernel_name << R"(<<< n_blocks_2, pipeline[1].threads_per_block, pipeline[1].shared_mem_bytes >>> (
+        pipeline[1].d_result_array, pipeline[1].d_result_count, pipeline[1].d_shared_mem_contents, pipeline[0].d_result_array
+    );
     })";
             }
 
@@ -303,7 +305,7 @@ int main() {
             fout << "    {uint32_t shmem[] = ";
             print_shared_mem(fout, kp[i]);
             fout << " for (int k = 0; k < " << kp[i].shared_mem.size()
-                << "; k++) pipeline[" << i << "].shared_memory.push_back(shmem[k]);}\n}"
+                << "; k++) pipeline[" << i << "].shared_memory.push_back(shmem[k]);}\n"
                 << "\npipeline[" << i << "].init_memory();\n";
         }
 

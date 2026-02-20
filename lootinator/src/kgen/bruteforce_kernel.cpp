@@ -173,7 +173,7 @@ u32 counter_idx = (entry_data >> 8) & 0xf; // [4b][8b]
 u32 enchantment_count = entry_data & 0xff; // [8b]
 
 i32 item_count = nextIntBounded(&loot_seed, min_count, max_count);
-i32 enchant_id = nextIntBounded(&loot_seed, 0, enchantment_count);
+i32 enchant_id = enchantment_count != 0 ? nextInt(&loot_seed, enchantment_count) : 64;
 
 bool r = (enchantment_mask & (1 << enchant_id));
 u64 m = !r - 1;

@@ -33,7 +33,8 @@ namespace loot {
 
 	void merge_contraints(
 		const std::vector<loot::Constraint>& src, std::vector<loot::Constraint>& dest);
-	std::vector<loot::Constraint> parse_constraints_from_json(const char* filepath);
+	std::vector<loot::Constraint> parse_constraints_from_json(
+		const char* filepath, std::unordered_map<std::string, int>& item_map);
 } // namespace loot
 
 #endif

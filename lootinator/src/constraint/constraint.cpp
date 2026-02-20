@@ -96,12 +96,15 @@ namespace loot {
 		return attributes;
 	}
 
-	std::vector<loot::Constraint> parse_constraints_from_json(const char* filepath) {
+	std::vector<loot::Constraint> parse_constraints_from_json(
+		const char* filepath, std::unordered_map<std::string, int>& item_map) {
 		std::vector<loot::Constraint> constraints;
 		std::ifstream f(filepath);
 		nlohmann::json data = nlohmann::json::parse(f);
 		for (auto con : data) {
-			std::uint32_t item = con["item"];
+			std::string item_name = con["item"];
+			std::uint32_t item = item_map[item_name];
+			printf("ITEM: %s, %ld\n", item_name.c_str(), item);
 			std::int32_t slot_id = con["slot"];
 			util::RangeInclusive<std::uint32_t> count_range =
 				util::RangeInclusive<std::uint32_t>::from_json(con["range"]);

@@ -152,11 +152,15 @@ namespace kgen {
 		out << "for (i32 roll = 0; roll < rolls; roll++) {\n";
 		out << "int item = nextInt(&loot_seed, " << pool->get_total_weight() << ");\n";
 
+		// u64 enchantment_mask = (static_cast<u64>(data[0 + item * 3 + 2]) << 32) | data[0 + item *
+		// 3 + 1];
+
 		// TODO can the unpacking be done with an intrinsic function?
 		out << R"(u32 entry_data = data[)" << pool_off
 			<< R"( + item * 3]; // min_max_count__counter_index__enchantment_count
-u64 enchantment_mask = reinterpret_cast<u64*>(data)[)"
-			<< pool_off << R"( + item*3 + 1];
+u64 enchantment_mask = (static_cast<u64>(data[)"
+			<< pool_off << R"( + item * 3 + 2]) << 32) | data[)" << pool_off
+			<< R"( + item * 3 + 1]; 
 u32 item_idx = entry_data >> 24; // [8b][6b][6b][4b][8b])";
 
 		if (this->kgen_config.seedcracking) {
@@ -256,8 +260,8 @@ local_constraints[counter_idx] += item_count;
 
 			for (int w = 0; w < entry->weight; w++) {
 				combined_shared_memory.push_back(basic_info);
-				combined_shared_memory.push_back(enchant_mask >> 32);
 				combined_shared_memory.push_back(enchant_mask & 0xFFFFFFFF);
+				combined_shared_memory.push_back(enchant_mask >> 32);
 			}
 			// printf("%u\n", static_cast<unsigned int>(combined_shared_memory.size()));
 		}

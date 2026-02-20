@@ -44,29 +44,31 @@ struct ConfiguredKernel {
     u32 device_id;
     i32 start_batch;
     i32 end_batch;
-};
-struct KernelMemory {
+    u32 max_results;
+
+    // -------------------
     u32* d_shared_mem_contents;
     u32 shared_mem_contents_length;
     u32 shared_mem_bytes;
     u64* d_result_array;
     u32* d_result_count;
 
-    KernelMemory(const ConfiguredKernel& lp) {
-        shared_mem_contents_length = lp.shared_memory.size();
-        shared_mem_bytes = lp.shared_memory.size() * sizeof(u32);
+    void init_memory() {
+        shared_mem_contents_length = shared_memory.size();
+        shared_mem_bytes = shared_memory.size() * sizeof(u32);
         cudaMalloc(&d_shared_mem_contents, shared_mem_bytes);
-        cudaMalloc(&d_result_array, )"
-			 << kgen::RESULT_BUFFER_SIZE << R"( * sizeof(u64));
+        cudaMalloc(&d_result_array, max_results * sizeof(u64));
         cudaMalloc(&d_result_count, sizeof(u32));
-        cudaMemcpy(d_shared_mem_contents, lp.shared_memory.data(), shared_mem_bytes, cudaMemcpyHostToDevice);
+        cudaMemcpy(d_shared_mem_contents, shared_memory.data(), shared_mem_bytes, cudaMemcpyHostToDevice);
     }
-    ~KernelMemory() {
+
+    ~ConfiguredKernel() {
         cudaFree(d_shared_mem_contents);
         cudaFree(d_result_array);
         cudaFree(d_result_count);
     }
 };
+
 struct BenchmarkResults {
     std::string kernel_name;
     bool success;
@@ -74,20 +76,23 @@ struct BenchmarkResults {
     float ms_total_estimate;
 };
 
-typedef void (*launch_function)(const ConfiguredKernel&, const KernelMemory&, u32, u64);
+typedef std::vector<ConfiguredKernel> KernelPipeline;
+typedef void (*launch_function)(const KernelPipeline&, u32, u64);
 
-void launch_configured_kernel(launch_function lf, const ConfiguredKernel& lp, const KernelMemory& mem, bool print_results) {
-    u64 h_result_array[)"
-			 << kgen::RESULT_BUFFER_SIZE << R"(];
-    const u32 num_blocks = lp.threads_per_batch / lp.threads_per_block;
-    for (u32 b = lp.start_batch; b < lp.end_batch; b++) {
+void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline, bool print_results) {
+    u64* h_result_array = (u64*)malloc(pipeline.back().max_results * sizeof(u64));
+    const u32 num_blocks = pipeline[0].threads_per_batch / pipeline[0].threads_per_block;
+    
+    for (u32 b = pipeline[0].start_batch; b < pipeline[0].end_batch; b++) {
         u32 h_result_count = 0;
-        CUDA_CHECK(cudaMemcpy(mem.d_result_count, &h_result_count, sizeof(u32), cudaMemcpyHostToDevice));
-        lf(lp, mem, num_blocks, b*lp.threads_per_batch);
+        for (const auto& ck : pipeline) {
+            CUDA_CHECK(cudaMemcpy(ck.d_result_count, &h_result_count, sizeof(u32), cudaMemcpyHostToDevice));
+        }
+        lf(pipeline, num_blocks, b*pipeline[0].threads_per_batch);
         CUDA_CHECK(cudaDeviceSynchronize());
 
-        CUDA_CHECK(cudaMemcpy(&h_result_count, mem.d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
-        CUDA_CHECK(cudaMemcpy(h_result_array, mem.d_result_array, h_result_count * sizeof(u64), cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(&h_result_count, pipeline.back().d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(h_result_array, pipeline.back().d_result_array, h_result_count * sizeof(u64), cudaMemcpyDeviceToHost));
         
         if (!print_results) continue;
         for (u32 i = 0; i < h_result_count; i++) {
@@ -95,6 +100,8 @@ void launch_configured_kernel(launch_function lf, const ConfiguredKernel& lp, co
         }
         std::cout << std::flush;
     }
+
+    delete[] h_result_array;
 }
 )"
 			 << "\n\n";
@@ -127,35 +134,54 @@ void launch_configured_kernel(launch_function lf, const ConfiguredKernel& lp, co
 	}
 
 	void print_kernels(
-		std::ostream& out, const std::vector<kgen::ConfiguredKernel>& kernel_configs) {
-		for (int k = 0; k < kernel_configs.size(); k++) {
+        std::ostream& out, const std::vector<KernelPipeline>& kernel_pipelines) {
+		for (int k = 0; k < kernel_pipelines.size(); k++) {
 			// each kernel gets its own namespace to avoid device helper conflicts
 			out << "namespace kernel" << k << " {\n";
-			out << kernel_configs[k].code;
+            for (const auto& configured_kernel : kernel_pipelines[k]) {
+                out << configured_kernel.code;
+            }
 			out << "\n} //namespace\n";
 		}
 	}
 
 	void print_kernel_launchers(
-		std::ostream& out, const std::vector<kgen::ConfiguredKernel>& kernel_configs) {
-		for (int k = 0; k < kernel_configs.size(); k++) {
-			const auto& conf = kernel_configs.at(k);
+		std::ostream& out, const std::vector<KernelPipeline>& kernel_pipelines) {
+		for (int k = 0; k < kernel_pipelines.size(); k++) {
+			const auto& pipeline = kernel_pipelines[k];
+
 			out << "namespace kernel" << k << " {";
-			out <<
-				R"(
-void launch(const ConfiguredKernel& lp, const KernelMemory& mem, u32 num_blocks, u64 offset) 
+			out << R"(
+void launch(const KernelPipeline& pipeline, u32 num_blocks, u64 offset) 
 {
-    )" << conf.kernel_name
-				<< R"(<<< num_blocks, lp.threads_per_block, mem.shared_mem_bytes >>> (
-        mem.d_result_array, mem.d_result_count, mem.d_shared_mem_contents, mem.shared_mem_contents_length, offset
+    )"; 
+            out << pipeline[0].kernel_name << R"(<<< num_blocks, pipeline[0].threads_per_block, pipeline[0].shared_mem_bytes >>> (
+        pipeline[0].d_result_array, pipeline[0].d_result_count, pipeline[0].d_shared_mem_contents, offset
     );
+    )";
+            if (pipeline.size() == 2) {
+                out << R"(
+    CUDA_CHECK(cudaDeviceSynchronize());
+
+    u32 result_count;
+    CUDA_CHECK(cudaMemcpy(&result_count, mem.d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
+
+    if (result_count != 0) {
+        u32 n_blocks_2 = (result_count + pipeline[1].threads_per_block - 1) / pipeline[1].threads_per_block;
+        secondary<<< n_blocks_2, pipeline[1].threads_per_block, pipeline[1].shared_mem_bytes >>> ();
+    })";
+            }
+
+		out << R"(	
 }} //namespace
 )";
 		}
 	}
 
+    // TODO revive
+    /*
 	void print_benchmarker(
-		std::ostream& out, const std::vector<kgen::ConfiguredKernel>& kernel_configs) {
+		std::ostream& out, const std::vector<KernelPipeline>& kernel_configs) {
 		out <<
 			R"(
 int main() {
@@ -252,40 +278,46 @@ int main() {
     return 0;
 }
 )";
-	}
+	}*/
 
-	void generate_runner_source(kgen::ConfiguredKernel& lp, std::ostream& fout) {
-		std::vector<kgen::ConfiguredKernel> single_kernel;
-		single_kernel.push_back(lp);
+	void generate_runner_source(KernelPipeline& kp, std::ostream& fout) {
+		std::vector<KernelPipeline> single_kernel;
+		single_kernel.push_back(kp);
 
-		print_preamble(fout, lp);
+		print_preamble(fout, kp[0]);
 		print_kernels(fout, single_kernel);
 		print_kernel_launchers(fout, single_kernel);
 
 		fout <<
 			R"(
 int main() {
-    ConfiguredKernel config = {")"
-			 << lp.kernel_name << "\", "
-			 << "std::vector<u32>(), " << lp.total_threads << "ULL, " << lp.threads_per_batch
-			 << "ULL, " << lp.threads_per_block << "U, " << lp.device_id << "U, " << lp.start_batch
-			 << ", " << lp.end_batch << "};\n";
+    KernelPipeline pipeline;
+    )";
+        for (int i = 0; i < 2; i++) {
+            fout << R"(pipeline.push_back(ConfiguredKernel{")"
+                << kp[i].kernel_name << "\", "
+                << "std::vector<u32>(), " << kp[i].total_threads << "ULL, " << kp[i].threads_per_batch
+                << "ULL, " << kp[i].threads_per_block << "U, " << kp[i].device_id << "U, " << kp[i].start_batch
+                << ", " << kp[i].end_batch << "});\n";
 
-		fout << "    {uint32_t shmem[] = ";
-		print_shared_mem(fout, lp);
-		fout << " for (int k = 0; k < " << lp.shared_mem.size()
-			 << "; k++) config.shared_memory.push_back(shmem[k]);}\n";
+            fout << "    {uint32_t shmem[] = ";
+            print_shared_mem(fout, kp[i]);
+            fout << " for (int k = 0; k < " << kp[i].shared_mem.size()
+                << "; k++) pipeline[" << i << "].shared_memory.push_back(shmem[k]);}\n}"
+                << "\npipeline[" << i << "].init_memory();\n";
+        }
 
-		fout <<
-			R"(    const KernelMemory mem(config);
-    launch_configured_kernel(kernel0::launch, config, mem, true);
+		fout << R"(
+    launch_configured_kernel(kernel0::launch, pipeline, true);
     return 0;
 }
 )";
 	}
 
+    // TODO revive
+    /*
 	int generate_benchmarker_source(
-		std::vector<kgen::ConfiguredKernel> kernel_configs, std::ostream& fout) {
+		std::vector<KernelPipeline> kernel_configs, std::ostream& fout) {
 		if (kernel_configs.size() == 0) {
 			std::cerr << "ERROR: No kernels provided.\n";
 			return 1;
@@ -298,4 +330,5 @@ int main() {
 		print_benchmarker(fout, kernel_configs);
 		return 0;
 	}
+    */
 } // namespace kgen

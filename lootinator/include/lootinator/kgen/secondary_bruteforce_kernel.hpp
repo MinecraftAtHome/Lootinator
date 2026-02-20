@@ -1,15 +1,14 @@
-#ifndef LOOTINATOR_KERNGEN_BRUTEFORCE_KERNEL_H
-#define LOOTINATOR_KERNGEN_BRUTEFORCE_KERNEL_H
+#ifndef LOOTINATOR_KERNGEN_SECONDARY_BRUTEFORCE_KERNEL_H
+#define LOOTINATOR_KERNGEN_SECONDARY_BRUTEFORCE_KERNEL_H
 
 #include "lootinator/kgen/kernel.hpp"
 
 namespace kgen {
 	class SecondaryBruteforceKernel : public Kernel {
 	  public:
-		static void gen_kernels(data::LootTableRoot& root_node, std::vector<ConfiguredKernel>& out,
-			kgen::KernelGenConfig kgen_config);
-		SecondaryBruteforceKernel(
-			data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config);
+		static void gen_kernels(
+			std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config);
+		SecondaryBruteforceKernel(data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config);
 
 	  protected:
 		virtual ConfiguredKernel generate() override;

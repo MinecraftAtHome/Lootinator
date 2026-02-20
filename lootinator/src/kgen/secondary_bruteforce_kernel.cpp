@@ -6,9 +6,24 @@
 #include <sstream>
 
 namespace kgen {
-	void SecondaryBruteforceKernel::gen_kernels(data::LootTableRoot& root_node,
-		std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
-		SecondaryBruteforceKernel bk(root_node, kgen_config);
+	void SecondaryBruteforceKernel::gen_kernels(
+		std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config
+	) {
+		std::vector<loot::Constraint> constr =
+			loot::parse_constraints_from_json(kgen_config.constraint_path.c_str());
+		std::ifstream f(kgen_config.loot_table_path);
+		nlohmann::json loot_table_json = nlohmann::json::parse(f);
+
+		data::LootTableRoot root =
+			data::LootTableRoot(loot_table_json, kgen_config.item_map_path, kgen_config.version);
+
+		try {
+			root.add_constraints(constr);
+		} catch (std::exception& ex) {
+			std::cout << ex.what() << "\n";
+		}
+
+		SecondaryBruteforceKernel bk(root, kgen_config);
 		out.push_back(bk.generate());
 	}
 
@@ -34,7 +49,8 @@ namespace kgen {
 			combined_shared_memory,
 			0,
 			0,
-			UINT64_C(1) << 16,
+			UINT32_C(1) << 16,
+			UINT32_C(1) << 18
 		};
 	}
 
@@ -45,13 +61,13 @@ namespace kgen {
 		generate_forward_filter(result);
 
 		result << R"(extern "C" __global__ void )" << this->name
-			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 "
-				  "shared_mem_contents_length, u64 offset) {";
+			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents, "
+				  "u64 offset) {";
 		result <<
 			R"(
-    extern __shared__ u32 data[];
-    if (threadIdx.x < shared_mem_contents_length) {
-        for (int i = threadIdx.x; i < shared_mem_contents_length; i += blockDim.x) {
+    extern __shared__ u32 data[)" << combined_shared_memory.size() << R"(];
+    if (threadIdx.x < )" << combined_shared_memory.size() << R"() {
+        for (int i = threadIdx.x; i < )" << combined_shared_memory.size() << R"(; i += blockDim.x) {
             data[i] = shared_mem_contents[i];
         }
     }
@@ -59,7 +75,7 @@ namespace kgen {
 
     u64 input_seed = (u64)blockIdx.x * blockDim.x + threadIdx.x + offset;
     
-    if (forward_filter(input_seed, data)) {
+    if (forward_filter_full(input_seed, data)) {
         write_result(input_seed ^ JRAND_MULTIPLIER, result_array, result_count);
     }
 }
@@ -98,7 +114,6 @@ namespace kgen {
 			return "";
 		}
 
-		// TODO make sure this actually works
 		mc::Enchantment ench = mc::get_enchantment_from_attribute(constraint.attributes[0]);
 		int i = 0;
 		auto& vec = lfd_enchant_randomly->enchant_randomly.enchantment_order;
@@ -253,13 +268,9 @@ namespace kgen {
 	}
 
 	void SecondaryBruteforceKernel::generate_forward_filter(std::ostream& out) {
-		// TODO Create check_lootseed(u64) -> bool
-		//      The function should use available loot pool information combined
-		//      with existing implementations of loot functions and form a full,
-		//      isolated boolean check of specified constraints
 		materialize_level(&root_node);
 
-		out << "__device__ bool forward_filter(u64 loot_seed, u32 data[]) {\n";
+		out << "__device__ bool forward_filter_full(u64 loot_seed, u32 data[]) {\n";
 		// out << "extern __shared__ u32 data[];\n";
 		if (!this->root_node.constraints.empty()) {
 			out << "int global_constraints[" << this->root_node.constraints.size() << "] = {0};\n";

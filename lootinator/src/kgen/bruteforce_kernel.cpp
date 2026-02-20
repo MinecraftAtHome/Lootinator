@@ -48,7 +48,8 @@ namespace kgen {
 			combined_shared_memory,
 			0,
 			0,
-			UINT64_C(1) << 16,
+			UINT32_C(1) << 16,
+			UINT32_C(1) << 19
 		};
 	}
 
@@ -59,8 +60,8 @@ namespace kgen {
 		generate_forward_filter(result);
 
 		result << R"(extern "C" __global__ void )" << this->name
-			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents, u32 "
-				  "shared_mem_contents_length, u64 offset) {";
+			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents,"
+				  "u64 offset) {";
 		result <<
 			R"(
     __shared__ u32 data[)"

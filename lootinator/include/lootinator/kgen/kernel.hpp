@@ -27,6 +27,8 @@ namespace kgen {
 		uint32_t device_id;
 		uint32_t start_batch;
 		uint32_t end_batch;
+
+		uint32_t max_results;
 	};
 
 	class Kernel {

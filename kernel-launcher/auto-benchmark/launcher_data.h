@@ -25,7 +25,6 @@ namespace launcher {
 	struct AppParameters {
 		AppMode mode;
 		bool debug_info;
-		bool generate_cuda_source;
 	};
 
 	struct LaunchParameters {

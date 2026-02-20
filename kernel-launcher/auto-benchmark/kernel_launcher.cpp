@@ -310,10 +310,9 @@ namespace launcher {
 	}
 
 	// Compiles the CUDA kernel in file 'source_filename' and stores the PTX in the 'config'
-	// structure OR stores the CUDA source code in the 'config' structure, depending on whether
-	// 'generate_sources' was set.
+	// structure OR stores the CUDA source code in the 'config' structure.
 	int compile_nvrtc(
-		std::string source_filename, LaunchParameters& config, const bool generate_sources) {
+		std::string source_filename, LaunchParameters& config) {
 		std::ifstream file(source_filename);
 		if (!file) {
 			std::cerr << "Fatal error (compile_nvrtc): Failed to open source code file '"
@@ -329,10 +328,6 @@ namespace launcher {
 			return 1;
 		}
 		std::string kernel_source = ss.str();
-		if (generate_sources) {
-			config.kernel_code = kernel_source;
-			return 0;
-		}
 
 		nvrtcProgram prog;
 
@@ -382,8 +377,6 @@ namespace launcher {
 				app_params.debug_info = data["debug"];
 			if (data.contains("device_id"))
 				device_id = data["device_id"];
-			if (data.contains("generate_cuda_source"))
-				app_params.generate_cuda_source = data["generate_cuda_source"];
 
 			DEBUG(app_params.debug_info) << "App params parsed succesfully.\n";
 
@@ -414,7 +407,7 @@ namespace launcher {
 							  << "' for kernel " << lp.kernel_name << "\n";
 					return 1;
 				}
-				if (compile_nvrtc(lp.kernel_source_file, lp, app_params.generate_cuda_source)) {
+				if (compile_nvrtc(lp.kernel_source_file, lp)) {
 					std::cerr << "Error: failed to compile source code file '"
 							  << lp.kernel_source_file << "' for kernel " << lp.kernel_name << "\n";
 					return 1;
@@ -438,7 +431,6 @@ namespace launcher {
 		// default app config
 		app_params.mode = AppMode::NONE;
 		app_params.debug_info = false;
-		app_params.generate_cuda_source = false;
 
 		for (int i = 1; i < argc; i++) {
 			// flag args
@@ -493,26 +485,16 @@ int main(int argc, char** argv) {
 
 	if (app_params.mode == launcher::AppMode::BENCHMARK) {
 		DEBUG(app_params.debug_info) << "selected benchmark mode.\n";
-
-		// if (app_params.generate_cuda_source) {
-		// return launcher::generate_benchmarker_source(kernel_configs);
-		// }
-		// else {
 		launcher::benchmark_all(app_params, kernel_configs);
 		return 0;
-		// }
 	} else { // app mode = run single
 		DEBUG(app_params.debug_info) << "selected run-single mode.\n";
 		launcher::LaunchParameters config = kernel_configs.at(0);
-		if (launcher::finalize_config(config, app_params))
+		if (launcher::finalize_config(config, app_params)) {
 			return 1;
+		}
 
-		// if (app_params.generate_cuda_source) {
-		//     return launcher::generate_runner_source(config);
-		// }
-		// else {
 		launcher::KernelData kdata(config);
 		return launcher::launch_kernel(kdata, config, app_params);
-		// }
 	}
 }

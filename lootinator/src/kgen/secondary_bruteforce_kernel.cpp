@@ -117,11 +117,11 @@ namespace kgen {
 		mc::Enchantment ench = mc::get_enchantment_from_attribute(constraint.attributes[0]);
 		int i = 0;
 		auto& vec = lfd_enchant_randomly->enchant_randomly.enchantment_order;
-		for (; i < vec.size(); i++) {
+		for (; i < (int)vec.size(); i++) {
 			if (vec[i] == ench)
 				break;
 		}
-		if (i == vec.size()) {
+		if (i == (int)vec.size()) {
 			throw "messed up, need to fix :)";
 		}
 
@@ -279,7 +279,7 @@ namespace kgen {
 		for (const auto child : this->root_node.children) {
 			data::LootPool* pool = dynamic_cast<data::LootPool*>(child);
 			bool empty = true;
-			for (int pool_idx_2 = pool_idx + 1; pool_idx_2 < this->root_node.children.size();
+			for (int pool_idx_2 = pool_idx + 1; pool_idx_2 < (int)this->root_node.children.size();
 				 pool_idx_2++) {
 				if (!this->root_node.children[pool_idx_2]->constraints.empty()) {
 					empty = false;

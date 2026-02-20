@@ -8,13 +8,15 @@
 namespace kgen {
 	void BruteforceKernel::gen_kernels(
 		std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
-		std::vector<loot::Constraint> constr =
-			loot::parse_constraints_from_json(kgen_config.constraint_path.c_str());
+
 		std::ifstream f(kgen_config.loot_table_path);
 		nlohmann::json loot_table_json = nlohmann::json::parse(f);
 
 		data::LootTableRoot root =
 			data::LootTableRoot(loot_table_json, kgen_config.item_map_path, kgen_config.version);
+
+		std::vector<loot::Constraint> constr =
+			loot::parse_constraints_from_json(kgen_config.constraint_path.c_str(), root.item_map);
 
 		try {
 			root.add_constraints(constr);
@@ -115,7 +117,7 @@ namespace kgen {
 			int offset = pool_memory_offsets[pool_idx];
 
 			CAST_CHILD(entry, data::LootEntry, node->children[entry_ix]);
-			for (int w = entry->next_int_range.min; w <= entry->next_int_range.max; w++) {
+			for (int w = entry->next_int_range.min; w <= (int)entry->next_int_range.max; w++) {
 				combined_shared_memory[offset + w * 3] |= (index << 8);
 			}
 
@@ -207,7 +209,7 @@ local_constraints[counter_idx] += item_count;
 		for (const auto child : this->root_node.children) {
 			data::LootPool* pool = dynamic_cast<data::LootPool*>(child);
 			bool empty = true;
-			for (int pool_idx_2 = pool_idx + 1; pool_idx_2 < this->root_node.children.size();
+			for (int pool_idx_2 = pool_idx + 1; pool_idx_2 < (int)this->root_node.children.size();
 				 pool_idx_2++) {
 				if (!this->root_node.children[pool_idx_2]->constraints.empty()) {
 					empty = false;
@@ -223,6 +225,7 @@ local_constraints[counter_idx] += item_count;
 
 	void BruteforceKernel::fill_function_shared_mem(data::LootTreeNode* current) {
 		// this kernel doesn't really use this
+		(void)current;
 		return;
 	}
 

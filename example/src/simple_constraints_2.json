@@ -1,6 +1,6 @@
 [
 	{
-		"item": 11,
+		"item": "minecraft:enchanted_golden_apple",
 		"range": {
 			"min": 4,
 			"max": 1000

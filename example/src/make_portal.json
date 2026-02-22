@@ -1,0 +1,29 @@
+[
+	{
+		"item": "minecraft:obsidian",
+		"range": {
+			"min": 10,
+			"max": 100
+		},
+		"slot": 0
+	},
+    {
+        "item": "minecraft:flint_and_steel",
+		"range": {
+			"min": 1,
+			"max": 100
+		},
+		"slot": 0
+    },
+    {
+        "item": "minecraft:golden_sword",
+		"range": {
+			"min": 2,
+			"max": 100
+		},
+		"slot": 0,
+        "attributes": [{
+            "type": "looting", "level": 3
+        }]
+    }
+]

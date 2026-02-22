@@ -821,12 +821,12 @@ namespace mc {
 	// ItemAttribute
 
 	mc::ItemAttribute mc::ItemAttribute::from_json(nlohmann::json json) {
+		std::string type_str = json["type"];
+		mc::Enchantment ench_enum = ENCHANTMENT_TO_NAME.lookup_string(type_str);
 		if (json.contains("level")) {
-			std::string type_str = json["type"];
-			mc::Enchantment ench_enum = ENCHANTMENT_TO_NAME.lookup_string(type_str);
 			return {static_cast<uint32_t>(ench_enum), json["level"]};
 		}
-		return {1, -1};
+		return {static_cast<uint32_t>(ench_enum), -1};
 	}
 
 	bool mc::ItemAttribute::operator==(const ItemAttribute& other) const {

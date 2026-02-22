@@ -134,14 +134,13 @@ void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline
 		}
 	}
 
-	void print_kernels(
-        std::ostream& out, const std::vector<KernelPipeline>& kernel_pipelines) {
+	void print_kernels(std::ostream& out, const std::vector<KernelPipeline>& kernel_pipelines) {
 		for (int k = 0; k < (int)kernel_pipelines.size(); k++) {
 			// each kernel gets its own namespace to avoid device helper conflicts
 			out << "namespace kernel" << k << " {\n";
-            for (const auto& configured_kernel : kernel_pipelines[k]) {
-                out << configured_kernel.code;
-            }
+			for (const auto& configured_kernel : kernel_pipelines[k]) {
+				out << configured_kernel.code;
+			}
 			out << "\n} //namespace\n";
 		}
 	}
@@ -155,13 +154,14 @@ void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline
 			out << R"(
 void launch(const KernelPipeline& pipeline, u32 num_blocks, u64 offset) 
 {
-    )"; 
-            out << pipeline[0].kernel_name << R"(<<< num_blocks, pipeline[0]->threads_per_block, pipeline[0]->shared_mem_bytes >>> (
+    )";
+			out << pipeline[0].kernel_name
+				<< R"(<<< num_blocks, pipeline[0]->threads_per_block, pipeline[0]->shared_mem_bytes >>> (
         pipeline[0]->d_result_array, pipeline[0]->d_result_count, pipeline[0]->d_shared_mem_contents, offset
     );
     )";
-            if (pipeline.size() == 2) {
-                out << R"(
+			if (pipeline.size() == 2) {
+				out << R"(
     CUDA_CHECK(cudaDeviceSynchronize());
 
     u32 result_count;
@@ -169,29 +169,30 @@ void launch(const KernelPipeline& pipeline, u32 num_blocks, u64 offset)
 
     if (result_count != 0) {
         u32 n_blocks_2 = (result_count + pipeline[1]->threads_per_block - 1) / pipeline[1]->threads_per_block;
-        )" << pipeline[1].kernel_name << R"(<<< n_blocks_2, pipeline[1]->threads_per_block, pipeline[1]->shared_mem_bytes >>> (
-        pipeline[1]->d_result_array, pipeline[1]->d_result_count, pipeline[1]->d_shared_mem_contents, pipeline[0]->d_result_array
+        )" << pipeline[1].kernel_name
+					<< R"(<<< n_blocks_2, pipeline[1]->threads_per_block, pipeline[1]->shared_mem_bytes >>> (
+        pipeline[1]->d_result_array, pipeline[1]->d_result_count, pipeline[1]->d_shared_mem_contents, pipeline[0]->d_result_array, result_count
     );
     })";
-            }
+			}
 
-		out << R"(	
+			out << R"(	
 }} //namespace
 )";
 		}
 	}
 
-    // TODO revive
-    /*
+	// TODO revive
+	/*
 	void print_benchmarker(
 		std::ostream& out, const std::vector<KernelPipeline>& kernel_configs) {
 		out <<
 			R"(
 int main() {
-    constexpr int num_kernels = )"
+	constexpr int num_kernels = )"
 			<< kernel_configs.size() << R"(;
-    std::vector<launch_function> launchers;
-    std::vector<ConfiguredKernel> configs;
+	std::vector<launch_function> launchers;
+	std::vector<ConfiguredKernel> configs;
 )";
 
 		for (int i = 0; i < (int)kernel_configs.size(); i++) {
@@ -214,71 +215,70 @@ int main() {
 		out << "    for (int k = 0; k < num_kernels; k++) {\n";
 		out <<
 			R"(        const ConfiguredKernel& config = configs[k];
-        ConfiguredKernel work_config = config;
-        KernelMemory kernel_memory(config);
-        BenchmarkResults results{config.kernel_name, false, 0.0f, 0.0f};
+		ConfiguredKernel work_config = config;
+		KernelMemory kernel_memory(config);
+		BenchmarkResults results{config.kernel_name, false, 0.0f, 0.0f};
 
-        const i32 middle_batch = (config.start_batch + config.end_batch) / 2;
-        work_config.threads_per_batch /= 4;
+		const i32 middle_batch = (config.start_batch + config.end_batch) / 2;
+		work_config.threads_per_batch /= 4;
 
-        // warmup (to get more accurate measurements)
-        work_config.start_batch = middle_batch;
-        work_config.end_batch = middle_batch + 1;
+		// warmup (to get more accurate measurements)
+		work_config.start_batch = middle_batch;
+		work_config.end_batch = middle_batch + 1;
 
-        CUDA_CHECK(cudaDeviceSynchronize());
-        for (u32 i = 0; i < 3; i++) {
-            launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
-        }
+		CUDA_CHECK(cudaDeviceSynchronize());
+		for (u32 i = 0; i < 3; i++) {
+			launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
+		}
 
-        // benchmarking with auto-tuning
-        i32 batches = 1;
-        float elapsed_ms = 0.0f;
-        while (elapsed_ms < 100.0f) {
-            work_config.end_batch = work_config.start_batch + batches;
+		// benchmarking with auto-tuning
+		i32 batches = 1;
+		float elapsed_ms = 0.0f;
+		while (elapsed_ms < 100.0f) {
+			work_config.end_batch = work_config.start_batch + batches;
 
-            auto t0 = std::chrono::high_resolution_clock::now();
-            launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
-            auto t1 = std::chrono::high_resolution_clock::now();
-            elapsed_ms = (t1-t0).count() * 1e-6f;
-            if (elapsed_ms < 100.0f)
-                batches *= 2;
-        }
+			auto t0 = std::chrono::high_resolution_clock::now();
+			launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
+			auto t1 = std::chrono::high_resolution_clock::now();
+			elapsed_ms = (t1-t0).count() * 1e-6f;
+			if (elapsed_ms < 100.0f)
+				batches *= 2;
+		}
 
-        // results
-        results.success = true;
-        results.ms_per_batch = elapsed_ms * 4 / batches;
-        results.ms_total_estimate = results.ms_per_batch * (config.end_batch - config.start_batch);
-        result_array[k] = results;
-    }
-    
-    int best_kernel = -1;
-    double best_perf = result_array[0].ms_total_estimate;
-    for (int k = 0; k < num_kernels; k++) {
-        if (result_array[k].success && result_array[k].ms_total_estimate < best_perf) {
-            best_perf = result_array[k].ms_total_estimate;
-            best_kernel = k;
-        }
-    }
-    if (best_kernel == -1) {
-        std::cerr << "All kernels failed. Aborting...\n";
-        return 1;
-    }
-    for (int k = 0; k < num_kernels; k++) {
-        std::cerr << (k == best_kernel ? "BEST> " : "      ");
-        if (result_array[k].success)
-            std::cerr << configs[k].kernel_name << ", ETA = " << result_array[k].ms_total_estimate << " ms.\n";
-        else
-            std::cerr << configs[k].kernel_name << " (failed!)\n";
-    }
-    
-    std::cerr << "Running kernel " << configs[best_kernel].kernel_name << "...\n";
-    {
-        const ConfiguredKernel& config = configs[best_kernel];
-        KernelMemory kernel_memory(config);
-        launch_configured_kernel(launchers[best_kernel], config, kernel_memory, true);
-        std::cerr << "Finished.\n";
-    }
-    return 0;
+		// results
+		results.success = true;
+		results.ms_per_batch = elapsed_ms * 4 / batches;
+		results.ms_total_estimate = results.ms_per_batch * (config.end_batch - config.start_batch);
+		result_array[k] = results;
+	}
+
+	int best_kernel = -1;
+	double best_perf = result_array[0].ms_total_estimate;
+	for (int k = 0; k < num_kernels; k++) {
+		if (result_array[k].success && result_array[k].ms_total_estimate < best_perf) {
+			best_perf = result_array[k].ms_total_estimate;
+			best_kernel = k;
+		}
+	}
+	if (best_kernel == -1) {
+		std::cerr << "All kernels failed. Aborting...\n";
+		return 1;
+	}
+	for (int k = 0; k < num_kernels; k++) {
+		std::cerr << (k == best_kernel ? "BEST> " : "      ");
+		if (result_array[k].success)
+			std::cerr << configs[k].kernel_name << ", ETA = " << result_array[k].ms_total_estimate
+<< " ms.\n"; else std::cerr << configs[k].kernel_name << " (failed!)\n";
+	}
+
+	std::cerr << "Running kernel " << configs[best_kernel].kernel_name << "...\n";
+	{
+		const ConfiguredKernel& config = configs[best_kernel];
+		KernelMemory kernel_memory(config);
+		launch_configured_kernel(launchers[best_kernel], config, kernel_memory, true);
+		std::cerr << "Finished.\n";
+	}
+	return 0;
 }
 )";
 	}*/
@@ -296,21 +296,21 @@ int main() {
 int main() {
     KernelPipeline pipeline;
     )";
-        for (int i = 0; i < kp.size(); i++) {
-            fout << "ConfiguredKernel ck" << i << " {\""
-                << kp[i].kernel_name << "\", "
-                << "std::vector<u32>(), " << kp[i].total_threads << "ULL, " << kp[i].threads_per_batch
-                << "ULL, " << kp[i].threads_per_block << "U, " << kp[i].device_id << "U, " << kp[i].start_batch
-                << ", " << kp[i].end_batch << ", " << kp[i].max_results << "};\n";
+		for (int i = 0; i < kp.size(); i++) {
+			fout << "ConfiguredKernel ck" << i << " {\"" << kp[i].kernel_name << "\", "
+				 << "std::vector<u32>(), " << kp[i].total_threads << "ULL, "
+				 << kp[i].threads_per_batch << "ULL, " << kp[i].threads_per_block << "U, "
+				 << kp[i].device_id << "U, " << kp[i].start_batch << ", " << kp[i].end_batch << ", "
+				 << kp[i].max_results << "};\n";
 
-            fout << "pipeline.push_back(&ck" << i << ");\n";
+			fout << "pipeline.push_back(&ck" << i << ");\n";
 
-            fout << "    {uint32_t shmem[] = ";
-            print_shared_mem(fout, kp[i]);
-            fout << " for (int k = 0; k < " << kp[i].shared_mem.size()
-                << "; k++) pipeline[" << i << "]->shared_memory.push_back(shmem[k]);}\n"
-                << "\npipeline[" << i << "]->init_memory();\n";
-        }
+			fout << "    {uint32_t shmem[] = ";
+			print_shared_mem(fout, kp[i]);
+			fout << " for (int k = 0; k < " << kp[i].shared_mem.size() << "; k++) pipeline[" << i
+				 << "]->shared_memory.push_back(shmem[k]);}\n"
+				 << "\npipeline[" << i << "]->init_memory();\n";
+		}
 
 		fout << R"(
     launch_configured_kernel(kernel0::launch, pipeline, true);
@@ -319,8 +319,8 @@ int main() {
 )";
 	}
 
-    // TODO revive
-    /*
+	// TODO revive
+	/*
 	int generate_benchmarker_source(
 		std::vector<KernelPipeline> kernel_configs, std::ostream& fout) {
 		if (kernel_configs.size() == 0) {
@@ -335,5 +335,5 @@ int main() {
 		print_benchmarker(fout, kernel_configs);
 		return 0;
 	}
-    */
+	*/
 } // namespace kgen

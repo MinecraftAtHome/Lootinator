@@ -7,10 +7,9 @@
 
 namespace kgen {
 	void SecondaryBruteforceKernel::gen_kernels(
-		std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config
-	) {
-		data::LootTableRoot root =
-			data::LootTableRoot(kgen_config.loot_table_json, kgen_config.item_map, kgen_config.version);
+		std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
+		data::LootTableRoot root = data::LootTableRoot(
+			kgen_config.loot_table_json, kgen_config.item_map, kgen_config.version);
 
 		try {
 			root.add_constraints(kgen_config.constraints);
@@ -36,8 +35,7 @@ namespace kgen {
 			fout << v << " ";
 		}
 
-		return ConfiguredKernel{
-			this->name,
+		return ConfiguredKernel{this->name,
 			to_string(),
 			UINT64_C(1) << 48,
 			UINT64_C(1) << 32,
@@ -46,8 +44,7 @@ namespace kgen {
 			0,
 			0,
 			UINT32_C(1) << 16,
-			UINT32_C(1) << 18
-		};
+			UINT32_C(1) << 18};
 	}
 
 	std::string SecondaryBruteforceKernel::to_string() {
@@ -58,19 +55,23 @@ namespace kgen {
 
 		result << R"(extern "C" __global__ void )" << this->name
 			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents, "
-				  "u64* kernel_1_out) {";
+				  "u64* kernel_1_out, u32 kernel_1_count) {";
 		result <<
 			R"(
-    __shared__ u32 data[)" << combined_shared_memory.size() << R"(];
-    if (threadIdx.x < )" << combined_shared_memory.size() << R"() {
-        for (int i = threadIdx.x; i < )" << combined_shared_memory.size() << R"(; i += blockDim.x) {
+    __shared__ u32 data[)"
+			   << combined_shared_memory.size() << R"(];
+    if (threadIdx.x < )"
+			   << combined_shared_memory.size() << R"() {
+        for (int i = threadIdx.x; i < )"
+			   << combined_shared_memory.size() << R"(; i += blockDim.x) {
             data[i] = shared_mem_contents[i];
         }
     }
     __syncthreads();
 
     u32 index = blockIdx.x * blockDim.x + threadIdx.x;
-    u64 internal_loot_seed = kernel_1_out[index] ^ JRAND_MULTIPLIER;
+    if (index >= kernel_1_count) return;
+	u64 internal_loot_seed = kernel_1_out[index] ^ JRAND_MULTIPLIER;
 
     if (forward_filter_full(internal_loot_seed, data)) {
         write_result(internal_loot_seed ^ JRAND_MULTIPLIER, result_array, result_count);
@@ -104,30 +105,33 @@ namespace kgen {
 		}
 	}
 
-	static std::string get_if_guard(loot::Constraint& constraint, data::LootFunctionData* lfd_enchant_randomly) {
-        // easy case - no enchantment, no if guard
-        if (constraint.attributes.empty()) {
-            return "";
-        }
+	static std::string get_if_guard(
+		loot::Constraint& constraint, data::LootFunctionData* lfd_enchant_randomly) {
+		// easy case - no enchantment, no if guard
+		if (constraint.attributes.empty()) {
+			return "";
+		}
 
-        mc::Enchantment ench = mc::get_enchantment_from_attribute(constraint.attributes[0]);
-        int i = 0;
-        auto& vec = lfd_enchant_randomly->enchant_randomly.enchantment_order;
-        for (; i < vec.size(); i++) {
-            if (vec[i] == ench) break;
-        }
-        if (i == vec.size()) {
-            throw "messed up, need to fix :)";
-        }
+		mc::Enchantment ench = mc::get_enchantment_from_attribute(constraint.attributes[0]);
+		int i = 0;
+		auto& vec = lfd_enchant_randomly->enchant_randomly.enchantment_order;
+		for (; i < vec.size(); i++) {
+			if (vec[i] == ench)
+				break;
+		}
+		if (i == vec.size()) {
+			throw "messed up, need to fix :)";
+		}
 
-        // enchantment, but no level - if guard only on enchantment id
-        if (constraint.attributes[0].level == -1) {
-            return "if (enchantment == " + std::to_string(i) + ") ";
-        }
+		// enchantment, but no level - if guard only on enchantment id
+		if (constraint.attributes[0].level == -1) {
+			return "if (enchantment == " + std::to_string(i) + ") ";
+		}
 
-        // enchantment & level
-        return "if (enchantment == " + std::to_string(i) + " && level == " + std::to_string(constraint.attributes[0].level) + ") ";
-    }
+		// enchantment & level
+		return "if (enchantment == " + std::to_string(i) +
+			   " && level == " + std::to_string(constraint.attributes[0].level) + ") ";
+	}
 
 	void SecondaryBruteforceKernel::emit_skip_for_entry(std::ostream& out, data::LootEntry* entry) {
 		for (const auto child : entry->children) {

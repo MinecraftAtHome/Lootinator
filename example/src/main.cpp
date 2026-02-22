@@ -8,18 +8,21 @@
 #include "lootinator/kgen/pipeline_generator.hpp"
 
 int main() {
-	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(
-		mc::MC_1_21_TO_1_21_9,
+	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_21_TO_1_21_9,
+#ifdef _WIN32_
 		"../../../../example/src/ruined_portal.json",
-		"../../../../example/src/simple_constraints_2.json",
+		"../../../../example/src/make_portal.json",
 		"../../../../example/src/item_map.txt",
-		false);
+#elif __linux__
+		"../../example/src/ruined_portal.json",
+		"../../example/src/make_portal.json",
+		"../../example/src/item_map.txt",
+#endif
+		true);
 
 	kgen::PipelineGenerator pipeline_gen(kgen_config);
-	const auto& pipelines = pipeline_gen
-		.add_bruteforce()
-		.build();
-	
+	const auto& pipelines = pipeline_gen.add_bruteforce().build();
+
 	for (int k = 0; k < pipelines.size(); k++) {
 		std::ofstream fout("ruined_portal_" + std::to_string(k) + ".cu");
 		kgen::generate_runner_source(pipelines[k], fout);

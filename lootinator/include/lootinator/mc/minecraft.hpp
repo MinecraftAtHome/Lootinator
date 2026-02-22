@@ -110,14 +110,8 @@ namespace mc {
 		std::uint32_t type;
 		std::int32_t level;
 
-		static ItemAttribute from_json(nlohmann::json json) {
-			if (json.contains("level")) {
-				return {json["type"], json["level"]};
-			}
-			return {json["type"], -1};
-		}
-
 		mc::AttributeCategory get_category() const;
+		static ItemAttribute from_json(nlohmann::json json);
 		bool operator==(const ItemAttribute& other) const;
 		bool operator!=(const ItemAttribute& other) const;
 		friend std::ostream& operator<<(std::ostream& os, const ItemAttribute& attribute);

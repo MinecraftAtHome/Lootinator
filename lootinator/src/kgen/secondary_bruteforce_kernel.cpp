@@ -104,33 +104,30 @@ namespace kgen {
 		}
 	}
 
-	static std::string get_branchless_if_guard(
-		loot::Constraint& constraint, data::LootFunctionData* lfd_enchant_randomly) {
-		// easy case - no enchantment, no if guard
-		if (constraint.attributes.empty()) {
-			return "";
-		}
+	static std::string get_if_guard(loot::Constraint& constraint, data::LootFunctionData* lfd_enchant_randomly) {
+        // easy case - no enchantment, no if guard
+        if (constraint.attributes.empty()) {
+            return "";
+        }
 
-		mc::Enchantment ench = mc::get_enchantment_from_attribute(constraint.attributes[0]);
-		int i = 0;
-		auto& vec = lfd_enchant_randomly->enchant_randomly.enchantment_order;
-		for (; i < (int)vec.size(); i++) {
-			if (vec[i] == ench)
-				break;
-		}
-		if (i == (int)vec.size()) {
-			throw "messed up, need to fix :)";
-		}
+        mc::Enchantment ench = mc::get_enchantment_from_attribute(constraint.attributes[0]);
+        int i = 0;
+        auto& vec = lfd_enchant_randomly->enchant_randomly.enchantment_order;
+        for (; i < vec.size(); i++) {
+            if (vec[i] == ench) break;
+        }
+        if (i == vec.size()) {
+            throw "messed up, need to fix :)";
+        }
 
-		// enchantment, but no level - if guard only on enchantment id
-		if (constraint.attributes[0].level == -1) {
-			return "item_count += (enchantment == " + std::to_string(i) + ") * ";
-		}
+        // enchantment, but no level - if guard only on enchantment id
+        if (constraint.attributes[0].level == -1) {
+            return "if (enchantment == " + std::to_string(i) + ") ";
+        }
 
-		// enchantment & level
-		return "item_count += (enchantment == " + std::to_string(i) +
-			   " && level == " + std::to_string(constraint.attributes[0].level) + ") * ";
-	}
+        // enchantment & level
+        return "if (enchantment == " + std::to_string(i) + " && level == " + std::to_string(constraint.attributes[0].level) + ") ";
+    }
 
 	void SecondaryBruteforceKernel::emit_skip_for_entry(std::ostream& out, data::LootEntry* entry) {
 		for (const auto child : entry->children) {
@@ -219,7 +216,7 @@ namespace kgen {
 
 		// now update accumulators
 		for (auto& constraint : entry->constraints) {
-			std::string if_guard = get_branchless_if_guard(constraint, ench_func);
+			std::string if_guard = get_if_guard(constraint, ench_func);
 			std::string item_ident = constraint_to_item_identifier(constraint);
 			std::string arrayPlusIndex = var_name_map[item_ident];
 			out << if_guard << arrayPlusIndex << " += item_count;";

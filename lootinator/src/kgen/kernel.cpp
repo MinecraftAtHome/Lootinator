@@ -21,7 +21,10 @@ namespace kgen {
 			item_map[item_name] = ix++;
 		}
 
-		constraints = loot::parse_constraints_from_json(constraint_path.c_str(), item_map);
+		std::vector<loot::Constraint> constr = loot::parse_constraints_from_json(constraint_path.c_str(), item_map);
+		std::function<bool(const loot::Constraint& a, const loot::Constraint& b)> cmp_func =
+			[](const loot::Constraint& a, const loot::Constraint& b) { return a.item_equal(b); };
+		merge_contraints(constr, constraints, cmp_func);
 	}
 
 	void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {

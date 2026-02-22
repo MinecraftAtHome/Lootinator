@@ -42,6 +42,13 @@ namespace data {
 		throw "illegal state in LootTreeNode::get_item_index - parent was nullptr";
 	}
 
+	void LootTreeNode::clear_constraints() {
+		this->constraints.clear();
+		for (auto child : this->children) {
+			child->clear_constraints();
+		}
+	}
+
 	void LootTreeNode::indent(int indentation) const {
 		std::cout << '\n';
 		for (int i = 0; i < indentation; i++) {

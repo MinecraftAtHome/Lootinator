@@ -6,6 +6,7 @@
 #include "lootinator/utility/range.h"
 
 #include <cstdint>
+#include <functional>
 
 namespace loot {
 	constexpr int32_t SLOT_NONE = -1;
@@ -31,8 +32,9 @@ namespace loot {
 		friend std::ostream& operator<<(std::ostream& os, const Constraint& constraint);
 	};
 
-	void merge_contraints(
-		const std::vector<loot::Constraint>& src, std::vector<loot::Constraint>& dest);
+	void merge_contraints(const std::vector<loot::Constraint>& src,
+		std::vector<loot::Constraint>& dest,
+		std::function<bool(const Constraint& a, const Constraint& b)> cmp);
 	std::vector<loot::Constraint> parse_constraints_from_json(
 		const char* filepath, std::unordered_map<std::string, int>& item_map);
 } // namespace loot

@@ -57,10 +57,10 @@ namespace loot {
 
 	// -------------------------------------------------------------------------------
 
-	static void merge_into(
-		std::vector<loot::Constraint>& dest, const loot::Constraint& constraint) {
+	static void merge_into(std::vector<loot::Constraint>& dest, const loot::Constraint& constraint,
+		std::function<bool(const Constraint& a, const Constraint& b)> cmp) {
 		for (auto& stored_constraint : dest) {
-			if (stored_constraint.item_equal(constraint)) {
+			if (cmp(stored_constraint, constraint)) {
 				// have two item count ranges (min1, max1), (min2, max2)
 				// the new min is min1+min2, new max is max1+max2
 				stored_constraint.count_range =
@@ -78,13 +78,14 @@ namespace loot {
 
 	// accumulates the per-slot constraints into per-item-type ones (used by seedfinding kernels)
 	// the acculumation takes into accout item enchantments
-	void merge_contraints(
-		const std::vector<loot::Constraint>& src, std::vector<loot::Constraint>& dest) {
+	void merge_contraints(const std::vector<loot::Constraint>& src,
+		std::vector<loot::Constraint>& dest,
+		std::function<bool(const Constraint& a, const Constraint& b)> cmp) {
 		for (auto& constraint : dest) {
 			constraint.slot_id = loot::SLOT_NONE;
 		}
 		for (const auto& constraint : src) {
-			merge_into(dest, constraint);
+			merge_into(dest, constraint, cmp);
 		}
 	}
 
@@ -104,7 +105,6 @@ namespace loot {
 		for (auto con : data) {
 			std::string item_name = con["item"];
 			std::uint32_t item = item_map[item_name];
-			printf("ITEM: %s, %ld\n", item_name.c_str(), item);
 			std::int32_t slot_id = con["slot"];
 			util::RangeInclusive<std::uint32_t> count_range =
 				util::RangeInclusive<std::uint32_t>::from_json(con["range"]);

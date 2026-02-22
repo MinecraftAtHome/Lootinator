@@ -7,14 +7,14 @@
 
 #include "lootinator/data/loot_data.hpp"
 #include "lootinator/kgen/bruteforce_kernel.hpp"
-#include "lootinator/kgen/secondary_bruteforce_kernel.hpp"
 #include "lootinator/kgen/cuda_source_gen.hpp"
+#include "lootinator/kgen/secondary_bruteforce_kernel.hpp"
 
 int main() {
 	kgen::KernelGenConfig kgen_config = {false,
-		"../../../../example/src/simple_constraints_2.json",
-		"../../../../example/src/item_map.txt",
-		"../../../../example/src/ruined_portal.json",
+		"../../example/src/simple_constraints_2.json",
+		"../../example/src/item_map.txt",
+		"../../example/src/ruined_portal.json",
 		mc::MC_1_21_TO_1_21_9};
 
 	std::vector<kgen::ConfiguredKernel> kernels1;

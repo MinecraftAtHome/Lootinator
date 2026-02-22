@@ -18,8 +18,15 @@ namespace kgen {
 		std::vector<loot::Constraint> constr =
 			loot::parse_constraints_from_json(kgen_config.constraint_path.c_str(), root.item_map);
 
+		// constraint merging thing
+		std::vector<loot::Constraint> merged_constraints;
+
+		std::function<bool(const loot::Constraint& a, const loot::Constraint& b)> cmp_func =
+			[](const loot::Constraint& a, const loot::Constraint& b) { return a.item == b.item; };
+		merge_contraints(constr, merged_constraints, cmp_func);
+
 		try {
-			root.add_constraints(constr);
+			root.add_constraints(merged_constraints);
 		} catch (std::exception& ex) {
 			std::cout << ex.what() << "\n";
 		}
@@ -41,8 +48,7 @@ namespace kgen {
 		for (auto v : combined_shared_memory) {
 			fout << v << " ";
 		}
-		return ConfiguredKernel{
-			this->name,
+		return ConfiguredKernel{this->name,
 			to_string(),
 			UINT64_C(1) << 48,
 			UINT64_C(1) << 32,
@@ -51,8 +57,7 @@ namespace kgen {
 			0,
 			0,
 			UINT32_C(1) << 16,
-			UINT32_C(1) << 19
-		};
+			UINT32_C(1) << 19};
 	}
 
 	std::string BruteforceKernel::to_string() {
@@ -267,20 +272,16 @@ local_constraints[counter_idx] += item_count;
 				combined_shared_memory.push_back(enchant_mask & 0xFFFFFFFF);
 				combined_shared_memory.push_back(enchant_mask >> 32);
 			}
-			// printf("%u\n", static_cast<unsigned int>(combined_shared_memory.size()));
 		}
 	}
 
 	void BruteforceKernel::setup_shared_memory() {
-		// constraint merging thing
-
 		function_memory_offsets.push_back(0);
 		pool_memory_offsets.push_back(0);
 
 		// parse shared mem for pools
 		for (auto child : root_node.children) {
 			CAST_CHILD(pool, data::LootPool, child);
-			// printf("%p\n", pool);
 
 			setup_entry_memory(pool);
 

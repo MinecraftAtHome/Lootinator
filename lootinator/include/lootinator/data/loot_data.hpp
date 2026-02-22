@@ -30,7 +30,7 @@ namespace data {
 		virtual void print(int indentation) const;
 		void print_constraints(int indentation) const;
 
-		void sort_constraints();
+		void clear_constraints();
 	};
 
 	class LootEntry : public LootTreeNode {

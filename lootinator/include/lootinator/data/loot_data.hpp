@@ -75,7 +75,7 @@ namespace data {
 		mc::VersionRange version;
 		std::unordered_map<std::string, int> item_map;
 
-		LootTableRoot(const nlohmann::json& json, const std::string& item_map_filepath,
+		LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
 			mc::VersionRange version);
 		virtual int get_item_index(const std::string& item_name) const override;
 		virtual void print(int indentation) const override;

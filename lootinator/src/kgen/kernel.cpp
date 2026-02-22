@@ -1,8 +1,29 @@
 #include "lootinator/kgen/kernel.hpp"
 #include "lootinator/global_settings.hpp"
 #include <cinttypes>
+#include <fstream>
 
 namespace kgen {
+	KernelGenConfig::KernelGenConfig(
+			mc::VersionRange version,
+			std::string loot_table_path,
+			std::string constraint_path,
+			std::string item_map_path,
+			bool seedcracking
+	) : version(version), seedcracking(seedcracking) {
+		std::ifstream f(loot_table_path);
+		loot_table_json = nlohmann::json::parse(f);
+
+		std::ifstream fin(item_map_path);
+		std::string item_name;
+		int ix = 0;
+		while (fin >> item_name) {
+			item_map[item_name] = ix++;
+		}
+
+		constraints = loot::parse_constraints_from_json(constraint_path.c_str(), item_map);
+	}
+
 	void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {
 		CAST_CHILD(func, data::LootFunctionData, current);
 		if (func == nullptr) {
@@ -66,12 +87,10 @@ namespace kgen {
 	}
 
 	Kernel::Kernel(data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config)
-		: root_node(root_node) {
+		: root_node(root_node), kgen_config(kgen_config) {
 		static int kernel_index = 0;
 		kernel_index++;
 		name = "kernel_" + std::to_string(kernel_index);
-
-		this->kgen_config = kgen_config;
 	}
 
 	void Kernel::write_shared_definitions(std::ostream& out) {

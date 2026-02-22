@@ -76,23 +76,24 @@ struct BenchmarkResults {
     float ms_total_estimate;
 };
 
-typedef std::vector<ConfiguredKernel> KernelPipeline;
+typedef std::vector<ConfiguredKernel*> KernelPipeline;
 typedef void (*launch_function)(const KernelPipeline&, u32, u64);
 
 void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline, bool print_results) {
-    u64* h_result_array = (u64*)malloc(pipeline.back().max_results * sizeof(u64));
-    const u32 num_blocks = pipeline[0].threads_per_batch / pipeline[0].threads_per_block;
+    u64* h_result_array = (u64*)malloc(pipeline.back()->max_results * sizeof(u64));
+    const u32 num_blocks = pipeline[0]->threads_per_batch / pipeline[0]->threads_per_block;
     
-    for (u32 b = pipeline[0].start_batch; b < pipeline[0].end_batch; b++) {
+    for (u32 b = pipeline[0]->start_batch; b < pipeline[0]->end_batch; b++) {
         u32 h_result_count = 0;
+
         for (const auto& ck : pipeline) {
-            CUDA_CHECK(cudaMemcpy(ck.d_result_count, &h_result_count, sizeof(u32), cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpy(ck->d_result_count, &h_result_count, sizeof(u32), cudaMemcpyHostToDevice));
         }
-        lf(pipeline, num_blocks, b*pipeline[0].threads_per_batch);
+        lf(pipeline, num_blocks, b*pipeline[0]->threads_per_batch);
         CUDA_CHECK(cudaDeviceSynchronize());
 
-        CUDA_CHECK(cudaMemcpy(&h_result_count, pipeline.back().d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
-        CUDA_CHECK(cudaMemcpy(h_result_array, pipeline.back().d_result_array, h_result_count * sizeof(u64), cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(&h_result_count, pipeline.back()->d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(h_result_array, pipeline.back()->d_result_array, h_result_count * sizeof(u64), cudaMemcpyDeviceToHost));
         
         if (!print_results) continue;
         for (u32 i = 0; i < h_result_count; i++) {
@@ -155,8 +156,8 @@ void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline
 void launch(const KernelPipeline& pipeline, u32 num_blocks, u64 offset) 
 {
     )"; 
-            out << pipeline[0].kernel_name << R"(<<< num_blocks, pipeline[0].threads_per_block, pipeline[0].shared_mem_bytes >>> (
-        pipeline[0].d_result_array, pipeline[0].d_result_count, pipeline[0].d_shared_mem_contents, offset
+            out << pipeline[0].kernel_name << R"(<<< num_blocks, pipeline[0]->threads_per_block, pipeline[0]->shared_mem_bytes >>> (
+        pipeline[0]->d_result_array, pipeline[0]->d_result_count, pipeline[0]->d_shared_mem_contents, offset
     );
     )";
             if (pipeline.size() == 2) {
@@ -164,12 +165,12 @@ void launch(const KernelPipeline& pipeline, u32 num_blocks, u64 offset)
     CUDA_CHECK(cudaDeviceSynchronize());
 
     u32 result_count;
-    CUDA_CHECK(cudaMemcpy(&result_count, pipeline[0].d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(&result_count, pipeline[0]->d_result_count, sizeof(u32), cudaMemcpyDeviceToHost));
 
     if (result_count != 0) {
-        u32 n_blocks_2 = (result_count + pipeline[1].threads_per_block - 1) / pipeline[1].threads_per_block;
-        )" << pipeline[1].kernel_name << R"(<<< n_blocks_2, pipeline[1].threads_per_block, pipeline[1].shared_mem_bytes >>> (
-        pipeline[1].d_result_array, pipeline[1].d_result_count, pipeline[1].d_shared_mem_contents, pipeline[0].d_result_array
+        u32 n_blocks_2 = (result_count + pipeline[1]->threads_per_block - 1) / pipeline[1]->threads_per_block;
+        )" << pipeline[1].kernel_name << R"(<<< n_blocks_2, pipeline[1]->threads_per_block, pipeline[1]->shared_mem_bytes >>> (
+        pipeline[1]->d_result_array, pipeline[1]->d_result_count, pipeline[1]->d_shared_mem_contents, pipeline[0]->d_result_array
     );
     })";
             }
@@ -282,7 +283,7 @@ int main() {
 )";
 	}*/
 
-	void generate_runner_source(KernelPipeline& kp, std::ostream& fout) {
+	void generate_runner_source(const KernelPipeline& kp, std::ostream& fout) {
 		std::vector<KernelPipeline> single_kernel;
 		single_kernel.push_back(kp);
 
@@ -295,18 +296,20 @@ int main() {
 int main() {
     KernelPipeline pipeline;
     )";
-        for (int i = 0; i < 2; i++) {
-            fout << R"(pipeline.push_back(ConfiguredKernel{")"
+        for (int i = 0; i < kp.size(); i++) {
+            fout << "ConfiguredKernel ck" << i << " {\""
                 << kp[i].kernel_name << "\", "
                 << "std::vector<u32>(), " << kp[i].total_threads << "ULL, " << kp[i].threads_per_batch
                 << "ULL, " << kp[i].threads_per_block << "U, " << kp[i].device_id << "U, " << kp[i].start_batch
-                << ", " << kp[i].end_batch << "});\n";
+                << ", " << kp[i].end_batch << ", " << kp[i].max_results << "};\n";
+
+            fout << "pipeline.push_back(&ck" << i << ");\n";
 
             fout << "    {uint32_t shmem[] = ";
             print_shared_mem(fout, kp[i]);
             fout << " for (int k = 0; k < " << kp[i].shared_mem.size()
-                << "; k++) pipeline[" << i << "].shared_memory.push_back(shmem[k]);}\n"
-                << "\npipeline[" << i << "].init_memory();\n";
+                << "; k++) pipeline[" << i << "]->shared_memory.push_back(shmem[k]);}\n"
+                << "\npipeline[" << i << "]->init_memory();\n";
         }
 
 		fout << R"(

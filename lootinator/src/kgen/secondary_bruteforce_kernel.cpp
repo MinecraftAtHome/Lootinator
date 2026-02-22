@@ -9,17 +9,11 @@ namespace kgen {
 	void SecondaryBruteforceKernel::gen_kernels(
 		std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config
 	) {
-		std::ifstream f(kgen_config.loot_table_path);
-		nlohmann::json loot_table_json = nlohmann::json::parse(f);
-
 		data::LootTableRoot root =
-			data::LootTableRoot(loot_table_json, kgen_config.item_map_path, kgen_config.version);
-
-		std::vector<loot::Constraint> constr =
-			loot::parse_constraints_from_json(kgen_config.constraint_path.c_str(), root.item_map);
+			data::LootTableRoot(kgen_config.loot_table_json, kgen_config.item_map, kgen_config.version);
 
 		try {
-			root.add_constraints(constr);
+			root.add_constraints(kgen_config.constraints);
 		} catch (std::exception& ex) {
 			std::cout << ex.what() << "\n";
 		}

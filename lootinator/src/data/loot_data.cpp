@@ -127,20 +127,13 @@ namespace data {
 		LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
 	}
 
-	LootTableRoot::LootTableRoot(const nlohmann::json& json, const std::string& item_map_filepath,
-		mc::VersionRange version) {
+	LootTableRoot::LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
+		mc::VersionRange version) : item_map(item_map) {
 		this->id_counter = 0;
 		this->parent = nullptr;
 		this->version = version;
 
-		std::ifstream fin(item_map_filepath);
-		std::string item_name;
-		int ix = 0;
-		while (fin >> item_name) {
-			this->item_map[item_name] = ix++;
-		}
-
-		auto pools = json["pools"];
+		auto& pools = json["pools"];
 		for (auto& pool : pools) {
 			this->children.push_back(new LootPool(this, pool));
 		}
@@ -302,6 +295,7 @@ namespace data {
 		LootTableRoot* root = dynamic_cast<LootTableRoot*>(get_root_node());
 		this->id = root->id_counter;
 		root->id_counter++;
+		type = LootFunctionType::IGNORED;
 
 		this->children = std::vector<LootTreeNode*>();
 

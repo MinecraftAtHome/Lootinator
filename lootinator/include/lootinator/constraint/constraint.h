@@ -9,19 +9,26 @@
 #include <functional>
 
 namespace loot {
+	// Used to mark an unused slot index constraint (`Constraint::slot_id`).
 	constexpr int32_t SLOT_NONE = -1;
-	constexpr uint32_t COUNT_NONE = 0;
-	constexpr uint32_t COUNT_INFINITE = 10000;
 
+	
 	bool attributes_match(
-		const std::vector<mc::ItemAttribute>& first, const std::vector<mc::ItemAttribute>& second);
+		const std::vector<mc::ItemAttribute>& first, 
+		const std::vector<mc::ItemAttribute>& second
+	);
 
-	// stores loot constraints on individual slots of items
+	/**
+	 * Represents a single constraint on a loot table.
+	 */
 	struct Constraint {
+		// The internal item index for which the constraint is specified.
 		std::uint32_t item;
+		// an inclusive range of item counts required by the constraint.
 		util::RangeInclusive<std::uint32_t> count_range;
-		std::int32_t slot_id; // contraints are shared by cracking and finding kernels, finding
-							  // won't use this
+		// (optional) The slot index of the item stack inside the target chest's layout. 0 = top left corner.
+		std::int32_t slot_id;
+		// A list of all attributes required by the constraint.
 		std::vector<mc::ItemAttribute> attributes; // TODO: make this not a vector...
 
 		bool item_equal(const Constraint& other) const;
@@ -32,11 +39,17 @@ namespace loot {
 		friend std::ostream& operator<<(std::ostream& os, const Constraint& constraint);
 	};
 
-	void merge_contraints(const std::vector<loot::Constraint>& src,
+	void merge_contraints(
+		const std::vector<loot::Constraint>& src,
 		std::vector<loot::Constraint>& dest,
-		std::function<bool(const Constraint& a, const Constraint& b)> cmp);
+		std::function<bool(const Constraint& a, const Constraint& b)> cmp
+	);
+
 	std::vector<loot::Constraint> parse_constraints_from_json(
-		const char* filepath, std::unordered_map<std::string, int>& item_map);
+		const char* filepath, 
+		std::unordered_map<std::string, int>& item_map
+	);
+
 } // namespace loot
 
 #endif

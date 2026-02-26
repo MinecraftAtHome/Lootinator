@@ -7,11 +7,14 @@
 #include "lootinator/mc/minecraft.hpp"
 
 namespace loot {
-	// -------------------------------------------------------------------------------
-	// Constraint
-
+	/**
+	 * Utility function for comparing two item attribute vectors. Returns `true`
+	 * if the vectors have the exact same contents, regardless of element order.
+	 */
 	bool attributes_match(
-		const std::vector<mc::ItemAttribute>& first, const std::vector<mc::ItemAttribute>& second) {
+		const std::vector<mc::ItemAttribute>& first, 
+		const std::vector<mc::ItemAttribute>& second
+	) {
 		if (first.size() != second.size())
 			return false;
 
@@ -30,11 +33,13 @@ namespace loot {
 		return true;
 	}
 
+	/**
+	 * Returns whether the item data of this constraint matches exactly the item data
+	 * of the `other` constraint. This takes into account both the item type and item attributes.
+	 */
 	bool loot::Constraint::item_equal(const Constraint& other) const {
-		if (item != other.item || attributes.size() != other.attributes.size())
+		if (item != other.item)
 			return false;
-
-		// all item attributes must match
 		return loot::attributes_match(attributes, other.attributes);
 	}
 
@@ -57,8 +62,13 @@ namespace loot {
 
 	// -------------------------------------------------------------------------------
 
-	static void merge_into(std::vector<loot::Constraint>& dest, const loot::Constraint& constraint,
-		std::function<bool(const Constraint& a, const Constraint& b)> cmp) {
+	// Internal utility function that merges the provided constraint into the existing
+	// constraint accumulation vector `dest`.
+	static void merge_into(
+		std::vector<loot::Constraint>& dest, 
+		const loot::Constraint& constraint,
+		std::function<bool(const Constraint& a, const Constraint& b)> cmp
+	) {
 		for (auto& stored_constraint : dest) {
 			if (cmp(stored_constraint, constraint)) {
 				// have two item count ranges (min1, max1), (min2, max2)
@@ -76,11 +86,21 @@ namespace loot {
 		dest.push_back(to_add);
 	}
 
-	// accumulates the per-slot constraints into per-item-type ones (used by seedfinding kernels)
-	// the acculumation takes into accout item enchantments
-	void merge_contraints(const std::vector<loot::Constraint>& src,
+	/**
+	 * Merges the provided constraint vector `src` into the destination vector `dest`, using
+	 * `cmp` as the constraint equality comparison function. 
+	 *
+	 * For each element in `src`, if the destination vector contains an element equal to 
+	 * `constraint` under `cmp`, the first matching element's count range gets merged with 
+	 * the count range defined by `constraint`. Otherwise, the new constraint gets added at 
+	 * the back of the destination vector.
+	 * Warning: the destination vector will lose all chest slot data once this function is called.
+	 */
+	void merge_contraints(
+		const std::vector<loot::Constraint>& src, 
 		std::vector<loot::Constraint>& dest,
-		std::function<bool(const Constraint& a, const Constraint& b)> cmp) {
+		std::function<bool(const Constraint& a, const Constraint& b)> cmp
+	) {
 		for (auto& constraint : dest) {
 			constraint.slot_id = loot::SLOT_NONE;
 		}
@@ -89,6 +109,9 @@ namespace loot {
 		}
 	}
 
+	/**
+	 * Parses the provided json data into a list of item attributes.
+	 */
 	std::vector<mc::ItemAttribute> parse_attribute_json(nlohmann::json attribute_json) {
 		std::vector<mc::ItemAttribute> attributes;
 		for (auto json : attribute_json) {
@@ -97,8 +120,13 @@ namespace loot {
 		return attributes;
 	}
 
+	/**
+	 * Parses the provided json data (available in file `filepath`) into a list of loot constraints.
+	 */
 	std::vector<loot::Constraint> parse_constraints_from_json(
-		const char* filepath, std::unordered_map<std::string, int>& item_map) {
+		const char* filepath, 
+		std::unordered_map<std::string, int>& item_map
+	) {
 		std::vector<loot::Constraint> constraints;
 		std::ifstream f(filepath);
 		nlohmann::json data = nlohmann::json::parse(f);

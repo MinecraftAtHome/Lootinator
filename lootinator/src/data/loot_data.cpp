@@ -5,14 +5,19 @@
 #include <iostream>
 
 namespace data {
+	// ---------------------------------------------------------------
+	// LootTreeNode - base class
+
+	/**
+	 * Returns the Minecraft version range of this node's tree.
+	 */
 	mc::VersionRange LootTreeNode::get_version() {
-		LootTreeNode* next = this;
-		while (next->parent != nullptr) {
-			next = next->parent;
-		}
-		return dynamic_cast<LootTableRoot*>(next)->version;
+		return dynamic_cast<LootTableRoot*>(get_root_node())->version;
 	}
 
+	/**
+	 * Returns the pointer to the root node of the tree.
+	 */
 	LootTreeNode* LootTreeNode::get_root_node() {
 		LootTreeNode* current = this;
 		while (current->parent != nullptr) {
@@ -27,14 +32,35 @@ namespace data {
 		}
 	}
 
-	// assuming that the default loot tree node does not influence the lcg
+	/**
+	 * Returns the minimum number of states by which this node and all of its children can advance 
+	 * the LCG. By default, returns the sum of all childrens' `get_min_lcg_advancement` outputs.
+	 */
 	uint32_t LootTreeNode::get_min_lcg_advancement() const {
-		return 0;
-	}
-	uint32_t LootTreeNode::get_max_lcg_advancement() const {
-		return 0;
+		uint32_t total_advance = 0;
+		for (auto& func : children) {
+			total_advance += func->get_min_lcg_advancement();
+		}
+		return total_advance;
 	}
 
+	/**
+	 * Returns the maximum number of states by which this node and all of its children can advance 
+	 * the LCG. By default, returns the sum of all childrens' `get_max_lcg_advancement` outputs.
+	 * This doesn't account for any possible extra nextInt(n) advancements by design.
+	 */
+	uint32_t LootTreeNode::get_max_lcg_advancement() const {
+		uint32_t total_advance = 0;
+		for (auto& func : children) {
+			total_advance += func->get_max_lcg_advancement();
+		}
+		return total_advance;
+	}
+
+	/**
+	 * Fetches the internal item index for the provided item name. Returns -1 if the item was not
+	 * found in the item to index mapping.
+	 */
 	int LootTreeNode::get_item_index(const std::string& item_name) const {
 		if (parent != nullptr) {
 			return parent->get_item_index(item_name);
@@ -42,6 +68,9 @@ namespace data {
 		throw "illegal state in LootTreeNode::get_item_index - parent was nullptr";
 	}
 
+	/**
+	 * Deletes all constraints from this loot tree node.
+	 */
 	void LootTreeNode::clear_constraints() {
 		this->constraints.clear();
 		for (auto child : this->children) {
@@ -49,6 +78,7 @@ namespace data {
 		}
 	}
 
+	// TODO make this a static non-member
 	void LootTreeNode::indent(int indentation) const {
 		std::cout << '\n';
 		for (int i = 0; i < indentation; i++) {
@@ -56,6 +86,9 @@ namespace data {
 		}
 	}
 
+	/**
+	 * Prints the entire loot table (sub-)tree to console, treating this node as the root.
+	 */
 	void LootTreeNode::print(int indentation) const {
 		for (const auto& child : children) {
 			child->print(indentation);
@@ -64,6 +97,7 @@ namespace data {
 		print_constraints(indentation);
 	}
 
+	// Internal helper for loot tree printing. Prints the vector of constraints for the current node.
 	void LootTreeNode::print_constraints(int indentation) const {
 		indent(indentation);
 		std::cout << "Constraints: [";
@@ -74,20 +108,144 @@ namespace data {
 		std::cout << ']';
 	}
 
-	uint32_t LootEntry::get_min_lcg_advancement() const {
-		uint32_t total_advance = 0;
-		for (auto& func : children) {
-			total_advance += func->get_min_lcg_advancement();
+
+	// ---------------------------------------------------------------
+	// LootTableRoot
+
+	LootTableRoot::LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
+		mc::VersionRange version) : item_map(item_map) {
+		this->id_counter = 0;
+		this->parent = nullptr;
+		this->version = version;
+
+		auto& pools = json["pools"];
+		for (auto& pool : pools) {
+			this->children.push_back(new LootPool(this, pool));
 		}
-		return total_advance;
+	}
+
+	void LootTableRoot::add_constraints(const std::vector<loot::Constraint>& new_constraints) {
+		for (const auto& constraint : new_constraints) {
+			std::vector<int> matching_pools;
+			int pool_idx = 0;
+			for (auto child : children) {
+				LootPool* pool = dynamic_cast<LootPool*>(child);
+				if (pool->matches_constraint(constraint)) {
+					matching_pools.push_back(pool_idx);
+				}
+				pool_idx++;
+			}
+
+			if (matching_pools.empty()) {
+				throw "we messed up";
+			} else if (matching_pools.size() > 1) {
+				constraints.push_back(constraint);
+			} else {
+				children[matching_pools[0]]->constraints.push_back(constraint);
+			}
+		}
+	}
+
+	int LootTableRoot::get_item_index(const std::string& item_name) const {
+		if (item_map.find(item_name) != item_map.end()) {
+			return item_map.at(item_name);
+		}
+		return -1;
+	}
+
+	void LootTableRoot::print(int indentation) const {
+		indent(indentation);
+
+		util::DebugStruct(std::cout, "LootTableRoot").add("version", version).finish();
+		printf(" %p", (void*)this);
+		LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
+	}
+
+	// ---------------------------------------------------------------
+	// LootPool
+
+	LootPool::LootPool(LootTreeNode* parent, const nlohmann::json& json)
+		: rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {
+		this->parent = parent;
+		for (auto& entry : json["entries"]) {
+			uint32_t entry_weight =
+				(entry.contains("weight") ? static_cast<uint32_t>(entry["weight"]) : 1);
+			uint32_t start_weight = static_cast<uint32_t>(entry_lookup.size());
+			uint32_t end_weight =
+				start_weight + entry_weight - 1; // -1 accounts for range being inclusive-inclusive
+
+			this->children.push_back(new LootEntry(this, entry, {start_weight, end_weight}));
+
+			for (uint32_t w = 0; w < entry_weight; w++) {
+				this->entry_lookup.push_back(dynamic_cast<LootEntry*>(this->children.back())->item);
+			}
+		}
+	}
+
+	bool LootPool::matches_constraint(const loot::Constraint& constraint) const {
+		bool matches = false;
+		for (auto child : children) {
+			LootEntry* entry = dynamic_cast<LootEntry*>(child);
+			if (entry->matches_constraint(constraint)) {
+				entry->constraints.push_back(constraint);
+				matches = true;
+			}
+		}
+		return matches;
+	}
+
+	uint32_t LootPool::get_total_weight() const {
+		return static_cast<uint32_t>(entry_lookup.size());
+	}
+
+	uint32_t LootPool::get_min_lcg_advancement() const {
+		uint32_t min_among_children = 1000;
+		for (auto& child : children) {
+			min_among_children = std::min(min_among_children, child->get_min_lcg_advancement());
+		}
+
+		uint32_t item_choice_advance = (children.size() == 1 ? 0 : 1);
+		uint32_t roll_count_advance = (rolls.min == rolls.max ? 0 : 1);
+
+		return roll_count_advance + rolls.min * (min_among_children + item_choice_advance);
+	}
+
+	uint32_t LootPool::get_max_lcg_advancement() const {
+		uint32_t max_among_children = 0;
+		for (auto& child : children) {
+			max_among_children = std::max(max_among_children, child->get_max_lcg_advancement());
+		}
+
+		uint32_t item_choice_advance = (children.size() == 1 ? 0 : 1);
+		uint32_t roll_count_advance = (rolls.min == rolls.max ? 0 : 1);
+
+		return roll_count_advance + rolls.max * (max_among_children + item_choice_advance);
+	}
+
+	void LootPool::print(int indentation) const {
+		indent(indentation);
+
+		util::DebugStruct(std::cout, "LootPool")
+			.add("min_rolls", rolls.min)
+			.add("max_rolls", rolls.max)
+			.add("total_weight", get_total_weight())
+			.finish();
+		printf(" %p", (void*)this);
+		LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
+	}
+
+
+	// ---------------------------------------------------------------
+	// LootEntry
+
+	uint32_t LootEntry::get_min_lcg_advancement() const {
+		// TODO remove, deprecated
+		return LootTreeNode::get_min_lcg_advancement();
 	}
 
 	uint32_t LootEntry::get_max_lcg_advancement() const {
-		uint32_t total_advance = 0;
-		for (auto& func : children) {
-			total_advance += func->get_max_lcg_advancement();
-		}
-		return total_advance;
+		// TODO remove, deprecated
+		return LootTreeNode::get_max_lcg_advancement();
 	}
 
 	LootEntry::LootEntry(LootTreeNode* parent, const nlohmann::json& json,
@@ -116,49 +274,6 @@ namespace data {
 				children.push_back(new data::LootFunctionData(this, function_json));
 			}
 		}
-	}
-
-	void LootEntry::print(int indentation) const {
-		indent(indentation);
-
-		util::DebugStruct(std::cout, "LootEntry")
-			.add("item", item)
-			.add("name", name)
-			.add("type", type)
-			.add("weight", weight)
-			.add("min_next_int", next_int_range.min)
-			.add("max_next_int", next_int_range.max)
-			.finish();
-		printf(" %p", (void*)this);
-
-		LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
-	}
-
-	LootTableRoot::LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
-		mc::VersionRange version) : item_map(item_map) {
-		this->id_counter = 0;
-		this->parent = nullptr;
-		this->version = version;
-
-		auto& pools = json["pools"];
-		for (auto& pool : pools) {
-			this->children.push_back(new LootPool(this, pool));
-		}
-	}
-
-	int LootTableRoot::get_item_index(const std::string& item_name) const {
-		if (item_map.find(item_name) != item_map.end()) {
-			return item_map.at(item_name);
-		}
-		return -1;
-	}
-
-	void LootTableRoot::print(int indentation) const {
-		indent(indentation);
-
-		util::DebugStruct(std::cout, "LootTableRoot").add("version", version).finish();
-		printf(" %p", (void*)this);
-		LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
 	}
 
 	bool LootEntry::matches_constraint(const loot::Constraint& constraint) const {
@@ -202,100 +317,25 @@ namespace data {
 		return {1, 1};
 	}
 
-	bool LootPool::matches_constraint(const loot::Constraint& constraint) const {
-		bool matches = false;
-		for (auto child : children) {
-			LootEntry* entry = dynamic_cast<LootEntry*>(child);
-			if (entry->matches_constraint(constraint)) {
-				entry->constraints.push_back(constraint);
-				matches = true;
-			}
-		}
-		return matches;
-	}
-
-	void LootTableRoot::add_constraints(const std::vector<loot::Constraint>& new_constraints) {
-		for (const auto& constraint : new_constraints) {
-			std::vector<int> matching_pools;
-			int pool_idx = 0;
-			for (auto child : children) {
-				LootPool* pool = dynamic_cast<LootPool*>(child);
-				if (pool->matches_constraint(constraint)) {
-					matching_pools.push_back(pool_idx);
-				}
-				pool_idx++;
-			}
-
-			if (matching_pools.empty()) {
-				throw "we messed up";
-			} else if (matching_pools.size() > 1) {
-				constraints.push_back(constraint);
-			} else {
-				children[matching_pools[0]]->constraints.push_back(constraint);
-			}
-		}
-	}
-
-	LootPool::LootPool(LootTreeNode* parent, const nlohmann::json& json)
-		: rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {
-		this->parent = parent;
-		for (auto& entry : json["entries"]) {
-			uint32_t entry_weight =
-				(entry.contains("weight") ? static_cast<uint32_t>(entry["weight"]) : 1);
-			uint32_t start_weight = static_cast<uint32_t>(entry_lookup.size());
-			uint32_t end_weight =
-				start_weight + entry_weight - 1; // -1 accounts for range being inclusive-inclusive
-
-			this->children.push_back(new LootEntry(this, entry, {start_weight, end_weight}));
-
-			for (uint32_t w = 0; w < entry_weight; w++) {
-				this->entry_lookup.push_back(dynamic_cast<LootEntry*>(this->children.back())->item);
-			}
-		}
-	}
-
-	uint32_t LootPool::get_total_weight() const {
-		return static_cast<uint32_t>(entry_lookup.size());
-	}
-
-	uint32_t LootPool::get_min_lcg_advancement() const {
-		uint32_t min_among_children = 1000;
-		for (auto& child : children) {
-			min_among_children = std::min(min_among_children, child->get_min_lcg_advancement());
-		}
-
-		uint32_t item_choice_advance = (children.size() == 1 ? 0 : 1);
-		uint32_t roll_count_advance = (rolls.min == rolls.max ? 0 : 1);
-
-		return roll_count_advance + rolls.min * (min_among_children + item_choice_advance);
-	}
-
-	uint32_t LootPool::get_max_lcg_advancement() const {
-		uint32_t max_among_children = 0;
-		for (auto& child : children) {
-			max_among_children = std::max(max_among_children, child->get_max_lcg_advancement());
-		}
-
-		uint32_t item_choice_advance = (children.size() == 1 ? 0 : 1);
-		uint32_t roll_count_advance = (rolls.min == rolls.max ? 0 : 1);
-
-		return roll_count_advance + rolls.max * (max_among_children + item_choice_advance);
-	}
-
-	void LootPool::print(int indentation) const {
+	void LootEntry::print(int indentation) const {
 		indent(indentation);
 
-		util::DebugStruct(std::cout, "LootPool")
-			.add("min_rolls", rolls.min)
-			.add("max_rolls", rolls.max)
-			.add("total_weight", get_total_weight())
+		util::DebugStruct(std::cout, "LootEntry")
+			.add("item", item)
+			.add("name", name)
+			.add("type", type)
+			.add("weight", weight)
+			.add("min_next_int", next_int_range.min)
+			.add("max_next_int", next_int_range.max)
 			.finish();
 		printf(" %p", (void*)this);
+
 		LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
 	}
 
-	// -----------------------------------------------------------------
-	// loot function data
+
+	// ---------------------------------------------------------------
+	// LootFunctionData
 
 	LootFunctionData::LootFunctionData(LootTreeNode* parent, const nlohmann::json& json) {
 		this->parent = parent;

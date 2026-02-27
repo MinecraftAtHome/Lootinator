@@ -1,0 +1,10 @@
+[
+  {
+    "item": "minecraft:gold_ingot",
+    "range": {
+      "min": 30,
+      "max": 1000
+    },
+    "slot": 0
+  }
+]

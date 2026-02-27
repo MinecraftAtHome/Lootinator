@@ -8,15 +8,15 @@
 #include "lootinator/kgen/pipeline_generator.hpp"
 
 int main() {
-	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_21_TO_1_21_9,
-#ifdef _WIN32_
-		"../../../../example/src/ruined_portal.json",
-		"../../../../example/src/make_portal.json",
-		"../../../../example/src/item_map.txt",
+	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_14_TO_1_15,
+#ifdef _WIN32
+		"../../../../example/src/chests_jungle_temple.json",
+		"../../../../example/src/midas.json",
+		"../../../../example/src/item_map_jt.txt",
 #elif __linux__
-		"../../example/src/ruined_portal.json",
-		"../../example/src/make_portal.json",
-		"../../example/src/item_map.txt",
+		"../../example/src/chests_jungle_temple.json",
+		"../../example/src/midas.json",
+		"../../example/src/item_map_jt.txt",
 #endif
 		true);
 

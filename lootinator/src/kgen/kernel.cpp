@@ -116,18 +116,37 @@ __device__ inline i32 nextIntBounded(u64* rand, const i32 min, const i32 max) {i
 __device__ inline i32 nextIntNoAdvance(u64 *rand, const i32 n) {if ((n-1 & n) == 0) {u64 x = n * *rand; return (i32)((i64)x >> 31);} else {return (i32)(*rand % n);}} 
 __device__ inline void write_result(u64 input_seed, u64 *result_array, u32 *result_count) {result_array[atomicAdd(result_count, 1)] = input_seed;}
 
-__device__ inline i32 bsNextInt(u64 *rand, const i32 n) {
-  bool r = (n - 1 & n);
-  bool r2 = n - 1;
-  u64 m = r - 1;
-  u64 m2 = !r2 - 1;
-  *rand = (*rand * (1|(25214903917&m2)) + (11&m2)) & MASK_48;
-  u64 x = ((m & n) | r) * (*rand >> 17);
-  return ((x&m2) >> (31&m)) % (n + (4294960000&m));
+__device__ void enchant_with_levels_function(u64* rand, const u32* array_pointer) {
+	const u32 enchantability = array_pointer[0];
+	const u32 minLevel = array_pointer[1];
+	const u32 maxLevel = array_pointer[2];
+
+	// calculate effective level
+	i32 level = minLevel;
+	if (minLevel != maxLevel) {
+		level += nextInt(rand, maxLevel - minLevel + 1);
+    }
+	const i32 delta = enchantability / 4 + 1;
+	level += 1 + nextInt(rand, delta) + nextInt(rand, delta);
+	const float amplifier = (nextFloat(rand) + nextFloat(rand) - 1.0F) * 0.15F;
+	level = floor( ((float)level + (float)level * amplifier) + 0.5F );
+
+	u32 nGroups = array_pointer[3 + level];
+	if (nGroups == 0) {
+        return;
+    }
+	*rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48;
+
+	while (nextInt(rand, 50) <= level) {
+        nGroups--;
+		if (nGroups == 0) {
+            break;
+        }
+        *rand = (*rand * JRAND_MULTIPLIER + 11) & MASK_48;
+		level /= 2;
+	}
 }
-__device__ inline i32 bsBoundedNextInt(u64 *rand, const i32 min, const i32 max) {
-  return min + bsNextInt(rand, max - min + 1);
-}
+
 //@SharedDefinitionsEnd
 #endif
 )";

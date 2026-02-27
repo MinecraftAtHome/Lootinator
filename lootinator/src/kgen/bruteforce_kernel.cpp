@@ -270,6 +270,48 @@ local_constraints[counter_idx] += item_count;
 		}
 	}
 
+	void BruteforceKernel::setup_enchant_with_levels(data::LootTreeNode* node, int total_entry_offset, int entry_idx, const uint32_t offset_before_surgery) {
+		CAST_CHILD(func, data::LootFunctionData, node);
+		if (func == nullptr) {
+			CAST_CHILD(pool, data::LootPool, node);
+			CAST_CHILD(root, data::LootTableRoot, node);
+
+			int idx = 0;
+			int pool_off = 0;
+			for (auto child : node->children) {
+				if (pool != nullptr) {
+					entry_idx = idx; // lol
+				}
+				
+				if (root != nullptr) {
+					setup_enchant_with_levels(child, pool_off, entry_idx, offset_before_surgery);
+					pool_off += child->children.size();
+				}
+				else {
+					setup_enchant_with_levels(child, total_entry_offset, entry_idx, offset_before_surgery);
+					idx++;
+				}
+			}
+			return;
+		}
+
+		// in a loot function node
+		if (func->type != data::ENCHANT_WITH_LEVELS) {
+			return;
+		}
+
+		uint32_t current_offset = combined_shared_memory.size();
+		combined_shared_memory[offset_before_surgery + total_entry_offset + entry_idx] = current_offset;
+
+		combined_shared_memory.push_back(func->enchant_with_levels.enchantability);
+		combined_shared_memory.push_back(func->enchant_with_levels.level.min);
+		combined_shared_memory.push_back(func->enchant_with_levels.level.max);
+
+		for (auto el : func->shared_mem) {
+			combined_shared_memory.push_back(el);
+		}
+	}
+
 	void BruteforceKernel::setup_shared_memory() {
 		function_memory_offsets.push_back(0);
 		pool_memory_offsets.push_back(0);
@@ -283,5 +325,16 @@ local_constraints[counter_idx] += item_count;
 			uint32_t size = static_cast<uint32_t>(combined_shared_memory.size());
 			pool_memory_offsets.push_back(size);
 		}
+
+		// enchant_with_levels :nowhiskas:
+
+		const uint32_t offset_before_surgery = combined_shared_memory.size();
+		for (auto child : root_node.children) {
+			CAST_CHILD(pool, data::LootPool, child);
+			for (int i = 0; i < pool->children.size(); i++) {
+				combined_shared_memory.push_back(0); // ready for surgery
+			}
+		}
+		setup_enchant_with_levels(&root_node, 0, 0, offset_before_surgery);
 	}
 } // namespace kgen

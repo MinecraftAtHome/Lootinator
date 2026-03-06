@@ -264,6 +264,9 @@ local_constraints[counter_idx] += item_count;
 				}
 			}
 
+			uint32_t lower_mask = 0;
+			uint32_t upper_mask = 0;
+
 			if (enchant_rand_func != nullptr) {
 				basic_info |= enchant_rand_func->enchant_randomly.enchantment_order.size();
 
@@ -274,19 +277,18 @@ local_constraints[counter_idx] += item_count;
 					i++;
 				}
 				enchant_mask <<= 1;
-
-				for (int w = 0; w < entry->weight; w++) {
-					combined_shared_memory.push_back(basic_info);
-					combined_shared_memory.push_back(enchant_mask & 0xFFFFFFFF);
-					combined_shared_memory.push_back(enchant_mask >> 32);
-				}
+				lower_mask = enchant_mask & 0xFFFFFFFF;
+				upper_mask = enchant_mask >> 32;
 			}
 			else if (enchant_levels_func != nullptr) {
-				for (int w = 0; w < entry->weight; w++) {
-					combined_shared_memory.push_back(basic_info);
-					combined_shared_memory.push_back(1); // encoding the enchantment function type
-					combined_shared_memory.push_back(0xdeadbeef); // surgery vol 2, here we go
-				}
+				lower_mask = 1;
+				upper_mask = 0xdeadbeef;
+			}
+
+			for (int w = 0; w < entry->weight; w++) {
+				combined_shared_memory.push_back(basic_info);
+				combined_shared_memory.push_back(lower_mask);
+				combined_shared_memory.push_back(upper_mask);
 			}
 		}
 	}

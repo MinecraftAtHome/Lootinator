@@ -1,8 +1,8 @@
 [
   {
-    "item": "minecraft:gold_ingot",
+    "item": "minecraft:book",
     "range": {
-      "min": 30,
+      "min": 5,
       "max": 1000
     },
     "slot": 0

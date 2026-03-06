@@ -30,7 +30,7 @@ namespace kgen {
 		virtual void setup_shared_memory() override;
 		virtual void fill_function_shared_mem(data::LootTreeNode* current) override;
 
-		void setup_enchant_with_levels(data::LootTreeNode* node, int total_entry_offset, int entry_idx, const uint32_t offset_before_surgery);
+		void setup_enchant_with_levels(data::LootTreeNode* node, int total_entry_offset);
 	};
 } // namespace kgen
 

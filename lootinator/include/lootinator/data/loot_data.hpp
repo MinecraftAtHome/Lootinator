@@ -14,9 +14,13 @@ namespace data {
 	  public:
 		static const int INDENT_SIZE = 4;
 
+		// index of the node within the parent's child vector
+		uint32_t child_index;
 		LootTreeNode* parent;
 		std::vector<LootTreeNode*> children;
 		std::vector<loot::Constraint> constraints;
+
+		LootTreeNode(LootTreeNode* parent);
 
 		mc::VersionRange get_version();
 		virtual LootTreeNode* get_root_node();
@@ -71,7 +75,6 @@ namespace data {
 
 	class LootTableRoot : public LootTreeNode {
 	  public:
-		int id_counter; // bleh
 		mc::VersionRange version;
 		std::unordered_map<std::string, int> item_map;
 

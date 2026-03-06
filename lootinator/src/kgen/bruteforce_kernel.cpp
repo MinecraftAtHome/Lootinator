@@ -174,6 +174,15 @@ u32 item_idx = entry_data >> 24; // [8b][6b][6b][4b][8b])";
 		}
 
 		out << R"(
+
+if (enchantment_mask & 1) { // enchant with levels
+    enchant_with_levels_function(&loot_seed, &(data[enchantment_mask >> 1]));       
+}
+else { // enchant randomly
+    enchantment_mask |= (static_cast<u64>(data[0 + item * 3 + 2]) << 32);
+    enchantment_mask >>= 1;
+}
+
 u32 min_count = (entry_data >> 18) & 0x3f; // [6b][6b][4b][8b]
 u32 max_count = (entry_data >> 12) & 0x3f; // [6b][4b][8b]
 u32 counter_idx = (entry_data >> 8) & 0xf; // [4b][8b]
@@ -240,15 +249,19 @@ local_constraints[counter_idx] += item_count;
 						  (entry->get_count_range().max << 12);
 			// counters not materialized, just ignore them :)
 
-			// find an enchant randomly thing
+			// find an enchant function thing
 			data::LootFunctionData* enchant_rand_func = nullptr;
+			data::LootFunctionData* enchant_levels_func = nullptr;
 			for (auto child3 : entry->children) {
 				CAST_CHILD(lf, data::LootFunctionData, child3);
-				if (lf->type != data::ENCHANT_RANDOMLY) {
-					continue;
+				if (lf->type == data::ENCHANT_RANDOMLY) {
+					enchant_rand_func = lf;
+					break;
 				}
-				enchant_rand_func = lf;
-				break;
+				else if (lf->type == data::ENCHANT_WITH_LEVELS) {
+					enchant_levels_func = lf;
+					break;
+				}
 			}
 
 			if (enchant_rand_func != nullptr) {
@@ -260,48 +273,47 @@ local_constraints[counter_idx] += item_count;
 					enchant_mask |= (max_level > 1) ? (1ULL << i) : 0;
 					i++;
 				}
-			}
+				enchant_mask <<= 1;
 
-			for (int w = 0; w < entry->weight; w++) {
-				combined_shared_memory.push_back(basic_info);
-				combined_shared_memory.push_back(enchant_mask & 0xFFFFFFFF);
-				combined_shared_memory.push_back(enchant_mask >> 32);
+				for (int w = 0; w < entry->weight; w++) {
+					combined_shared_memory.push_back(basic_info);
+					combined_shared_memory.push_back(enchant_mask & 0xFFFFFFFF);
+					combined_shared_memory.push_back(enchant_mask >> 32);
+				}
+			}
+			else if (enchant_levels_func != nullptr) {
+				for (int w = 0; w < entry->weight; w++) {
+					combined_shared_memory.push_back(basic_info);
+					combined_shared_memory.push_back(1); // encoding the enchantment function type
+					combined_shared_memory.push_back(0xdeadbeef); // surgery vol 2, here we go
+				}
 			}
 		}
 	}
 
-	void BruteforceKernel::setup_enchant_with_levels(data::LootTreeNode* node, int total_entry_offset, int entry_idx, const uint32_t offset_before_surgery) {
+	void BruteforceKernel::setup_enchant_with_levels(data::LootTreeNode* node, int total_entry_offset) {
 		CAST_CHILD(func, data::LootFunctionData, node);
+		
 		if (func == nullptr) {
 			CAST_CHILD(pool, data::LootPool, node);
-			CAST_CHILD(root, data::LootTableRoot, node);
-
-			int idx = 0;
-			int pool_off = 0;
 			for (auto child : node->children) {
-				if (pool != nullptr) {
-					entry_idx = idx; // lol
-				}
-				
-				if (root != nullptr) {
-					setup_enchant_with_levels(child, pool_off, entry_idx, offset_before_surgery);
-					pool_off += child->children.size();
-				}
-				else {
-					setup_enchant_with_levels(child, total_entry_offset, entry_idx, offset_before_surgery);
-					idx++;
-				}
+				setup_enchant_with_levels(child, total_entry_offset);
+			}
+			if (pool != nullptr) {
+				total_entry_offset += pool->get_total_weight() * 3; // 3x uint32 per entry
 			}
 			return;
 		}
-
+		
 		// in a loot function node
 		if (func->type != data::ENCHANT_WITH_LEVELS) {
 			return;
 		}
 
+		CAST_CHILD(entry_node, data::LootEntry, node->parent);
+
 		uint32_t current_offset = combined_shared_memory.size();
-		combined_shared_memory[offset_before_surgery + total_entry_offset + entry_idx] = current_offset;
+		combined_shared_memory[total_entry_offset + entry_node->child_index * 3] |= current_offset << 1;
 
 		combined_shared_memory.push_back(func->enchant_with_levels.enchantability);
 		combined_shared_memory.push_back(func->enchant_with_levels.level.min);
@@ -328,13 +340,12 @@ local_constraints[counter_idx] += item_count;
 
 		// enchant_with_levels :nowhiskas:
 
-		const uint32_t offset_before_surgery = combined_shared_memory.size();
 		for (auto child : root_node.children) {
 			CAST_CHILD(pool, data::LootPool, child);
 			for (int i = 0; i < pool->children.size(); i++) {
 				combined_shared_memory.push_back(0); // ready for surgery
 			}
 		}
-		setup_enchant_with_levels(&root_node, 0, 0, offset_before_surgery);
+		setup_enchant_with_levels(&root_node, 0);
 	}
 } // namespace kgen

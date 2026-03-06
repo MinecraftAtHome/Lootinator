@@ -5,6 +5,11 @@
 #include <iostream>
 
 namespace data {
+	LootTreeNode::LootTreeNode(data::LootTreeNode* parent) {
+		this->parent = parent;
+		this->child_index = parent==nullptr ? 0 : parent->children.size() - 1;
+	}
+
 	mc::VersionRange LootTreeNode::get_version() {
 		LootTreeNode* next = this;
 		while (next->parent != nullptr) {
@@ -92,9 +97,7 @@ namespace data {
 
 	LootEntry::LootEntry(LootTreeNode* parent, const nlohmann::json& json,
 		const util::RangeInclusive<uint32_t> next_int_range)
-		: next_int_range(next_int_range) {
-		this->parent = parent;
-
+		: next_int_range(next_int_range), LootTreeNode(parent) {
 		// entry parsing
 		weight = json.contains("weight") ? static_cast<int>(json["weight"]) : 1;
 
@@ -135,9 +138,7 @@ namespace data {
 	}
 
 	LootTableRoot::LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
-		mc::VersionRange version) : item_map(item_map) {
-		this->id_counter = 0;
-		this->parent = nullptr;
+		mc::VersionRange version) : item_map(item_map), LootTreeNode(nullptr) {
 		this->version = version;
 
 		auto& pools = json["pools"];
@@ -237,8 +238,8 @@ namespace data {
 	}
 
 	LootPool::LootPool(LootTreeNode* parent, const nlohmann::json& json)
-		: rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {
-		this->parent = parent;
+		: rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])), LootTreeNode(parent)  {
+
 		for (auto& entry : json["entries"]) {
 			uint32_t entry_weight =
 				(entry.contains("weight") ? static_cast<uint32_t>(entry["weight"]) : 1);
@@ -297,11 +298,10 @@ namespace data {
 	// -----------------------------------------------------------------
 	// loot function data
 
-	LootFunctionData::LootFunctionData(LootTreeNode* parent, const nlohmann::json& json) {
-		this->parent = parent;
+	LootFunctionData::LootFunctionData(LootTreeNode* parent, const nlohmann::json& json)
+		: LootTreeNode(parent) {
+
 		LootTableRoot* root = dynamic_cast<LootTableRoot*>(get_root_node());
-		this->id = root->id_counter;
-		root->id_counter++;
 		type = LootFunctionType::IGNORED;
 
 		this->children = std::vector<LootTreeNode*>();

@@ -7,7 +7,13 @@
 #include <vector>
 
 namespace mc {
-	enum VersionRange { MC_1_13, MC_1_14_TO_1_15, MC_1_16_TO_1_20, MC_1_21_TO_1_21_9 };
+	enum VersionRange {
+		MC_1_13,
+		MC_1_14_TO_1_15,
+		MC_1_16_TO_1_20,
+		MC_1_21_TO_1_21_9,
+		MC_1_21_10_TO_26_1
+	};
 
 	/*
 		NO_ATTRIBUTE: 0
@@ -76,6 +82,7 @@ namespace mc {
 		UNBREAKING = 41,
 		CURSE_OF_VANISHING = 42,
 		CURSE_OF_BINDING = 43,
+		LUNGE = 44,
 	};
 
 	enum ItemType {
@@ -94,7 +101,8 @@ namespace mc {
 		CROSSBOW,
 		TRIDENT,
 		MACE,
-		BOOK
+		BOOK,
+		SPEAR
 	};
 
 	enum AttributeCategory {

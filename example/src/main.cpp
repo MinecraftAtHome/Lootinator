@@ -14,9 +14,9 @@ int main() {
 		"../../../../example/src/midas.json",
 		"../../../../example/src/item_map_ac.txt",
 #elif __linux__
-		"../../../../example/src/chests_ancient_city.json",
-		"../../../../example/src/midas.json",
-		"../../../../example/src/item_map_ac.txt",
+		"../../example/src/chests_ancient_city.json",
+		"../../example/src/midas.json",
+		"../../example/src/item_map_ac.txt",
 #endif
 		true);
 

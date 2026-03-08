@@ -32,16 +32,12 @@ namespace kgen {
 		}
 
 		CAST_CHILD(entry, data::LootEntry, root);
-		if (entry != nullptr) {
+		if (entry != nullptr && !entry->children.empty()) {
 			for (int i = 0; i < entry->children.size() - 1; i++) {
 				CAST_CHILD(f1, data::LootFunctionData, entry->children[i]);
 				CAST_CHILD(f2, data::LootFunctionData, entry->children[i + 1]);
 				edges[f1->type][f2->type] = true;
 			}
-
-			// TODO : create a directed graph of function types. Edge between A and B = for some entry,
-			// function B is the successor of A.
-			// Construct the graph, then traverse. If cycle = fast filtering can't be applied.
 		}
 
 		CAST_CHILD(function, data::LootFunctionData, root);
@@ -65,7 +61,18 @@ namespace kgen {
 	}
 
 
-	static bool check_cycles_dfs(int vertex, bool** edges, bool* visited) {
+	static bool check_cycles_dfs(int vertex, const int num_functions, bool** edges, bool* visited) {
+		for (int v = 0; v < num_functions; v++) {
+			if (edges[vertex][v]) {
+				if (visited[v]) {
+					return true;
+				}
+				visited[v] = true;
+				if (check_cycles_dfs(v, num_functions, edges, visited)) {
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 
@@ -93,8 +100,9 @@ namespace kgen {
 			if (visited[v]) {
 				continue;
 			}
-			if (check_cycles_dfs(v, edges, visited)) {
-				
+			visited[v] = true;
+			if (check_cycles_dfs(v, NUM_FUNCTIONS, edges, visited)) {
+				no_fast_filter = true;
 			}
 		}
 		delete[] visited;
@@ -103,7 +111,6 @@ namespace kgen {
 			delete[] edges[i];
 		}
 		delete[] edges;
-		
 	}
 
 	void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {

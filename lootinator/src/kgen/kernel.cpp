@@ -22,27 +22,46 @@ namespace kgen {
 		std::function<bool(const loot::Constraint& a, const loot::Constraint& b)> cmp_func =
 			[](const loot::Constraint& a, const loot::Constraint& b) { return a.item_equal(b); };
 		merge_contraints(constr, constraints, cmp_func);
+
+		derive_mode_from_tree();
 	}
 
-	void traverse_and_derive(data::LootTreeNode* root) {
+	void KernelGenConfig::traverse_and_derive(data::LootTreeNode* root, std::vector<int>& function_type_order) {
 		for (auto child : root->children) {
-			traverse_and_derive(child);
+			traverse_and_derive(child, function_type_order);
 		}
+
+		CAST_CHILD(entry, data::LootEntry, root);
 
 		CAST_CHILD(function, data::LootFunctionData, root);
 		if (function == nullptr) {
 			return;
 		}
 
-		if (function->type ==) {
+		// update bytes used if function is enchant randomly
+		if (function->type == data::ENCHANT_RANDOMLY) {
+			enchant_randomly = true;
+			int usedBits = 1 + function->enchant_randomly.enchantment_order.size();
+			int usedBytes = 2 + usedBits / 32;
+			if (bytes_per_entry < usedBytes) {
+				bytes_per_entry = usedBytes;
+			}
+		}
+		else if (function->type == data::ENCHANT_WITH_LEVELS) {
+			enchant_with_levels = true;
+			if (bytes_per_entry < 2) {
+				bytes_per_entry = 2;
+			}
 		}
 	}
 
-	void derive_mode_from_tree() {
+	void KernelGenConfig::derive_mode_from_tree() {
 		data::LootTableRoot root = data::LootTableRoot(loot_table_json, item_map, version);
 
 		bytes_per_entry = 1;
-		traverse_and_derive(root);
+		enchant_randomly = false;
+		enchant_with_levels = false;
+		traverse_and_derive(&root);
 	}
 
 	void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {

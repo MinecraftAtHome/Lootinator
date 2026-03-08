@@ -8,7 +8,7 @@
 #include "lootinator/kgen/pipeline_generator.hpp"
 
 int main() {
-	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_21_TO_1_21_9,
+	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_21_10_TO_26_1,
 #ifdef _WIN32
 		"../../../../example/src/chests_ancient_city.json",
 		"../../../../example/src/midas.json",

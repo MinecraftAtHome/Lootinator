@@ -25,6 +25,7 @@ namespace kgen {
 		KernelGenConfig(mc::VersionRange version, std::string loot_table_path,
 			std::string constraint_path, std::string item_map_path, bool seedcracking);
 
+		void traverse_and_derive(data::LootTreeNode* root, std::vector<int>& function_type_order);
 		void derive_mode_from_tree();
 	};
 

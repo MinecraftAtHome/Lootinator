@@ -26,22 +26,18 @@ namespace kgen {
 		derive_mode_from_tree();
 	}
 
-	void KernelGenConfig::traverse_and_derive(data::LootTreeNode* root, std::vector<data::LootFunctionType>& function_type_order) {
+	void KernelGenConfig::traverse_and_derive(data::LootTreeNode* root) {
 		for (auto child : root->children) {
-			traverse_and_derive(child, function_type_order);
+			traverse_and_derive(child);
 		}
 
 		CAST_CHILD(entry, data::LootEntry, root);
 		if (entry != nullptr) {
 			int idx = 0;
-			for (auto child : entry->children) {
-				CAST_CHILD(func, data::LootFunctionData, child);
-				
-				// find next occ of function type in the base vec
-				while (idx < function_type_order.size() && func->type != function_type_order[idx]) {
-					idx++;
-				}
-			}
+
+			// TODO : create a directed graph of function types. Edge between A and B = for some entry,
+			// function B is the successor of A.
+			// Construct the graph, then traverse. If cycle = fast filtering can't be applied.
 		}
 
 		CAST_CHILD(function, data::LootFunctionData, root);
@@ -51,7 +47,6 @@ namespace kgen {
 
 		// update bytes used if function is enchant randomly
 		if (function->type == data::ENCHANT_RANDOMLY) {
-			enchant_randomly = true;
 			int usedBits = 1 + function->enchant_randomly.enchantment_order.size();
 			int usedBytes = 2 + usedBits / 32;
 			if (bytes_per_entry < usedBytes) {
@@ -59,7 +54,6 @@ namespace kgen {
 			}
 		}
 		else if (function->type == data::ENCHANT_WITH_LEVELS) {
-			enchant_with_levels = true;
 			if (bytes_per_entry < 2) {
 				bytes_per_entry = 2;
 			}
@@ -70,11 +64,7 @@ namespace kgen {
 		data::LootTableRoot root = data::LootTableRoot(loot_table_json, item_map, version);
 
 		bytes_per_entry = 1;
-		enchant_randomly = false;
-		enchant_with_levels = false;
-
-		std::vector<data::LootFunctionType> function_type_order;
-		traverse_and_derive(&root, function_type_order);
+		traverse_and_derive(&root);
 	}
 
 	void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {

@@ -19,13 +19,13 @@ namespace kgen {
 
 		// derived tree config
 		int bytes_per_entry;
-		bool enchant_randomly;
-		bool enchant_with_levels;
+		std::vector<data::LootFunctionType> function_order;
+		bool no_fast_filter;
 
 		KernelGenConfig(mc::VersionRange version, std::string loot_table_path,
 			std::string constraint_path, std::string item_map_path, bool seedcracking);
 
-		void traverse_and_derive(data::LootTreeNode* root, std::vector<data::LootFunctionType>& function_type_order);
+		void traverse_and_derive(data::LootTreeNode* root);
 		void derive_mode_from_tree();
 	};
 

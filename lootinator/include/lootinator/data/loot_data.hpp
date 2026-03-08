@@ -75,6 +75,7 @@ namespace data {
 
 	class LootTableRoot : public LootTreeNode {
 	  public:
+		int id_counter;
 		mc::VersionRange version;
 		std::unordered_map<std::string, int> item_map;
 

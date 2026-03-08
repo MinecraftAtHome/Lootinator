@@ -26,12 +26,23 @@ namespace kgen {
 		derive_mode_from_tree();
 	}
 
-	void KernelGenConfig::traverse_and_derive(data::LootTreeNode* root, std::vector<int>& function_type_order) {
+	void KernelGenConfig::traverse_and_derive(data::LootTreeNode* root, std::vector<data::LootFunctionType>& function_type_order) {
 		for (auto child : root->children) {
 			traverse_and_derive(child, function_type_order);
 		}
 
 		CAST_CHILD(entry, data::LootEntry, root);
+		if (entry != nullptr) {
+			int idx = 0;
+			for (auto child : entry->children) {
+				CAST_CHILD(func, data::LootFunctionData, child);
+				
+				// find next occ of function type in the base vec
+				while (idx < function_type_order.size() && func->type != function_type_order[idx]) {
+					idx++;
+				}
+			}
+		}
 
 		CAST_CHILD(function, data::LootFunctionData, root);
 		if (function == nullptr) {
@@ -61,7 +72,9 @@ namespace kgen {
 		bytes_per_entry = 1;
 		enchant_randomly = false;
 		enchant_with_levels = false;
-		traverse_and_derive(&root);
+
+		std::vector<data::LootFunctionType> function_type_order;
+		traverse_and_derive(&root, function_type_order);
 	}
 
 	void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {

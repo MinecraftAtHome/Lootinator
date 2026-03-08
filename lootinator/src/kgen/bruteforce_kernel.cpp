@@ -161,8 +161,7 @@ namespace kgen {
 		// TODO can the unpacking be done with an intrinsic function?
 		out << R"(u32 entry_data = data[)" << pool_off
 			<< R"( + item * 3]; // min_max_count__counter_index__enchantment_count
-u64 enchantment_mask = (static_cast<u64>(data[)"
-			<< pool_off << R"( + item * 3 + 2]) << 32) | data[)" << pool_off
+u64 enchantment_mask = data[)" << pool_off
 			<< R"( + item * 3 + 1]; 
 u32 item_idx = entry_data >> 24; // [8b][6b][6b][4b][8b])";
 
@@ -315,7 +314,9 @@ local_constraints[counter_idx] += item_count;
 		CAST_CHILD(entry_node, data::LootEntry, node->parent);
 
 		uint32_t current_offset = combined_shared_memory.size();
-		combined_shared_memory[total_entry_offset + entry_node->child_index * 3] |= current_offset << 1;
+		for (int w = entry_node->next_int_range.min; w <= entry_node->next_int_range.max; w++) {
+			combined_shared_memory[total_entry_offset + w*3 + 1] |= current_offset << 1;
+		}
 
 		combined_shared_memory.push_back(func->enchant_with_levels.enchantability);
 		combined_shared_memory.push_back(func->enchant_with_levels.level.min);
@@ -341,13 +342,6 @@ local_constraints[counter_idx] += item_count;
 		}
 
 		// enchant_with_levels :nowhiskas:
-
-		for (auto child : root_node.children) {
-			CAST_CHILD(pool, data::LootPool, child);
-			for (int i = 0; i < pool->children.size(); i++) {
-				combined_shared_memory.push_back(0); // ready for surgery
-			}
-		}
 		setup_enchant_with_levels(&root_node, 0);
 	}
 } // namespace kgen

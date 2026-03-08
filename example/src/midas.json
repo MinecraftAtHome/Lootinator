@@ -1,8 +1,8 @@
 [
   {
-    "item": "minecraft:book",
+    "item": "minecraft:enchanted_golden_apple",
     "range": {
-      "min": 5,
+      "min": 13,
       "max": 1000
     },
     "slot": 0

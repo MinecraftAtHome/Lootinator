@@ -9,9 +9,8 @@ namespace kgen {
 	void BruteforceKernel::gen_kernels(
 		std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config) {
 
-		data::LootTableRoot root =
-			data::LootTableRoot(kgen_config.loot_table_json, kgen_config.item_map, kgen_config.version);
-
+		data::LootTableRoot root = data::LootTableRoot(
+			kgen_config.loot_table_json, kgen_config.item_map, kgen_config.version);
 
 		// constraint merging thing
 		std::vector<loot::Constraint> merged_constraints;
@@ -174,26 +173,26 @@ u32 item_idx = entry_data >> 24; // [8b][6b][6b][4b][8b])";
 		}
 
 		out << R"(
-
 if (enchantment_mask & 1) { // enchant with levels
     enchant_with_levels_function(&loot_seed, &(data[enchantment_mask >> 1]));       
 }
 else { // enchant randomly
     enchantment_mask |= (static_cast<u64>(data[0 + item * 3 + 2]) << 32);
     enchantment_mask >>= 1;
+
+	u32 enchantment_count = entry_data & 0xff; // [8b]
+	i32 enchant_id = enchantment_count != 0 ? nextInt(&loot_seed, enchantment_count) : 64;
+
+	bool r = (enchantment_mask & (1 << enchant_id));
+	u64 m = !r - 1;
+	loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;
 }
 
-u32 min_count = (entry_data >> 18) & 0x3f; // [6b][6b][4b][8b]
-u32 max_count = (entry_data >> 12) & 0x3f; // [6b][4b][8b]
-u32 counter_idx = (entry_data >> 8) & 0xf; // [4b][8b]
-u32 enchantment_count = entry_data & 0xff; // [8b]
+u32 min_count = (entry_data >> 18) & 0x3f;
+u32 max_count = (entry_data >> 12) & 0x3f; 
+u32 counter_idx = (entry_data >> 8) & 0xf; 
 
 i32 item_count = nextIntBounded(&loot_seed, min_count, max_count);
-i32 enchant_id = enchantment_count != 0 ? nextInt(&loot_seed, enchantment_count) : 64;
-
-bool r = (enchantment_mask & (1 << enchant_id));
-u64 m = !r - 1;
-loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;
 
 local_constraints[counter_idx] += item_count;
 )";
@@ -257,8 +256,7 @@ local_constraints[counter_idx] += item_count;
 				if (lf->type == data::ENCHANT_RANDOMLY) {
 					enchant_rand_func = lf;
 					break;
-				}
-				else if (lf->type == data::ENCHANT_WITH_LEVELS) {
+				} else if (lf->type == data::ENCHANT_WITH_LEVELS) {
 					enchant_levels_func = lf;
 					break;
 				}
@@ -279,8 +277,7 @@ local_constraints[counter_idx] += item_count;
 				enchant_mask <<= 1;
 				lower_mask = enchant_mask & 0xFFFFFFFF;
 				upper_mask = enchant_mask >> 32;
-			}
-			else if (enchant_levels_func != nullptr) {
+			} else if (enchant_levels_func != nullptr) {
 				lower_mask = 1;
 				upper_mask = 0xdeadbeef;
 			}
@@ -293,9 +290,10 @@ local_constraints[counter_idx] += item_count;
 		}
 	}
 
-	void BruteforceKernel::setup_enchant_with_levels(data::LootTreeNode* node, int total_entry_offset) {
+	void BruteforceKernel::setup_enchant_with_levels(
+		data::LootTreeNode* node, int total_entry_offset) {
 		CAST_CHILD(func, data::LootFunctionData, node);
-		
+
 		if (func == nullptr) {
 			CAST_CHILD(pool, data::LootPool, node);
 			for (auto child : node->children) {
@@ -306,7 +304,7 @@ local_constraints[counter_idx] += item_count;
 			}
 			return;
 		}
-		
+
 		// in a loot function node
 		if (func->type != data::ENCHANT_WITH_LEVELS) {
 			return;
@@ -315,7 +313,10 @@ local_constraints[counter_idx] += item_count;
 		CAST_CHILD(entry_node, data::LootEntry, node->parent);
 
 		uint32_t current_offset = combined_shared_memory.size();
-		combined_shared_memory[total_entry_offset + entry_node->child_index * 3] |= current_offset << 1;
+		// printf("%ld %ld\n", total_entry_offset, entry_node->child_index);
+		for (int w = entry_node->next_int_range.min; w <= entry_node->next_int_range.max; w++) {
+			combined_shared_memory[total_entry_offset + w * 3 + 1] |= current_offset << 1;
+		}
 
 		combined_shared_memory.push_back(func->enchant_with_levels.enchantability);
 		combined_shared_memory.push_back(func->enchant_with_levels.level.min);

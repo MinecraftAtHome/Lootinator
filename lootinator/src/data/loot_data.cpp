@@ -139,6 +139,7 @@ namespace data {
 
 	LootTableRoot::LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
 		mc::VersionRange version) : item_map(item_map), LootTreeNode(nullptr) {
+		this->id_counter = 0;
 		this->version = version;
 
 		auto& pools = json["pools"];
@@ -302,6 +303,8 @@ namespace data {
 		: LootTreeNode(parent) {
 
 		LootTableRoot* root = dynamic_cast<LootTableRoot*>(get_root_node());
+		id = root->id_counter;
+		(root->id_counter)++;
 		type = LootFunctionType::IGNORED;
 
 		this->children = std::vector<LootTreeNode*>();

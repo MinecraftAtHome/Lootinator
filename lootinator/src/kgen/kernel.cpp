@@ -26,14 +26,18 @@ namespace kgen {
 		derive_mode_from_tree();
 	}
 
-	void KernelGenConfig::traverse_and_derive(data::LootTreeNode* root) {
+	void KernelGenConfig::traverse_and_derive(data::LootTreeNode* root, bool** edges) {
 		for (auto child : root->children) {
-			traverse_and_derive(child);
+			traverse_and_derive(child, edges);
 		}
 
 		CAST_CHILD(entry, data::LootEntry, root);
 		if (entry != nullptr) {
-			int idx = 0;
+			for (int i = 0; i < entry->children.size() - 1; i++) {
+				CAST_CHILD(f1, data::LootFunctionData, entry->children[i]);
+				CAST_CHILD(f2, data::LootFunctionData, entry->children[i + 1]);
+				edges[f1->type][f2->type] = true;
+			}
 
 			// TODO : create a directed graph of function types. Edge between A and B = for some entry,
 			// function B is the successor of A.
@@ -60,11 +64,46 @@ namespace kgen {
 		}
 	}
 
+
+	static bool check_cycles_dfs(int vertex, bool** edges, bool* visited) {
+		return false;
+	}
+
 	void KernelGenConfig::derive_mode_from_tree() {
 		data::LootTableRoot root = data::LootTableRoot(loot_table_json, item_map, version);
-
 		bytes_per_entry = 1;
-		traverse_and_derive(&root);
+
+		const int NUM_FUNCTIONS = data::IGNORED;
+
+		bool** edges = new bool*[NUM_FUNCTIONS];
+		for (int i = 0; i < NUM_FUNCTIONS; i++) {
+			edges[i] = new bool[NUM_FUNCTIONS];
+			for (int j = 0; j < NUM_FUNCTIONS; j++) {
+				edges[i][j] = false;
+			}
+		}
+
+		traverse_and_derive(&root, edges);
+
+		// "DFS"
+		bool* visited = new bool[NUM_FUNCTIONS];
+		for (int v = 0; v < NUM_FUNCTIONS; v++) visited[v] = false;
+
+		for (int v = 0; v < NUM_FUNCTIONS; v++) {
+			if (visited[v]) {
+				continue;
+			}
+			if (check_cycles_dfs(v, edges, visited)) {
+				
+			}
+		}
+		delete[] visited;
+
+		for (int i = 0; i < NUM_FUNCTIONS; i++) {
+			delete[] edges[i];
+		}
+		delete[] edges;
+		
 	}
 
 	void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {

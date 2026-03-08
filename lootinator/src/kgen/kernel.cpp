@@ -4,13 +4,9 @@
 #include <fstream>
 
 namespace kgen {
-	KernelGenConfig::KernelGenConfig(
-			mc::VersionRange version,
-			std::string loot_table_path,
-			std::string constraint_path,
-			std::string item_map_path,
-			bool seedcracking
-	) : version(version), seedcracking(seedcracking) {
+	KernelGenConfig::KernelGenConfig(mc::VersionRange version, std::string loot_table_path,
+		std::string constraint_path, std::string item_map_path, bool seedcracking)
+		: version(version), seedcracking(seedcracking) {
 		std::ifstream f(loot_table_path);
 		loot_table_json = nlohmann::json::parse(f);
 
@@ -21,10 +17,32 @@ namespace kgen {
 			item_map[item_name] = ix++;
 		}
 
-		std::vector<loot::Constraint> constr = loot::parse_constraints_from_json(constraint_path.c_str(), item_map);
+		std::vector<loot::Constraint> constr =
+			loot::parse_constraints_from_json(constraint_path.c_str(), item_map);
 		std::function<bool(const loot::Constraint& a, const loot::Constraint& b)> cmp_func =
 			[](const loot::Constraint& a, const loot::Constraint& b) { return a.item_equal(b); };
 		merge_contraints(constr, constraints, cmp_func);
+	}
+
+	void traverse_and_derive(data::LootTreeNode* root) {
+		for (auto child : root->children) {
+			traverse_and_derive(child);
+		}
+
+		CAST_CHILD(function, data::LootFunctionData, root);
+		if (function == nullptr) {
+			return;
+		}
+
+		if (function->type ==) {
+		}
+	}
+
+	void derive_mode_from_tree() {
+		data::LootTableRoot root = data::LootTableRoot(loot_table_json, item_map, version);
+
+		bytes_per_entry = 1;
+		traverse_and_derive(root);
 	}
 
 	void Kernel::fill_function_shared_mem(data::LootTreeNode* current) {

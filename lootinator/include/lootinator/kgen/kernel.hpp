@@ -8,22 +8,24 @@
 namespace kgen {
 	struct KernelGenConfig {
 		bool seedcracking;
-		//std::string constraint_path;
-		//std::string item_map_path;
-		//std::string loot_table_path;
+		// std::string constraint_path;
+		// std::string item_map_path;
+		// std::string loot_table_path;
 		mc::VersionRange version;
 
 		nlohmann::json loot_table_json;
 		std::unordered_map<std::string, int> item_map;
 		std::vector<loot::Constraint> constraints;
 
-		KernelGenConfig(
-			mc::VersionRange version,
-			std::string loot_table_path,
-			std::string constraint_path,
-			std::string item_map_path,
-			bool seedcracking
-		);
+		// derived tree config
+		int bytes_per_entry;
+		bool enchant_randomly;
+		bool enchant_with_levels;
+
+		KernelGenConfig(mc::VersionRange version, std::string loot_table_path,
+			std::string constraint_path, std::string item_map_path, bool seedcracking);
+
+		void derive_mode_from_tree();
 	};
 
 	struct ConfiguredKernel {

@@ -36,7 +36,9 @@ namespace kgen {
 			for (int i = 0; i < entry->children.size() - 1; i++) {
 				CAST_CHILD(f1, data::LootFunctionData, entry->children[i]);
 				CAST_CHILD(f2, data::LootFunctionData, entry->children[i + 1]);
-				edges[f1->type][f2->type] = true;
+				if (f1->type != data::IGNORED && f2->type != data::IGNORED) {
+					edges[f1->type][f2->type] = true;
+				}
 			}
 		}
 
@@ -79,6 +81,7 @@ namespace kgen {
 	void KernelGenConfig::derive_mode_from_tree() {
 		data::LootTableRoot root = data::LootTableRoot(loot_table_json, item_map, version);
 		bytes_per_entry = 1;
+		no_fast_filter = false;
 
 		const int NUM_FUNCTIONS = data::IGNORED;
 

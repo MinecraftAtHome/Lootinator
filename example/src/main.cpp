@@ -8,23 +8,23 @@
 #include "lootinator/kgen/pipeline_generator.hpp"
 
 int main() {
-	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_21_TO_1_21_10,
+	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_21_11_TO_26_1,
 #ifdef _WIN32
 		"../../../../example/src/chests_ancient_city.json",
 		"../../../../example/src/midas.json",
 		"../../../../example/src/item_map_ac.txt",
 #elif __linux__
-		"../../example/src/chests_ancient_city.json",
-		"../../example/src/midas.json",
-		"../../example/src/item_map_ac.txt",
+		"../../example/src/buried_treasure.json",
+		"../../example/src/ask_for_help.json",
+		"../../example/src/bt.txt",
 #endif
-		false);
+		true);
 
 	kgen::PipelineGenerator pipeline_gen(kgen_config);
 	const auto& pipelines = pipeline_gen.add_bruteforce().build();
 
 	for (int k = 0; k < pipelines.size(); k++) {
-		std::ofstream fout("ac_" + std::to_string(k) + ".cu");
+		std::ofstream fout("bt_" + std::to_string(k) + ".cu");
 		kgen::generate_runner_source(pipelines[k], fout);
 		fout.close();
 	}

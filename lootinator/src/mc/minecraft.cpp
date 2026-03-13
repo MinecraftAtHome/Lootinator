@@ -742,7 +742,7 @@ namespace mc {
 				PIERCING,
 				MENDING,
 				CURSE_OF_VANISHING}});
-		} else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_9) {
+		} else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_10) {
 			return std::vector<mc::Enchantment>({{PROTECTION,
 				FIRE_PROTECTION,
 				FEATHER_FALLING,
@@ -782,7 +782,7 @@ namespace mc {
 				CURSE_OF_VANISHING,
 				FROST_WALKER,
 				MENDING}});
-		} else if (version_range == mc::VersionRange::MC_1_21_10_TO_26_1) {
+		} else if (version_range == mc::VersionRange::MC_1_21_11_TO_26_1) {
 			return std::vector<mc::Enchantment>({{
 				PROTECTION,
 				FIRE_PROTECTION,

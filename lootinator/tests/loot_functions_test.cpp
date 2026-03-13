@@ -18,7 +18,7 @@ static void smoke_test() {
 		nlohmann::json loot_table_json = nlohmann::json::parse(f);
 		data::LootTableRoot root = data::LootTableRoot(loot_table_json,
 			"../../lootinator/tests/data/item_map_end_city.txt",
-			mc::VersionRange::MC_1_21_TO_1_21_9);
+			mc::VersionRange::MC_1_21_TO_1_21_10);
 	}
 }
 
@@ -83,7 +83,7 @@ static void correctness_test_enchant_with_levels() {
 	nlohmann::json loot_table_json = nlohmann::json::parse(f);
 	data::LootTableRoot root = data::LootTableRoot(loot_table_json,
 		"../../lootinator/tests/data/item_map_end_city.txt",
-		mc::VersionRange::MC_1_21_TO_1_21_9);
+		mc::VersionRange::MC_1_21_TO_1_21_10);
 
 	data::LootTreeNode* node = root.children[0]->children[10]->children[0];
 	data::LootFunctionData* func_node = dynamic_cast<data::LootFunctionData*>(node);

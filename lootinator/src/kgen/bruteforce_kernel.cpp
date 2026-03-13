@@ -117,7 +117,8 @@ namespace kgen {
 
 			CAST_CHILD(entry, data::LootEntry, node->children[entry_ix]);
 			for (int w = entry->next_int_range.min; w <= (int)entry->next_int_range.max; w++) {
-				combined_shared_memory[offset + w * 3] |= (index << 8);
+				combined_shared_memory[offset + w * this->kgen_config.bytes_per_entry] |=
+					(index << 8);
 			}
 
 			index++;
@@ -130,13 +131,93 @@ namespace kgen {
 		bool long_long = pool->children.size() > 32;
 		uint64_t bitmask = 0;
 		for (auto child : pool->children) {
-			data::LootEntry* entry = dynamic_cast<data::LootEntry*>(child);
+			CAST_CHILD(entry, data::LootEntry, child);
 			if (entry->constraints.empty() && entry->item >= 0) {
 				bitmask |= 1ULL << entry->item;
 			}
 		}
 		std::string bitmask_str = (long_long ? "((u32)" : "((u64)") + std::to_string(bitmask) + ")";
 		return bitmask_str;
+	}
+
+	std::string BruteforceKernel::create_apply_damage_item_mask(data::LootPool* pool) {
+		bool long_long = pool->children.size() > 32;
+		uint64_t bitmask = 0;
+		for (auto child : pool->children) {
+			CAST_CHILD(entry, data::LootEntry, child);
+			for (auto child2 : entry->children) {
+				CAST_CHILD(function, data::LootFunctionData, child2);
+				if (function->type != data::LootFunctionType::APPLY_DAMAGE) {
+					continue;
+				}
+				bitmask |= 1ULL << entry->item;
+				break;
+			}
+		}
+		std::string bitmask_str = (long_long ? "((u32)" : "((u64)") + std::to_string(bitmask) + ")";
+		return bitmask_str;
+	}
+
+	void BruteforceKernel::extract_data_prefix(
+		std::ostream& out, data::LootPool* pool, int pool_off) {
+		out << "int item = nextInt(&loot_seed, " << pool->get_total_weight() << ");\n";
+
+		int bpe = this->kgen_config.bytes_per_entry;
+		int bpe_offset = (bpe == 3) ? 2 : 0;
+		// TODO can the unpacking be done with an intrinsic function?
+		out << R"(u32 entry_data = data[)" << pool_off << R"( + item * )" << bpe
+			<< R"(]; // min_max_count__counter_index__enchantment_count
+u64 enchantment_mask = data[)"
+			<< pool_off << R"( + item * )" << bpe << R"( + 1]; 
+u32 item_idx = entry_data >> 24; // [8b][6b][6b][4b][8b]
+u32 min_count = (entry_data >> 18) & 0x3f; 
+u32 max_count = (entry_data >> 12) & 0x3f;  
+u32 counter_idx = (entry_data >> 8) & 0xf;)";
+
+		if (this->kgen_config.seedcracking) {
+			std::string one = pool->children.size() > 32 ? "((u64)1)" : "((u32)1)";
+			std::string forbidden_bitmask = create_forbidden_item_mask(pool);
+
+			out << "\nif (" << forbidden_bitmask << " & (" << one
+				<< " << item_idx)) return false;\n";
+		}
+	}
+
+	void BruteforceKernel::emit_function_set_count(std::ostream& out) {
+		out << "i32 item_count = nextIntBounded(&loot_seed, min_count, max_count);";
+	}
+
+	void BruteforceKernel::emit_function_enchant_randomly(std::ostream& out) {
+		int bpe = this->kgen_config.bytes_per_entry;
+
+		out << "if (!(enchantment_mask & 1)) {";
+		if (bpe == 3) {
+			out << "enchantment_mask |= (static_cast<u64>(data[0 + item * 3 + 2]) << 32);";
+		}
+		out << R"(
+		enchantment_mask >>= 1;
+
+		u32 enchantment_count = entry_data & 0xff; // [8b]
+		i32 enchant_id = enchantment_count != 0 ? nextInt(&loot_seed, enchantment_count) : 64;
+
+		bool r = (enchantment_mask & (1 << enchant_id));
+		u64 m = !r - 1;
+		loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
+		out << "}";
+	}
+
+	void BruteforceKernel::emit_function_enchant_with_levels(std::ostream& out) {
+		out << "if (enchantment_mask & 1) { enchant_with_levels_function(&loot_seed, "
+			   "&(data[enchantment_mask >> 1])); }";
+	}
+
+	void BruteforceKernel::emit_function_apply_damage(std::ostream& out, data::LootPool* pool) {
+		std::string apply_damage_bitmask = create_apply_damage_item_mask(pool);
+		std::string one = pool->children.size() > 32 ? "((u64)1)" : "((u32)1)";
+
+		out << R"(if ()" << apply_damage_bitmask << " & " << one << R"(<< item_idx) {
+			loot_seed = (loot_seed * 25214903917 + 11) & MASK_48;
+		})";
 	}
 
 	void BruteforceKernel::emit_cuda_for_pool(
@@ -152,49 +233,34 @@ namespace kgen {
 		out << "i32 rolls = nextIntBounded(&loot_seed, " << pool->rolls.min << ","
 			<< pool->rolls.max << ");\n";
 		out << "for (i32 roll = 0; roll < rolls; roll++) {\n";
-		out << "int item = nextInt(&loot_seed, " << pool->get_total_weight() << ");\n";
 
-		// u64 enchantment_mask = (static_cast<u64>(data[0 + item * 3 + 2]) << 32) | data[0 + item *
-		// 3 + 1];
+		extract_data_prefix(out, pool, pool_off);
 
-		// TODO can the unpacking be done with an intrinsic function?
-		out << R"(u32 entry_data = data[)" << pool_off
-			<< R"( + item * 3]; // min_max_count__counter_index__enchantment_count
-u64 enchantment_mask = data[)"
-			<< pool_off << R"( + item * 3 + 1]; 
-u32 item_idx = entry_data >> 24; // [8b][6b][6b][4b][8b])";
-
-		if (this->kgen_config.seedcracking) {
-			std::string one = pool->children.size() > 32 ? "((u64)1)" : "((u32)1)";
-			std::string forbidden_bitmask = create_forbidden_item_mask(pool);
-			out << "\nif (" << forbidden_bitmask << " & (" << one
-				<< " << item_idx)) return false;\n";
+		for (auto& func : this->kgen_config.function_order) {
+			switch (func) {
+				case data::ENCHANT_WITH_LEVELS: {
+					emit_function_enchant_with_levels(out);
+					break;
+				}
+				case data::ENCHANT_RANDOMLY: {
+					emit_function_enchant_randomly(out);
+					break;
+				}
+				case data::APPLY_DAMAGE: {
+					emit_function_apply_damage(out, pool);
+					break;
+				}
+				case data::SET_COUNT: {
+					emit_function_set_count(out);
+					break;
+				}
+			}
 		}
 
 		out << R"(
-if (enchantment_mask & 1) { // enchant with levels
-    enchant_with_levels_function(&loot_seed, &(data[enchantment_mask >> 1]));       
-}
-else { // enchant randomly
-    enchantment_mask |= (static_cast<u64>(data[0 + item * 3 + 2]) << 32);
-    enchantment_mask >>= 1;
+		local_constraints[counter_idx] += item_count;
+		)";
 
-	u32 enchantment_count = entry_data & 0xff; // [8b]
-	i32 enchant_id = enchantment_count != 0 ? nextInt(&loot_seed, enchantment_count) : 64;
-
-	bool r = (enchantment_mask & (1 << enchant_id));
-	u64 m = !r - 1;
-	loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;
-}
-
-u32 min_count = (entry_data >> 18) & 0x3f;
-u32 max_count = (entry_data >> 12) & 0x3f; 
-u32 counter_idx = (entry_data >> 8) & 0xf; 
-
-i32 item_count = nextIntBounded(&loot_seed, min_count, max_count);
-
-local_constraints[counter_idx] += item_count;
-)";
 		out << "}\n";
 
 		// check constraint sat
@@ -283,8 +349,12 @@ local_constraints[counter_idx] += item_count;
 
 			for (int w = 0; w < entry->weight; w++) {
 				combined_shared_memory.push_back(basic_info);
-				combined_shared_memory.push_back(lower_mask);
-				combined_shared_memory.push_back(upper_mask);
+				if (this->kgen_config.bytes_per_entry >= 2) {
+					combined_shared_memory.push_back(lower_mask);
+				}
+				if (this->kgen_config.bytes_per_entry >= 3) {
+					combined_shared_memory.push_back(upper_mask);
+				}
 			}
 		}
 	}
@@ -299,7 +369,8 @@ local_constraints[counter_idx] += item_count;
 				setup_enchant_with_levels(child, total_entry_offset);
 			}
 			if (pool != nullptr) {
-				total_entry_offset += pool->get_total_weight() * 3; // 3x uint32 per entry
+				total_entry_offset += pool->get_total_weight() *
+									  this->kgen_config.bytes_per_entry; // 3x uint32 per entry
 			}
 			return;
 		}
@@ -313,7 +384,8 @@ local_constraints[counter_idx] += item_count;
 
 		uint32_t current_offset = combined_shared_memory.size();
 		for (int w = entry_node->next_int_range.min; w <= entry_node->next_int_range.max; w++) {
-			combined_shared_memory[total_entry_offset + w * 3 + 1] |= current_offset << 1;
+			combined_shared_memory[total_entry_offset + w * this->kgen_config.bytes_per_entry +
+								   1] |= current_offset << 1;
 		}
 
 		//printf("func (bruteforce): %ld %ld %ld\n",

@@ -78,6 +78,45 @@ namespace kgen {
 		return false;
 	}
 
+	void KernelGenConfig::construct_order(bool** edges, const int num_functions) {
+		// while there are unused vertices, find the root and remove it from the graph.
+		// when removing, push back to function order vector
+
+		bool* removed = new bool[num_functions];
+		for (int i = 0; i < num_functions; i++) removed[i] = false;
+		int remaining = num_functions;
+
+		while (remaining > 0) {
+			for (int v = 0; v < num_functions; v++) {
+				if (removed[v]) continue;
+
+				// go back to the root, as far as you can
+				int current = v;
+				while (true) {
+					bool found_parent = false;
+
+					for (int v2 = 0; v2 < num_functions; v2++) {
+						if (v2 != current && edges[v2][current] && !removed[v2]) {
+							current = v2;
+							found_parent = true;
+							break;
+						}
+					}
+
+					if (!found_parent) {
+						break;
+					}
+				}
+
+				// remove the vertex
+				remaining--;
+				removed[current] = true;
+				// update the vector
+				function_order.push_back(static_cast<data::LootFunctionType>(current));
+			}
+		}
+	}
+
 	void KernelGenConfig::derive_mode_from_tree() {
 		data::LootTableRoot root = data::LootTableRoot(loot_table_json, item_map, version);
 		bytes_per_entry = 1;
@@ -97,18 +136,19 @@ namespace kgen {
 
 		// "DFS"
 		bool* visited = new bool[NUM_FUNCTIONS];
-		for (int v = 0; v < NUM_FUNCTIONS; v++) visited[v] = false;
-
 		for (int v = 0; v < NUM_FUNCTIONS; v++) {
-			if (visited[v]) {
-				continue;
-			}
+			for (int v2 = 0; v2 < NUM_FUNCTIONS; v2++) 
+				visited[v2] = false;
 			visited[v] = true;
 			if (check_cycles_dfs(v, NUM_FUNCTIONS, edges, visited)) {
 				no_fast_filter = true;
 			}
 		}
 		delete[] visited;
+
+		if (!no_fast_filter) {
+			construct_order(edges, NUM_FUNCTIONS);
+		}
 
 		for (int i = 0; i < NUM_FUNCTIONS; i++) {
 			delete[] edges[i];

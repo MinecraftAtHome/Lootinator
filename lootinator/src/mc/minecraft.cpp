@@ -655,8 +655,9 @@ namespace mc {
 	 * @return the enchantability for the provided item name or 0 if the item is invalid.
 	 */
 	uint32_t get_enchantability(const std::string& item_name) {
-		if (ITEM_NAME_TO_ENCHANTABILITY.find(item_name) != ITEM_NAME_TO_ENCHANTABILITY.end()) {
-			return ITEM_NAME_TO_ENCHANTABILITY.at(item_name);
+		std::string stripped_name = mc::strip_prefix(item_name);
+		if (ITEM_NAME_TO_ENCHANTABILITY.find(stripped_name) != ITEM_NAME_TO_ENCHANTABILITY.end()) {
+			return ITEM_NAME_TO_ENCHANTABILITY.at(stripped_name);
 		} else {
 			return 0;
 		}
@@ -871,8 +872,9 @@ namespace mc {
 	}
 
 	mc::Enchantment string_to_enchantment(const std::string& enchantment_string) {
-		if (ENCHANTMENT_TO_NAME.contains_string(enchantment_string)) {
-			return ENCHANTMENT_TO_NAME.lookup_string(enchantment_string);
+		std::string stripped_name = mc::strip_prefix(enchantment_string);
+		if (ENCHANTMENT_TO_NAME.contains_string(stripped_name)) {
+			return ENCHANTMENT_TO_NAME.lookup_string(stripped_name);
 		} else {
 			return mc::Enchantment::NO_ENCHANTMENT;
 		}

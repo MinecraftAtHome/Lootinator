@@ -7,7 +7,7 @@
 namespace data {
 	LootTreeNode::LootTreeNode(data::LootTreeNode* parent) {
 		this->parent = parent;
-		this->child_index = parent==nullptr ? 0 : parent->children.size() - 1;
+		this->child_index = parent == nullptr ? 0 : parent->children.size() - 1;
 	}
 
 	mc::VersionRange LootTreeNode::get_version() {
@@ -96,11 +96,11 @@ namespace data {
 	}
 
 	LootEntry::LootEntry(LootTreeNode* parent, const nlohmann::json& json,
-		const util::RangeInclusive<uint32_t> next_int_range)
+		const util::RangeInclusive<uint32_t> next_int_range, int index)
 		: next_int_range(next_int_range), LootTreeNode(parent) {
 		// entry parsing
 		weight = json.contains("weight") ? static_cast<int>(json["weight"]) : 1;
-
+		this->index = index;
 		if (json["type"] == "minecraft:empty") {
 			// empty entry
 			name = "";
@@ -137,8 +137,9 @@ namespace data {
 		LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
 	}
 
-	LootTableRoot::LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
-		mc::VersionRange version) : item_map(item_map), LootTreeNode(nullptr) {
+	LootTableRoot::LootTableRoot(const nlohmann::json& json,
+		const std::unordered_map<std::string, int>& item_map, mc::VersionRange version)
+		: item_map(item_map), LootTreeNode(nullptr) {
 		this->id_counter = 0;
 		this->version = version;
 
@@ -239,8 +240,10 @@ namespace data {
 	}
 
 	LootPool::LootPool(LootTreeNode* parent, const nlohmann::json& json)
-		: rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])), LootTreeNode(parent)  {
+		: rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])),
+		  LootTreeNode(parent) {
 
+		int entry_index = 0;
 		for (auto& entry : json["entries"]) {
 			uint32_t entry_weight =
 				(entry.contains("weight") ? static_cast<uint32_t>(entry["weight"]) : 1);
@@ -248,10 +251,12 @@ namespace data {
 			uint32_t end_weight =
 				start_weight + entry_weight - 1; // -1 accounts for range being inclusive-inclusive
 
-			this->children.push_back(new LootEntry(this, entry, {start_weight, end_weight}));
+			this->children.push_back(
+				new LootEntry(this, entry, {start_weight, end_weight}, entry_index++));
 
 			for (uint32_t w = 0; w < entry_weight; w++) {
-				this->entry_lookup.push_back(dynamic_cast<LootEntry*>(this->children.back())->item);
+				this->entry_lookup.push_back(
+					dynamic_cast<LootEntry*>(this->children.back())->index);
 			}
 		}
 	}

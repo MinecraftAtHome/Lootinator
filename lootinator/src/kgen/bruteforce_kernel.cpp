@@ -316,6 +316,11 @@ local_constraints[counter_idx] += item_count;
 			combined_shared_memory[total_entry_offset + w * 3 + 1] |= current_offset << 1;
 		}
 
+		printf("func (bruteforce): %ld %ld %ld\n",
+			func->enchant_with_levels.enchantability,
+			func->enchant_with_levels.level.min,
+			func->enchant_with_levels.level.max);
+
 		combined_shared_memory.push_back(func->enchant_with_levels.enchantability);
 		combined_shared_memory.push_back(func->enchant_with_levels.level.min);
 		combined_shared_memory.push_back(func->enchant_with_levels.level.max);

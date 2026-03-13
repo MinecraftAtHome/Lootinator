@@ -166,6 +166,12 @@ namespace kgen {
 					out << "loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;\n";
 					break;
 				}
+				case data::ENCHANT_WITH_LEVELS: {
+					int index = function_memory_offsets[function->id];
+					out << "// ENCHANT WITH LEVELS >:)\n";
+					out << "enchant_with_levels_function(&loot_seed, &(data[" << index << "]));\n";
+					break;
+				}
 				default: {
 					break;
 				}
@@ -245,7 +251,7 @@ namespace kgen {
 			if (this->kgen_config.seedcracking && entry->constraints.empty()) {
 				continue;
 			}
-			out << "case " << entry->item << ": { //" << entry->name << '\n';
+			out << "case " << entry->index << ": { //" << entry->name << '\n';
 			emit_cuda_for_entry(out, entry);
 			out << "break;}\n";
 		}

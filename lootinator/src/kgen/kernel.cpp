@@ -52,14 +52,12 @@ namespace kgen {
 			if (bytes_per_entry < usedBytes) {
 				bytes_per_entry = usedBytes;
 			}
-		}
-		else if (function->type == data::ENCHANT_WITH_LEVELS) {
+		} else if (function->type == data::ENCHANT_WITH_LEVELS) {
 			if (bytes_per_entry < 2) {
 				bytes_per_entry = 2;
 			}
 		}
 	}
-
 
 	static bool check_cycles_dfs(int vertex, const int num_functions, bool** edges, bool* visited) {
 		for (int v = 0; v < num_functions; v++) {
@@ -94,7 +92,8 @@ namespace kgen {
 
 		// "DFS"
 		bool* visited = new bool[NUM_FUNCTIONS];
-		for (int v = 0; v < NUM_FUNCTIONS; v++) visited[v] = false;
+		for (int v = 0; v < NUM_FUNCTIONS; v++)
+			visited[v] = false;
 
 		for (int v = 0; v < NUM_FUNCTIONS; v++) {
 			if (visited[v]) {
@@ -121,8 +120,21 @@ namespace kgen {
 			}
 		} else {
 			uint32_t size = static_cast<uint32_t>(func->shared_mem.size());
+			// printf("sizeof(%ld) = %ld\n", func->id, size);
 			uint32_t last = function_memory_offsets.back();
-			function_memory_offsets.push_back(last + size);
+
+			if (func->type == data::LootFunctionType::ENCHANT_WITH_LEVELS) {
+				printf("func: %ld %ld %ld\n",
+					func->enchant_with_levels.enchantability,
+					func->enchant_with_levels.level.min,
+					func->enchant_with_levels.level.max);
+				combined_shared_memory.push_back(func->enchant_with_levels.enchantability);
+				combined_shared_memory.push_back(func->enchant_with_levels.level.min);
+				combined_shared_memory.push_back(func->enchant_with_levels.level.max);
+				function_memory_offsets.push_back(last + size + 3);
+			} else {
+				function_memory_offsets.push_back(last + size);
+			}
 
 			for (auto i : func->shared_mem) {
 				combined_shared_memory.push_back(i);
@@ -170,8 +182,11 @@ namespace kgen {
 
 		fill_function_shared_mem(&root_node);
 		uint32_t last_pool_offset = pool_memory_offsets.back();
+		printf("%ld\n", last_pool_offset);
+		int i = 0;
 		for (auto& func_off : function_memory_offsets) {
 			func_off += last_pool_offset;
+			printf("start_index for function %d = %d\n", i++, func_off);
 		}
 	}
 

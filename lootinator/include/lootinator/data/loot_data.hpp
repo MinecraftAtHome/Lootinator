@@ -45,6 +45,7 @@ namespace data {
 		int weight;
 		// the range of nextInt values that produce this entry
 		util::RangeInclusive<uint32_t> next_int_range;
+		int index;
 
 		virtual uint32_t get_min_lcg_advancement() const;
 		virtual uint32_t get_max_lcg_advancement() const;
@@ -53,7 +54,7 @@ namespace data {
 		util::RangeInclusive<uint32_t> get_count_range() const;
 
 		LootEntry(LootTreeNode* parent, const nlohmann::json& json,
-			const util::RangeInclusive<uint32_t> next_int_range);
+			const util::RangeInclusive<uint32_t> next_int_range, int index);
 		virtual void print(int indentation) const override;
 	};
 
@@ -79,8 +80,8 @@ namespace data {
 		mc::VersionRange version;
 		std::unordered_map<std::string, int> item_map;
 
-		LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
-			mc::VersionRange version);
+		LootTableRoot(const nlohmann::json& json,
+			const std::unordered_map<std::string, int>& item_map, mc::VersionRange version);
 		virtual int get_item_index(const std::string& item_name) const override;
 		virtual void print(int indentation) const override;
 

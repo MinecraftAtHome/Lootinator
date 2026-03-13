@@ -655,8 +655,10 @@ namespace mc {
 	 * @return the enchantability for the provided item name or 0 if the item is invalid.
 	 */
 	uint32_t get_enchantability(const std::string& item_name) {
-		if (ITEM_NAME_TO_ENCHANTABILITY.find(item_name) != ITEM_NAME_TO_ENCHANTABILITY.end()) {
-			return ITEM_NAME_TO_ENCHANTABILITY.at(item_name);
+		std::string stripped_string = strip_prefix(item_name);
+		if (ITEM_NAME_TO_ENCHANTABILITY.find(stripped_string) !=
+			ITEM_NAME_TO_ENCHANTABILITY.end()) {
+			return ITEM_NAME_TO_ENCHANTABILITY.at(stripped_string);
 		} else {
 			return 0;
 		}
@@ -741,7 +743,7 @@ namespace mc {
 				PIERCING,
 				MENDING,
 				CURSE_OF_VANISHING}});
-		} else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_9) {
+		} else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_10) {
 			return std::vector<mc::Enchantment>({{PROTECTION,
 				FIRE_PROTECTION,
 				FEATHER_FALLING,
@@ -781,7 +783,7 @@ namespace mc {
 				CURSE_OF_VANISHING,
 				FROST_WALKER,
 				MENDING}});
-		} else if (version_range == mc::VersionRange::MC_1_21_10_TO_26_1) {
+		} else if (version_range == mc::VersionRange::MC_1_21_11_TO_26_1) {
 			return std::vector<mc::Enchantment>({{
 				PROTECTION,
 				FIRE_PROTECTION,

@@ -195,12 +195,10 @@ u32 counter_idx = (entry_data >> 8) & 0xf;)";
 			out << "enchantment_mask |= (static_cast<u64>(data[0 + item * 3 + 2]) << 32);";
 		}
 		out << R"(
-		enchantment_mask >>= 1;
-
 		u32 enchantment_count = entry_data & 0xff; // [8b]
 		i32 enchant_id = enchantment_count != 0 ? nextInt(&loot_seed, enchantment_count) : 64;
 
-		bool r = (enchantment_mask & (1 << enchant_id));
+		bool r = ((enchantment_mask >> 1) & (1 << enchant_id));
 		u64 m = !r - 1;
 		loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		out << "}";
@@ -215,7 +213,7 @@ u32 counter_idx = (entry_data >> 8) & 0xf;)";
 		std::string apply_damage_bitmask = create_apply_damage_item_mask(pool);
 		std::string one = pool->children.size() > 32 ? "((u64)1)" : "((u32)1)";
 
-		out << R"(if ()" << apply_damage_bitmask << " & " << one << R"(<< item_idx) {
+		out << R"(if ()" << apply_damage_bitmask << " & (" << one << R"(<< item_idx)) {
 			loot_seed = (loot_seed * 25214903917 + 11) & MASK_48;
 		})";
 	}

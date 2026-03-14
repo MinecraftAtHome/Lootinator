@@ -76,13 +76,31 @@ namespace kgen {
 		return false;
 	}
 
-	void KernelGenConfig::construct_order(bool** edges, const int num_functions) {
+	static void update_functions(data::LootTreeNode* node, bool* removed_vec) {
+		for (auto child : node->children) {
+			update_functions(child, removed_vec);
+			CAST_CHILD(func, data::LootFunctionData, child);
+			if (func == nullptr) { 
+				continue; 
+			}
+			removed_vec[func->type] = false;
+		}
+	}
+
+	void KernelGenConfig::construct_order(bool** edges, const int num_functions, data::LootTreeNode* root) {
 		// while there are unused vertices, find the root and remove it from the graph.
 		// when removing, push back to function order vector
 
 		bool* removed = new bool[num_functions];
-		for (int i = 0; i < num_functions; i++) removed[i] = false;
-		int remaining = num_functions;
+		for (int i = 0; i < num_functions; i++) { 
+			removed[i] = true; 
+		}
+		update_functions(root, removed);
+
+		int remaining = 0;
+		for (int i = 0; i < num_functions; i++) { 
+			remaining += !removed[i]; 
+		}
 
 		while (remaining > 0) {
 			for (int v = 0; v < num_functions; v++) {
@@ -111,6 +129,7 @@ namespace kgen {
 				removed[current] = true;
 				// update the vector
 				function_order.push_back(static_cast<data::LootFunctionType>(current));
+				break;
 			}
 		}
 	}
@@ -145,7 +164,7 @@ namespace kgen {
 		delete[] visited;
 
 		if (!no_fast_filter) {
-			construct_order(edges, NUM_FUNCTIONS);
+			construct_order(edges, NUM_FUNCTIONS, &root);
 		}
 
 		for (int i = 0; i < NUM_FUNCTIONS; i++) {

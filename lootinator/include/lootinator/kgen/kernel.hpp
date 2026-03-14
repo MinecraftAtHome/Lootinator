@@ -26,7 +26,7 @@ namespace kgen {
 			std::string constraint_path, std::string item_map_path, bool seedcracking);
 
 		void traverse_and_derive(data::LootTreeNode* root, bool** edges);
-		void construct_order(bool** edges, const int num_functions);
+		void construct_order(bool** edges, const int num_functions, data::LootTreeNode* root);
 		void derive_mode_from_tree();
 	};
 

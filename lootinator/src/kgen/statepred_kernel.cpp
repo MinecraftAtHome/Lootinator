@@ -58,7 +58,37 @@ namespace kgen {
 	}
 
 	std::string kgen::StatepredKernel::to_string() {
-		return std::string();
+		std::stringsgtream result;
+		Kernel::write_shared_definitions(result);
+
+		BruteforceKernel::generate_forward_filter(result);
+
+		data::LootPool* pool = dynamic_cast<data::LootPool*>(this->entry->parent);
+
+		result << R"(extern "C" __global__ void )" << this->name
+			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents,"
+				  "u64 offset) {";
+		result <<
+			R"(
+    __shared__ u32 data[)"
+			   << combined_shared_memory.size() << R"(];
+    if (threadIdx.x < )"
+			   << combined_shared_memory.size() << R"() {
+        for (int i = threadIdx.x; i < )"
+			   << combined_shared_memory.size() << R"(; i += blockDim.x) {
+            data[i] = shared_mem_contents[i];
+        }
+    }
+    __syncthreads();
+
+	u64 tid = (u64)blockDim.x * blockIdx.x + threadIdx.x + offset;
+	u32 lower17 = tid & ((1ull << 17) - 1);
+	u64 upper31 = (tid >> 17) * )"
+			   << pool->entry_lookup.size() << R"(
+	u64 state = (upper31 << 17) | lower17;
+}
+)";
+		return result.str();
 	}
 
 	void kgen::StatepredKernel::emit_cuda_for_pool(

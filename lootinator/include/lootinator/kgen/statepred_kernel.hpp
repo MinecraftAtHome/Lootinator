@@ -9,14 +9,18 @@ namespace kgen {
 		static void gen_kernels(
 			std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config);
 
-		StatepredKernel(data::LootTableRoot& root_node, loot::Constraint& target_constraint, const kgen::KernelGenConfig& kgen_config);
+		loot::Constraint& target_constraint;
+		data::LootEntry* entry;
+		uint32_t prediction_bound;
+
+		StatepredKernel(data::LootTableRoot& root_node, loot::Constraint& target_constraint, data::LootEntry* entry, const kgen::KernelGenConfig& kgen_config);
 
 	  protected:
 		virtual ConfiguredKernel generate() override;
 
 		std::string to_string();
 
-		virtual void emit_cuda_for_pool(std::ostream& out, data::LootPool* pool, int pool_idx);
+		virtual void generate_forward_filter(std::ostream& out)
 	};
 }
 

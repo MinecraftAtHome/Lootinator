@@ -38,10 +38,6 @@ namespace kgen {
 	// -----------------------------------------------------
 
 	ConfiguredKernel BruteforceKernel::generate() {
-		std::ofstream fout("kernel.shm");
-		for (auto v : combined_shared_memory) {
-			fout << v << " ";
-		}
 		return ConfiguredKernel{this->name,
 			to_string(),
 			UINT64_C(1) << 48,
@@ -386,7 +382,7 @@ u32 counter_idx = (entry_data >> 8) & 0xf;)";
 								   1] |= current_offset << 1;
 		}
 
-		//printf("func (bruteforce): %ld %ld %ld\n",
+		// printf("func (bruteforce): %ld %ld %ld\n",
 		//	func->enchant_with_levels.enchantability,
 		//	func->enchant_with_levels.level.min,
 		//	func->enchant_with_levels.level.max);

@@ -13,15 +13,16 @@ namespace kgen {
 		data::LootEntry* entry;
 		uint32_t prediction_bound;
 
-		StatepredKernel(data::LootTableRoot& root_node, loot::Constraint& target_constraint, data::LootEntry* entry, const kgen::KernelGenConfig& kgen_config);
+		StatepredKernel(data::LootTableRoot& root_node, data::LootEntry* target_entry,
+			loot::Constraint& target_constraint, const kgen::KernelGenConfig& kgen_config);
 
-	  protected:
 		virtual ConfiguredKernel generate() override;
 
+	  protected:
 		std::string to_string();
 
-		virtual void generate_forward_filter(std::ostream& out)
+		virtual void generate_statepred_filter(std::ostream& out);
 	};
-}
+} // namespace kgen
 
 #endif

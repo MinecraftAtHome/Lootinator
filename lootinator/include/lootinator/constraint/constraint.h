@@ -25,6 +25,7 @@ namespace loot {
 		std::vector<mc::ItemAttribute> attributes; // TODO: make this not a vector...
 
 		bool item_equal(const Constraint& other) const;
+		Constraint truncate(int attribute_prefix_length) const;
 
 		bool operator==(const Constraint& other) const;
 		bool operator!=(const Constraint& other) const;

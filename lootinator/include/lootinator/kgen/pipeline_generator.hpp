@@ -12,7 +12,7 @@ namespace kgen {
 		PipelineGenerator(const KernelGenConfig& kgen_config);
 
 		PipelineGenerator& add_bruteforce();
-		//PipelineGenerator& add_state_prediction();
+		PipelineGenerator& add_state_prediction();
 		//...
 
 		const std::vector<KernelPipeline>& build() const;

@@ -38,6 +38,21 @@ namespace loot {
 		return loot::attributes_match(attributes, other.attributes);
 	}
 
+	Constraint Constraint::truncate(int attribute_prefix_length) const {
+		std::vector<mc::ItemAttribute> attrs;
+
+		// for prefix of length 0: no attributes, hence -1
+		for (int i = 0; i < attribute_prefix_length - 1; i++) {
+			attrs.push_back(attributes[i]);
+		}
+		return Constraint{
+			item,
+			count_range,
+			slot_id,
+			attrs
+		};
+	}
+
 	bool loot::Constraint::operator==(const Constraint& other) const {
 		return item_equal(other) && other.count_range == count_range && other.slot_id == slot_id;
 	}

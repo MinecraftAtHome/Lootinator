@@ -21,6 +21,7 @@ namespace kgen {
 			uint32_t entry_data;
 			uint64_t enchantment_mask;
 			uint32_t enchantment_mask_2;
+			uint32_t enchantment_count;
 			uint32_t item;
 			uint32_t item_idx;
 			uint32_t min_count;
@@ -37,20 +38,21 @@ namespace kgen {
 				item_idx = entry_data >> 24;
 				min_count = (entry_data >> 18) & 0x3f; 
 				max_count = (entry_data >> 12) & 0x3f; 
+				enchantment_count = entry_data & 0xff;
 			}
 		};
 
-		void emit_function_set_count(std::ostream& out, const SharedEntryData& data);
+		void emit_entry_function_set_count(std::ostream& out, const SharedEntryData& data);
 		void emit_entry_function_enchant_randomly(std::ostream& out, const SharedEntryData& data);
 		void emit_entry_function_enchant_with_levels(std::ostream& out, const SharedEntryData& data);
-		void emit_entry_function_apply_damage(std::ostream& out, const SharedEntryData& data);
+		void emit_entry_function_apply_damage(std::ostream& out, const SharedEntryData& data, data::LootPool* pool);
 
 		virtual ConfiguredKernel generate() override;
 
 	  protected:
 		std::string to_string();
 
-		void emit_state_prediction_entry_handler(std::ostream& out);
+		void emit_state_prediction_entry_handler(std::ostream& out, const SharedEntryData& data);
 		virtual void generate_statepred_filter(std::ostream& out);
 	};
 } // namespace kgen

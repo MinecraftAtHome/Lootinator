@@ -5,6 +5,7 @@
 // all the kernels
 #include "lootinator/kgen/bruteforce_kernel.hpp"
 #include "lootinator/kgen/secondary_bruteforce_kernel.hpp"
+#include "lootinator/kgen/statepred_kernel.hpp"
 // ...
 
 
@@ -39,11 +40,26 @@ namespace kgen {
 		return *this;
 	}
 
-	//PipelineGenerator& kgen::PipelineGenerator::add_state_prediction() {
-	//	// TODO create the pipelines
-	//
-	//	return *this;
-	//}
+	PipelineGenerator& kgen::PipelineGenerator::add_state_prediction() {
+		std::vector<ConfiguredKernel> kernels1;
+		StatepredKernel::gen_kernels(kernels1, config);
+
+		std::vector<kgen::ConfiguredKernel> kernels2;
+		if (data_has_enchantments()) {
+			kgen::SecondaryBruteforceKernel::gen_kernels(kernels2, config);
+		}
+
+		for (auto& kernel1 : kernels1) {
+			auto& kernel2 = kernels2[0];
+
+			KernelPipeline statepred_pipeline;
+			statepred_pipeline.push_back(kernel1);
+			statepred_pipeline.push_back(kernel2);
+			pipelines.push_back(statepred_pipeline);
+		}
+
+		return *this;
+	}
 
 	const std::vector<KernelPipeline>& PipelineGenerator::build() const {
 		// TODO calc heuristic performance for each pipeline, 

@@ -194,7 +194,7 @@ u32 counter_idx = (entry_data >> 8) & 0xf;)";
 		u32 enchantment_count = entry_data & 0xff; // [8b]
 		i32 enchant_id = enchantment_count != 0 ? nextInt(&loot_seed, enchantment_count) : 64;
 
-		bool r = ((enchantment_mask >> 1) & (1 << enchant_id));
+		bool r = ((enchantment_mask >> 1) & (1ULL << enchant_id));
 		u64 m = !r - 1;
 		loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		out << "}";

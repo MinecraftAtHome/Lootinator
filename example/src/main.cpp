@@ -21,7 +21,7 @@ int main() {
 		false);
 
 	kgen::PipelineGenerator pipeline_gen(kgen_config);
-	const auto& pipelines = pipeline_gen.add_bruteforce().build();
+	const auto& pipelines = pipeline_gen.add_bruteforce().add_state_prediction().build();
 
 	for (int k = 0; k < pipelines.size(); k++) {
 		std::ofstream fout("bt_" + std::to_string(k) + ".cu");

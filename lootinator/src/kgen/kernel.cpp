@@ -251,7 +251,7 @@ namespace kgen {
 		}
 	}
 
-	Kernel::Kernel(data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config)
+	Kernel::Kernel(data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config)
 		: root_node(root_node), kgen_config(kgen_config) {
 		static int kernel_index = 0;
 		kernel_index++;

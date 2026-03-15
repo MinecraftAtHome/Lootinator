@@ -60,7 +60,7 @@ namespace kgen {
 
 		std::string name;
 
-		Kernel(data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config);
+		Kernel(data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config);
 
 	  protected:
 		static void write_shared_definitions(std::ostream& out);

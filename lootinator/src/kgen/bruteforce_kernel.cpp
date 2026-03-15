@@ -31,7 +31,7 @@ namespace kgen {
 	}
 
 	BruteforceKernel::BruteforceKernel(
-		data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config)
+		data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config)
 		: Kernel(root_node, kgen_config) {
 	}
 

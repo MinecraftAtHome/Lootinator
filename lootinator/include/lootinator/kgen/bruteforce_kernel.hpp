@@ -9,7 +9,7 @@ namespace kgen {
 	  public:
 		static void gen_kernels(
 			std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config);
-		BruteforceKernel(data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config);
+		BruteforceKernel(data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config);
 
 	  protected:
 		virtual ConfiguredKernel generate() override;
@@ -18,13 +18,13 @@ namespace kgen {
 		// to array names + indices like this: array[idx]
 		std::unordered_map<std::string, std::string> var_name_map;
 
-		std::string to_string();
+		virtual std::string to_string();
 		std::string create_forbidden_item_mask(data::LootPool* pool);
 		std::string create_apply_damage_item_mask(data::LootPool* pool);
 
 		// void emit_skip_for_entry(std::ostream& out, data::LootEntry* entry);
 		// void emit_cuda_for_entry(std::ostream& out, data::LootEntry* entry);
-		void emit_cuda_for_pool(std::ostream& out, data::LootPool* pool, int pool_idx);
+		virtual void emit_cuda_for_pool(std::ostream& out, data::LootPool* pool, int pool_idx);
 		void generate_forward_filter(std::ostream& out);
 
 		void materialize_level(data::LootTreeNode* node);

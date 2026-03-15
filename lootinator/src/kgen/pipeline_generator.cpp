@@ -9,7 +9,7 @@
 
 
 namespace kgen {
-	PipelineGenerator::PipelineGenerator(const KernelGenConfig& kgen_config)
+	PipelineGenerator::PipelineGenerator(const KernelGenConfig& kgen_config) // TODO add number of kernels returned
 		: config(kgen_config) {}
 
 	// FIXME this treats every attribute as enchantment
@@ -39,7 +39,16 @@ namespace kgen {
 		return *this;
 	}
 
+	//PipelineGenerator& kgen::PipelineGenerator::add_state_prediction() {
+	//	// TODO create the pipelines
+	//
+	//	return *this;
+	//}
+
 	const std::vector<KernelPipeline>& PipelineGenerator::build() const {
+		// TODO calc heuristic performance for each pipeline, 
+		// sort, return top-scoring N
+
 		return pipelines;
 	}
 }

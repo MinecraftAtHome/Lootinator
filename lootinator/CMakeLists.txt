@@ -8,6 +8,7 @@ add_library(lootinator
 	include/lootinator/kgen/kernel.hpp
 	include/lootinator/kgen/pipeline_generator.hpp
 	include/lootinator/kgen/secondary_bruteforce_kernel.hpp
+	include/lootinator/kgen/statepred_kernel.hpp
 	include/lootinator/lootinator.h
 	include/lootinator/mc/minecraft.hpp
 	include/lootinator/template/helpers.h
@@ -27,6 +28,7 @@ add_library(lootinator
 	src/kgen/kernel.cpp
 	src/kgen/pipeline_generator.cpp
 	src/kgen/secondary_bruteforce_kernel.cpp
+	src/kgen/statepred_kernel.cpp
 	src/lootinator.cpp
 	src/mc/minecraft.cpp
 	src/template/helpers.cpp

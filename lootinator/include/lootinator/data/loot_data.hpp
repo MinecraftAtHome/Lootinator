@@ -26,7 +26,7 @@ namespace data {
 		virtual uint32_t get_min_lcg_advancement() const;
 		virtual uint32_t get_max_lcg_advancement() const;
 
-		void indent(int indentation) const;
+		//void indent(int indentation) const;
 		virtual void print(int indentation) const;
 		void print_constraints(int indentation) const;
 

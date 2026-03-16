@@ -78,8 +78,8 @@ namespace data {
 		}
 	}
 
-	// TODO make this a static non-member
-	void LootTreeNode::indent(int indentation) const {
+	// Utility for indentation
+	static void indent(int indentation) {
 		std::cout << '\n';
 		for (int i = 0; i < indentation; i++) {
 			std::cout << ' ';
@@ -112,6 +112,12 @@ namespace data {
 	// ---------------------------------------------------------------
 	// LootTableRoot
 
+	/**
+	 * Constructs the loot table tree within the LootTableRoot object.
+	 * @param json the loot table json data
+	 * @param item_map the item name to item index map to be used while parsing the loot table
+	 * @param version the version range of the target loot table
+	 */
 	LootTableRoot::LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
 		mc::VersionRange version) : item_map(item_map) {
 		this->id_counter = 0;

@@ -180,7 +180,6 @@ namespace data {
 	 * @param item_map the item name to item index map to be used while parsing the loot table
 	 * @param version the version range of the target loot table
 	 */
-
 	LootTableRoot::LootTableRoot(const nlohmann::json& json,
 		const std::unordered_map<std::string, int>& item_map, mc::VersionRange version)
 		: item_map(item_map), LootTreeNode(nullptr) {

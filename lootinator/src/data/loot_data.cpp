@@ -7,7 +7,7 @@
 namespace data {
 	LootTreeNode::LootTreeNode(data::LootTreeNode* parent) {
 		this->parent = parent;
-		this->child_index = parent == nullptr ? 0 : parent->children.size() - 1;
+		this->child_index = parent == nullptr ? 0 : parent->children.size(); // removed -1, children are added after being created, not before
 	}
 
 	mc::VersionRange LootTreeNode::get_version() {

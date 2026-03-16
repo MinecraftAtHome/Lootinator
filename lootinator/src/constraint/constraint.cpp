@@ -38,18 +38,22 @@ namespace loot {
 		return loot::attributes_match(attributes, other.attributes);
 	}
 
-	Constraint Constraint::truncate(int attribute_prefix_length) const {
-		std::vector<mc::ItemAttribute> attrs;
+	Constraint Constraint::truncate_attribute(int attribute_prefix_length) const {
+		std::vector<mc::ItemAttribute> new_attrs;
 
-		// for prefix of length 0: no attributes, hence -1
-		for (int i = 0; i < attribute_prefix_length - 1; i++) {
-			attrs.push_back(attributes[i]);
+		if (attribute_prefix_length >= 1 && !attributes.empty()) { 
+			new_attrs.push_back(attributes[0]);
+			new_attrs[0].level = -1; // truncation unsets the level
 		}
+		if (attribute_prefix_length >= 2 && !attributes.empty()) { 
+			new_attrs[0].level = attributes[0].level; // set the level
+		}
+		
 		return Constraint{
 			item,
 			count_range,
 			slot_id,
-			attrs
+			new_attrs
 		};
 	}
 

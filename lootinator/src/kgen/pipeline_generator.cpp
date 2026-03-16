@@ -50,11 +50,11 @@ namespace kgen {
 		}
 
 		for (auto& kernel1 : kernels1) {
-			auto& kernel2 = kernels2[0];
-
 			KernelPipeline statepred_pipeline;
 			statepred_pipeline.push_back(kernel1);
-			statepred_pipeline.push_back(kernel2);
+			if (!kernels2.empty()) {
+				statepred_pipeline.push_back(kernels2[0]);
+			}
 			pipelines.push_back(statepred_pipeline);
 		}
 

@@ -26,13 +26,14 @@ namespace kgen {
 		}
 
 		BruteforceKernel bk(root, kgen_config);
-		bk.setup_shared_memory();
+		//bk.setup_shared_memory(); // moved into constructor
 		out.push_back(bk.generate());
 	}
 
 	BruteforceKernel::BruteforceKernel(
 		data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config)
-		: Kernel(root_node, kgen_config) {
+	: Kernel(root_node, kgen_config) {
+		setup_shared_memory(); // moved from post-constructor call to make sure it's processed by child classes
 	}
 
 	// -----------------------------------------------------

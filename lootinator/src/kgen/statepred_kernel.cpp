@@ -17,11 +17,19 @@ namespace kgen {
 		}
 
 		for (auto& constraint : node->constraints) {
-			for (int pfx = 0; pfx < constraint.attributes.size(); pfx++) {
-				loot::Constraint c = constraint.truncate(pfx);
+			for (int pfx = 0; pfx < 2; pfx++) {
+				loot::Constraint c = constraint.truncate_attribute(pfx);
+				if (c == constraint) {
+					continue;
+				}
+
 				StatepredKernel spk(root, entry, c, kgen_config);
 				out.push_back(spk.generate());
 			}
+
+			// we didn't handle the base constraint when truncating
+			StatepredKernel spk(root, entry, constraint, kgen_config);
+			out.push_back(spk.generate());
 		}
 	}
 
@@ -103,7 +111,7 @@ namespace kgen {
 	u64 upper31 = (tid >> 17) * )" << pool->entry_lookup.size() << R"(;
 	
 	#pragma unroll
-	for (int rem = 0; rem < 1; rem++) {
+	for (int rem = )" << entry->next_int_range.min << R"(; rem <= )" << entry->next_int_range.max << R"(; rem++) {
 		u64 state = ((upper31 + rem) << 17) | lower17;
 		statepred_filter(state, data, result_array, result_count);
 	}
@@ -127,12 +135,13 @@ namespace kgen {
 		data::LootFunctionData* func = nullptr;
 		for (auto child : entry->children) {
 			CAST_CHILD(f, data::LootFunctionData, child);
-			if (f->type = data::ENCHANT_RANDOMLY) {
+			if (f->type == data::ENCHANT_RANDOMLY) { // had a nasty = instead of == here
 				func = f;
 			}
 		}
 		if (func == nullptr) {
 			printf("something went wrong, no enchant_randomly found\n");
+			return;
 		}
 
 		// based on the constraint, emit proper filters
@@ -215,7 +224,8 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 	// ------------------------------------------------
 
 	void StatepredKernel::generate_statepred_filter(std::ostream& out) {
-		out << "__device__ void statepred_filter(u64 state, u32 data[], u64* result_array, u32* result_count) {\n";
+		out << "__device__ void statepred_filter(u64 original_state, u32 data[], u64* result_array, u32* result_count) {\n";
+		out << "u64 loot_seed = original_state;\n";
 		out << "i32 calculated_count = 0; // don't know if it will satisfy constraint requirements\n";
 		
 		CAST_CHILD(pool, data::LootPool, entry->parent);
@@ -258,12 +268,30 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		out << "}\n"; // end of for loop
 
 		// check constraint satisfaction
-		for (auto& constraint : pool->constraints) {
-			std::string comp = constraint.count_range.min == constraint.count_range.max ? " == " : ">=";
-			out << "if (!(local_constraints[1] " << comp << constraint.count_range.min << ")) return false;\n";
-		}
+		std::string comp = target_constraint.count_range.min == target_constraint.count_range.max ? " == " : ">=";
+		out << "if (!(local_constraints[1] " << comp << target_constraint.count_range.min << ")) return;\n";
 
-		out << "\n}"; // end of function
+		// Now it's time to go back and do the full forward check:
+		// - calculate min backward state advancement
+		// - calculate max backward state advancement
+		// - loop over the valid range of states
+
+		int32_t min_back = 1; // TODO
+		int32_t max_back = 1; // TODO
+
+		out << Kernel::generate_skip("loot_seed", -min_back) << ";\n";
+		out << "for (int back = 0; back < " << (max_back - min_back + 1) << "; back++) {\n";
+
+		// TODO optimization: calculate possible roll count range and check before doing full forward filter
+		out << R"(
+	if (forward_filter(loot_seed, data)) {
+		write_result(loot_seed ^ JRAND_MULTIPLIER, result_array, result_count);
+	}
+)";
+		out << "    " << Kernel::generate_skip("loot_seed", -1) << ";\n";
+		out << "}\n"; // end of for loop
+
+		out << "}\n\n"; // end of function
 	}
 }
 

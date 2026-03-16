@@ -7,6 +7,11 @@
 namespace data {
 	// ---------------------------------------------------------------
 	// LootTreeNode - base class
+	
+	LootTreeNode::LootTreeNode(data::LootTreeNode* parent) {
+		this->parent = parent;
+		this->child_index = parent == nullptr ? 0 : parent->children.size() - 1;
+	}
 
 	/**
 	 * Returns the Minecraft version range of this node's tree.
@@ -108,6 +113,63 @@ namespace data {
 		std::cout << ']';
 	}
 
+	uint32_t LootEntry::get_min_lcg_advancement() const {
+		uint32_t total_advance = 0;
+		for (auto& func : children) {
+			total_advance += func->get_min_lcg_advancement();
+		}
+		return total_advance;
+	}
+
+	uint32_t LootEntry::get_max_lcg_advancement() const {
+		uint32_t total_advance = 0;
+		for (auto& func : children) {
+			total_advance += func->get_max_lcg_advancement();
+		}
+		return total_advance;
+	}
+
+	LootEntry::LootEntry(LootTreeNode* parent, const nlohmann::json& json,
+		const util::RangeInclusive<uint32_t> next_int_range, int index)
+		: next_int_range(next_int_range), LootTreeNode(parent) {
+		// entry parsing
+		weight = json.contains("weight") ? static_cast<int>(json["weight"]) : 1;
+		this->index = index;
+		if (json["type"] == "minecraft:empty") {
+			// empty entry
+			name = "";
+			type = mc::ItemType::NO_ITEM;
+			item = -1;
+		} else {
+			// item entry
+			name = json["name"];
+			type = mc::string_to_item_type(name);
+			item = get_item_index(name);
+		}
+
+		// loot functions
+		if (json.contains("functions")) {
+			for (auto& function_json : json["functions"]) {
+				children.push_back(new data::LootFunctionData(this, function_json));
+			}
+		}
+	}
+
+	void LootEntry::print(int indentation) const {
+		indent(indentation);
+
+		util::DebugStruct(std::cout, "LootEntry")
+			.add("item", item)
+			.add("name", name)
+			.add("type", type)
+			.add("weight", weight)
+			.add("min_next_int", next_int_range.min)
+			.add("max_next_int", next_int_range.max)
+			.finish();
+		printf(" %p", (void*)this);
+
+		LootTreeNode::print(indentation + LootTreeNode::INDENT_SIZE);
+	}
 
 	// ---------------------------------------------------------------
 	// LootTableRoot
@@ -118,10 +180,11 @@ namespace data {
 	 * @param item_map the item name to item index map to be used while parsing the loot table
 	 * @param version the version range of the target loot table
 	 */
-	LootTableRoot::LootTableRoot(const nlohmann::json& json, const std::unordered_map<std::string, int>& item_map,
-		mc::VersionRange version) : item_map(item_map) {
+
+	LootTableRoot::LootTableRoot(const nlohmann::json& json,
+		const std::unordered_map<std::string, int>& item_map, mc::VersionRange version)
+		: item_map(item_map), LootTreeNode(nullptr) {
 		this->id_counter = 0;
-		this->parent = nullptr;
 		this->version = version;
 
 		auto& pools = json["pools"];
@@ -171,8 +234,10 @@ namespace data {
 	// LootPool
 
 	LootPool::LootPool(LootTreeNode* parent, const nlohmann::json& json)
-		: rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])) {
-		this->parent = parent;
+		: rolls(util::RangeInclusive<std::uint32_t>::from_json(json["rolls"])),
+		  LootTreeNode(parent) {
+
+		int entry_index = 0;
 		for (auto& entry : json["entries"]) {
 			uint32_t entry_weight =
 				(entry.contains("weight") ? static_cast<uint32_t>(entry["weight"]) : 1);
@@ -180,10 +245,12 @@ namespace data {
 			uint32_t end_weight =
 				start_weight + entry_weight - 1; // -1 accounts for range being inclusive-inclusive
 
-			this->children.push_back(new LootEntry(this, entry, {start_weight, end_weight}));
+			this->children.push_back(
+				new LootEntry(this, entry, {start_weight, end_weight}, entry_index++));
 
 			for (uint32_t w = 0; w < entry_weight; w++) {
-				this->entry_lookup.push_back(dynamic_cast<LootEntry*>(this->children.back())->item);
+				this->entry_lookup.push_back(
+					dynamic_cast<LootEntry*>(this->children.back())->index);
 			}
 		}
 	}
@@ -343,11 +410,12 @@ namespace data {
 	// ---------------------------------------------------------------
 	// LootFunctionData
 
-	LootFunctionData::LootFunctionData(LootTreeNode* parent, const nlohmann::json& json) {
-		this->parent = parent;
+	LootFunctionData::LootFunctionData(LootTreeNode* parent, const nlohmann::json& json)
+		: LootTreeNode(parent) {
+
 		LootTableRoot* root = dynamic_cast<LootTableRoot*>(get_root_node());
-		this->id = root->id_counter;
-		root->id_counter++;
+		id = root->id_counter;
+		(root->id_counter)++;
 		type = LootFunctionType::IGNORED;
 
 		this->children = std::vector<LootTreeNode*>();

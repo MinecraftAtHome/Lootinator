@@ -59,11 +59,10 @@ namespace mc {
 					FIRE_ASPECT,
 					SWEEPING_EDGE}},
 			{MACE, {DENSITY, BREACH, WIND_BURST, SMITE, BANE_OF_ARTHROPODS, FIRE_ASPECT}},
-
 			{BOW, {POWER, PUNCH, FLAME, INFINITY_ENCHANTMENT}},
 			{CROSSBOW, {PIERCING, MULTISHOT, QUICK_CHARGE}},
 			{TRIDENT, {IMPALING, RIPTIDE, LOYALTY, CHANNELING}},
-
+			{SPEAR, {LUNGE, SHARPNESS, SMITE, BANE_OF_ARTHROPODS, KNOCKBACK, FIRE_ASPECT, LOOTING}},
 			{PICKAXE, {EFFICIENCY, SILK_TOUCH, FORTUNE}},
 			{AXE, {EFFICIENCY, SILK_TOUCH, FORTUNE}},
 			{SHOVEL, {EFFICIENCY, SILK_TOUCH, FORTUNE}},
@@ -113,6 +112,7 @@ namespace mc {
 		{FLAME, 1},
 		{CHANNELING, 1},
 		{AQUA_AFFINITY, 1},
+		{LUNGE, 3},
 	});
 
 	// enchantability data
@@ -134,92 +134,102 @@ namespace mc {
 	constexpr uint32_t GOLD_ENCHANTABILITY_TOOLS = 22;
 	constexpr uint32_t GOLD_ENCHANTABILITY_ARMOR = 25;
 
-	std::unordered_map<std::string, uint32_t> ITEM_NAME_TO_ENCHANTABILITY(
-		{{"leather_chestplate", LEATHER_ENCHANTABILITY},
-			{"chainmail_chestplate", CHAINMAIL_ENCHANTABILITY},
-			{"copper_chestplate", COPPER_ENCHANTABILITY_ARMOR},
-			{"iron_chestplate", IRON_ENCHANTABILITY_ARMOR},
-			{"golden_chestplate", GOLD_ENCHANTABILITY_ARMOR},
-			{"diamond_chestplate", DIAMOND_ENCHANTABILITY},
-			{"netherite_chestplate", NETHERITE_ENCHANTABILITY},
+	std::unordered_map<std::string, uint32_t> ITEM_NAME_TO_ENCHANTABILITY({
+		{"leather_chestplate", LEATHER_ENCHANTABILITY},
+		{"chainmail_chestplate", CHAINMAIL_ENCHANTABILITY},
+		{"copper_chestplate", COPPER_ENCHANTABILITY_ARMOR},
+		{"iron_chestplate", IRON_ENCHANTABILITY_ARMOR},
+		{"golden_chestplate", GOLD_ENCHANTABILITY_ARMOR},
+		{"diamond_chestplate", DIAMOND_ENCHANTABILITY},
+		{"netherite_chestplate", NETHERITE_ENCHANTABILITY},
 
-			{"leather_helmet", LEATHER_ENCHANTABILITY},
-			{"chainmail_helmet", CHAINMAIL_ENCHANTABILITY},
-			{"copper_helmet", COPPER_ENCHANTABILITY_ARMOR},
-			{"iron_helmet", IRON_ENCHANTABILITY_ARMOR},
-			{"golden_helmet", GOLD_ENCHANTABILITY_ARMOR},
-			{"diamond_helmet", DIAMOND_ENCHANTABILITY},
-			{"netherite_helmet", NETHERITE_ENCHANTABILITY},
-			{"turtle_helmet", TURTLE_ENCHANTABILITY},
+		{"leather_helmet", LEATHER_ENCHANTABILITY},
+		{"chainmail_helmet", CHAINMAIL_ENCHANTABILITY},
+		{"copper_helmet", COPPER_ENCHANTABILITY_ARMOR},
+		{"iron_helmet", IRON_ENCHANTABILITY_ARMOR},
+		{"golden_helmet", GOLD_ENCHANTABILITY_ARMOR},
+		{"diamond_helmet", DIAMOND_ENCHANTABILITY},
+		{"netherite_helmet", NETHERITE_ENCHANTABILITY},
+		{"turtle_helmet", TURTLE_ENCHANTABILITY},
 
-			{"leather_leggings", LEATHER_ENCHANTABILITY},
-			{"chainmail_leggings", CHAINMAIL_ENCHANTABILITY},
-			{"copper_leggings", COPPER_ENCHANTABILITY_ARMOR},
-			{"iron_leggings", IRON_ENCHANTABILITY_ARMOR},
-			{"golden_leggings", GOLD_ENCHANTABILITY_ARMOR},
-			{"diamond_leggings", DIAMOND_ENCHANTABILITY},
-			{"netherite_leggings", NETHERITE_ENCHANTABILITY},
+		{"leather_leggings", LEATHER_ENCHANTABILITY},
+		{"chainmail_leggings", CHAINMAIL_ENCHANTABILITY},
+		{"copper_leggings", COPPER_ENCHANTABILITY_ARMOR},
+		{"iron_leggings", IRON_ENCHANTABILITY_ARMOR},
+		{"golden_leggings", GOLD_ENCHANTABILITY_ARMOR},
+		{"diamond_leggings", DIAMOND_ENCHANTABILITY},
+		{"netherite_leggings", NETHERITE_ENCHANTABILITY},
 
-			{"leather_boots", LEATHER_ENCHANTABILITY},
-			{"chainmail_boots", CHAINMAIL_ENCHANTABILITY},
-			{"copper_boots", COPPER_ENCHANTABILITY_ARMOR},
-			{"iron_boots", IRON_ENCHANTABILITY_ARMOR},
-			{"golden_boots", GOLD_ENCHANTABILITY_ARMOR},
-			{"diamond_boots", DIAMOND_ENCHANTABILITY},
-			{"netherite_boots", NETHERITE_ENCHANTABILITY},
+		{"leather_boots", LEATHER_ENCHANTABILITY},
+		{"chainmail_boots", CHAINMAIL_ENCHANTABILITY},
+		{"copper_boots", COPPER_ENCHANTABILITY_ARMOR},
+		{"iron_boots", IRON_ENCHANTABILITY_ARMOR},
+		{"golden_boots", GOLD_ENCHANTABILITY_ARMOR},
+		{"diamond_boots", DIAMOND_ENCHANTABILITY},
+		{"netherite_boots", NETHERITE_ENCHANTABILITY},
 
-			{"wooden_sword", WOOD_ENCHANTABILITY},
-			{"stone_sword", STONE_ENCHANTABILITY},
-			{"copper_sword", COPPER_ENCHANTABILITY_TOOLS},
-			{"iron_sword", IRON_ENCHANTABILITY_TOOLS},
-			{"golden_sword", GOLD_ENCHANTABILITY_TOOLS},
-			{"diamond_sword", DIAMOND_ENCHANTABILITY},
-			{"netherite_sword", NETHERITE_ENCHANTABILITY},
+		{"wooden_sword", WOOD_ENCHANTABILITY},
+		{"stone_sword", STONE_ENCHANTABILITY},
+		{"copper_sword", COPPER_ENCHANTABILITY_TOOLS},
+		{"iron_sword", IRON_ENCHANTABILITY_TOOLS},
+		{"golden_sword", GOLD_ENCHANTABILITY_TOOLS},
+		{"diamond_sword", DIAMOND_ENCHANTABILITY},
+		{"netherite_sword", NETHERITE_ENCHANTABILITY},
 
-			{"mace", MACE_ENCHANTABILITY},
-			{"bow", BASE_ENCHANTABILITY},
-			{"crossbow", BASE_ENCHANTABILITY},
-			{"trident", BASE_ENCHANTABILITY},
+		{"mace", MACE_ENCHANTABILITY},
+		{"bow", BASE_ENCHANTABILITY},
+		{"crossbow", BASE_ENCHANTABILITY},
+		{"trident", BASE_ENCHANTABILITY},
 
-			{"wooden_pickaxe", WOOD_ENCHANTABILITY},
-			{"stone_pickaxe", STONE_ENCHANTABILITY},
-			{"copper_pickaxe", COPPER_ENCHANTABILITY_TOOLS},
-			{"iron_pickaxe", IRON_ENCHANTABILITY_TOOLS},
-			{"golden_pickaxe", GOLD_ENCHANTABILITY_TOOLS},
-			{"diamond_pickaxe", DIAMOND_ENCHANTABILITY},
-			{"netherite_pickaxe", NETHERITE_ENCHANTABILITY},
+		{"wooden_pickaxe", WOOD_ENCHANTABILITY},
+		{"stone_pickaxe", STONE_ENCHANTABILITY},
+		{"copper_pickaxe", COPPER_ENCHANTABILITY_TOOLS},
+		{"iron_pickaxe", IRON_ENCHANTABILITY_TOOLS},
+		{"golden_pickaxe", GOLD_ENCHANTABILITY_TOOLS},
+		{"diamond_pickaxe", DIAMOND_ENCHANTABILITY},
+		{"netherite_pickaxe", NETHERITE_ENCHANTABILITY},
 
-			{"wooden_axe", WOOD_ENCHANTABILITY},
-			{"stone_axe", STONE_ENCHANTABILITY},
-			{"copper_axe", COPPER_ENCHANTABILITY_TOOLS},
-			{"iron_axe", IRON_ENCHANTABILITY_TOOLS},
-			{"golden_axe", GOLD_ENCHANTABILITY_TOOLS},
-			{"diamond_axe", DIAMOND_ENCHANTABILITY},
-			{"netherite_axe", NETHERITE_ENCHANTABILITY},
+		{"wooden_axe", WOOD_ENCHANTABILITY},
+		{"stone_axe", STONE_ENCHANTABILITY},
+		{"copper_axe", COPPER_ENCHANTABILITY_TOOLS},
+		{"iron_axe", IRON_ENCHANTABILITY_TOOLS},
+		{"golden_axe", GOLD_ENCHANTABILITY_TOOLS},
+		{"diamond_axe", DIAMOND_ENCHANTABILITY},
+		{"netherite_axe", NETHERITE_ENCHANTABILITY},
 
-			{"wooden_shovel", WOOD_ENCHANTABILITY},
-			{"stone_shovel", STONE_ENCHANTABILITY},
-			{"copper_shovel", COPPER_ENCHANTABILITY_TOOLS},
-			{"iron_shovel", IRON_ENCHANTABILITY_TOOLS},
-			{"golden_shovel", GOLD_ENCHANTABILITY_TOOLS},
-			{"diamond_shovel", DIAMOND_ENCHANTABILITY},
-			{"netherite_shovel", NETHERITE_ENCHANTABILITY},
+		{"wooden_shovel", WOOD_ENCHANTABILITY},
+		{"stone_shovel", STONE_ENCHANTABILITY},
+		{"copper_shovel", COPPER_ENCHANTABILITY_TOOLS},
+		{"iron_shovel", IRON_ENCHANTABILITY_TOOLS},
+		{"golden_shovel", GOLD_ENCHANTABILITY_TOOLS},
+		{"diamond_shovel", DIAMOND_ENCHANTABILITY},
+		{"netherite_shovel", NETHERITE_ENCHANTABILITY},
 
-			{"wooden_hoe", WOOD_ENCHANTABILITY},
-			{"stone_hoe", STONE_ENCHANTABILITY},
-			{"copper_hoe", COPPER_ENCHANTABILITY_TOOLS},
-			{"iron_hoe", IRON_ENCHANTABILITY_TOOLS},
-			{"golden_hoe", GOLD_ENCHANTABILITY_TOOLS},
-			{"diamond_hoe", DIAMOND_ENCHANTABILITY},
-			{"netherite_hoe", NETHERITE_ENCHANTABILITY},
+		{"wooden_hoe", WOOD_ENCHANTABILITY},
+		{"stone_hoe", STONE_ENCHANTABILITY},
+		{"copper_hoe", COPPER_ENCHANTABILITY_TOOLS},
+		{"iron_hoe", IRON_ENCHANTABILITY_TOOLS},
+		{"golden_hoe", GOLD_ENCHANTABILITY_TOOLS},
+		{"diamond_hoe", DIAMOND_ENCHANTABILITY},
+		{"netherite_hoe", NETHERITE_ENCHANTABILITY},
 
-			{"fishing_rod", BASE_ENCHANTABILITY},
-			{"book", BASE_ENCHANTABILITY},
-			{"enchanted_book", BASE_ENCHANTABILITY}});
+		{"fishing_rod", BASE_ENCHANTABILITY},
+		{"book", BASE_ENCHANTABILITY},
+		{"enchanted_book", BASE_ENCHANTABILITY},
+
+		{"wooden_spear", WOOD_ENCHANTABILITY},
+		{"golden_spear", GOLD_ENCHANTABILITY_TOOLS},
+		{"stone_spear", STONE_ENCHANTABILITY},
+		{"copper_spear", COPPER_ENCHANTABILITY_TOOLS},
+		{"iron_spear", IRON_ENCHANTABILITY_TOOLS},
+		{"diamond_spear", DIAMOND_ENCHANTABILITY},
+		{"netherite_spear", NETHERITE_ENCHANTABILITY},
+	});
 
 	// item name to enum translation (and reverse for debugging purposes)
 
-	std::unordered_map<mc::ItemType, std::string> ITEM_TYPE_TO_NAME({{CHESTPLATE, "chestplate"},
+	std::unordered_map<mc::ItemType, std::string> ITEM_TYPE_TO_NAME({
+		{CHESTPLATE, "chestplate"},
 		{HELMET, "helmet"},
 		{LEGGINGS, "leggings"},
 		{BOOTS, "boots"},
@@ -233,7 +243,10 @@ namespace mc {
 		{SHOVEL, "shovel"},
 		{HOE, "hoe"},
 		{FISHING_ROD, "fishing_rod"},
-		{BOOK, "book"}});
+		{BOOK, "book"},
+		{SPEAR, "spear"},
+	});
+
 	std::unordered_map<std::string, mc::ItemType> ITEM_NAME_TO_ITEM_TYPE(
 		{{"chestplate", CHESTPLATE},
 			{"leather_chestplate", CHESTPLATE},
@@ -322,13 +335,22 @@ namespace mc {
 			{"diamond_hoe", HOE},
 			{"netherite_hoe", HOE},
 
+			{"wooden_spear", SPEAR},
+			{"golden_spear", SPEAR},
+			{"stone_spear", SPEAR},
+			{"copper_spear", SPEAR},
+			{"iron_spear", SPEAR},
+			{"diamond_spear", SPEAR},
+			{"netherite_spear", SPEAR},
+
 			{"fishing_rod", FISHING_ROD},
 			{"book", BOOK},
 			{"enchanted_book", BOOK}});
 
 	// bidirectional map for enchantment name <-> enum translation
 
-	util::EnumToStringBimap<mc::Enchantment> ENCHANTMENT_TO_NAME({{EFFICIENCY, "efficiency"},
+	util::EnumToStringBimap<mc::Enchantment> ENCHANTMENT_TO_NAME({
+		{EFFICIENCY, "efficiency"},
 		{SHARPNESS, "sharpness"},
 		{SMITE, "smite"},
 		{BANE_OF_ARTHROPODS, "bane_of_arthropods"},
@@ -370,7 +392,9 @@ namespace mc {
 		{FLAME, "flame"},
 		{CHANNELING, "channeling"},
 		{AQUA_AFFINITY, "aqua_affinity"},
-		{NO_ENCHANTMENT, "no_enchantment"}});
+		{LUNGE, "lunge"},
+		{NO_ENCHANTMENT, "no_enchantment"},
+	});
 
 	// validation of enchantment level i and effective level n for enchant_with_levels
 	std::unordered_map<mc::Enchantment, std::function<bool(int, int)>> ENCHANT_LEVEL_VALIDATORS(
@@ -462,11 +486,13 @@ namespace mc {
 					return n >= 25 && n <= 50;
 				}},
 			{DENSITY, [](int i, int n) { return n >= 5 + (i - 1) * 8 && n <= 25 + (i - 1) * 8; }},
+			{LUNGE, [](int i, int n) { return n >= 5 + (i - 1) * 8 && n <= 25 + (i - 1) * 8; }},
 			{BREACH, [](int i, int n) { return n >= 15 + (i - 1) * 9 && n <= 65 + (i - 1) * 9; }},
 			{WIND_BURST,
 				[](int i, int n) { return n >= 15 + (i - 1) * 9 && n <= 65 + (i - 1) * 9; }}});
 
-	std::unordered_map<mc::Enchantment, int> ENCHANTMENT_GROUPS({{NO_ENCHANTMENT, 0},
+	std::unordered_map<mc::Enchantment, int> ENCHANTMENT_GROUPS({
+		{NO_ENCHANTMENT, 0},
 
 		{PROTECTION, 1},
 		{FIRE_PROTECTION, 1},
@@ -528,7 +554,10 @@ namespace mc {
 		{WIND_BURST, 27},
 		{UNBREAKING, 28},
 		{CURSE_OF_VANISHING, 29},
-		{CURSE_OF_BINDING, 30}});
+		{CURSE_OF_BINDING, 30},
+
+		{LUNGE, 31},
+	});
 
 	// --------------------------------------------------------------------------------------------------
 	// public api
@@ -626,8 +655,9 @@ namespace mc {
 	 * @return the enchantability for the provided item name or 0 if the item is invalid.
 	 */
 	uint32_t get_enchantability(const std::string& item_name) {
-		if (ITEM_NAME_TO_ENCHANTABILITY.find(item_name) != ITEM_NAME_TO_ENCHANTABILITY.end()) {
-			return ITEM_NAME_TO_ENCHANTABILITY.at(item_name);
+		std::string stripped_name = mc::strip_prefix(item_name);
+		if (ITEM_NAME_TO_ENCHANTABILITY.find(stripped_name) != ITEM_NAME_TO_ENCHANTABILITY.end()) {
+			return ITEM_NAME_TO_ENCHANTABILITY.at(stripped_name);
 		} else {
 			return 0;
 		}
@@ -712,7 +742,7 @@ namespace mc {
 				PIERCING,
 				MENDING,
 				CURSE_OF_VANISHING}});
-		} else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_9) {
+		} else if (version_range == mc::VersionRange::MC_1_21_TO_1_21_10) {
 			return std::vector<mc::Enchantment>({{PROTECTION,
 				FIRE_PROTECTION,
 				FEATHER_FALLING,
@@ -752,6 +782,49 @@ namespace mc {
 				CURSE_OF_VANISHING,
 				FROST_WALKER,
 				MENDING}});
+		} else if (version_range == mc::VersionRange::MC_1_21_11_TO_26_1) {
+			return std::vector<mc::Enchantment>({{
+				PROTECTION,
+				FIRE_PROTECTION,
+				FEATHER_FALLING,
+				BLAST_PROTECTION,
+				PROJECTILE_PROTECTION,
+				RESPIRATION,
+				AQUA_AFFINITY,
+				THORNS,
+				DEPTH_STRIDER,
+				SHARPNESS,
+				SMITE,
+				BANE_OF_ARTHROPODS,
+				KNOCKBACK,
+				FIRE_ASPECT,
+				LOOTING,
+				SWEEPING_EDGE,
+				EFFICIENCY,
+				SILK_TOUCH,
+				UNBREAKING,
+				FORTUNE,
+				POWER,
+				PUNCH,
+				FLAME,
+				INFINITY_ENCHANTMENT,
+				LUCK_OF_THE_SEA,
+				LURE,
+				LOYALTY,
+				IMPALING,
+				RIPTIDE,
+				CHANNELING,
+				MULTISHOT,
+				QUICK_CHARGE,
+				PIERCING,
+				DENSITY,
+				BREACH,
+				LUNGE,
+				CURSE_OF_BINDING,
+				CURSE_OF_VANISHING,
+				FROST_WALKER,
+				MENDING,
+			}});
 		} else {
 			std::cerr << "minecraft.cpp: get_enchantments_for_version(): Bad version range: "
 					  << version_range << '\n';
@@ -799,8 +872,9 @@ namespace mc {
 	}
 
 	mc::Enchantment string_to_enchantment(const std::string& enchantment_string) {
-		if (ENCHANTMENT_TO_NAME.contains_string(enchantment_string)) {
-			return ENCHANTMENT_TO_NAME.lookup_string(enchantment_string);
+		std::string stripped_name = mc::strip_prefix(enchantment_string);
+		if (ENCHANTMENT_TO_NAME.contains_string(stripped_name)) {
+			return ENCHANTMENT_TO_NAME.lookup_string(stripped_name);
 		} else {
 			return mc::Enchantment::NO_ENCHANTMENT;
 		}

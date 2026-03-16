@@ -20,7 +20,7 @@ int main() {
 		"../../example/src/simple_constraints_2.json",
 		"../../example/src/item_map.txt",
 		"../../example/src/ruined_portal.json",
-		mc::MC_1_21_TO_1_21_9};
+		mc::MC_1_21_TO_1_21_10};
 	std::vector<kgen::ConfiguredKernel> kernels;
 
   // generate all "bruteforce" kernels

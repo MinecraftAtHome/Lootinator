@@ -1,6 +1,7 @@
 #ifndef LOOTINATOR_KERNGEN_BRUTEFORCE_KERNEL_H
 #define LOOTINATOR_KERNGEN_BRUTEFORCE_KERNEL_H
 
+#include "lootinator/data/loot_data.hpp"
 #include "lootinator/kgen/kernel.hpp"
 
 namespace kgen {
@@ -19,8 +20,10 @@ namespace kgen {
 
 		std::string to_string();
 		std::string create_forbidden_item_mask(data::LootPool* pool);
-		//void emit_skip_for_entry(std::ostream& out, data::LootEntry* entry);
-		//void emit_cuda_for_entry(std::ostream& out, data::LootEntry* entry);
+		std::string create_apply_damage_item_mask(data::LootPool* pool);
+
+		// void emit_skip_for_entry(std::ostream& out, data::LootEntry* entry);
+		// void emit_cuda_for_entry(std::ostream& out, data::LootEntry* entry);
 		void emit_cuda_for_pool(std::ostream& out, data::LootPool* pool, int pool_idx);
 		void generate_forward_filter(std::ostream& out);
 
@@ -29,6 +32,14 @@ namespace kgen {
 		void setup_entry_memory(data::LootPool* pool);
 		virtual void setup_shared_memory() override;
 		virtual void fill_function_shared_mem(data::LootTreeNode* current) override;
+
+		void emit_function_apply_damage(std::ostream& out, data::LootPool* pool);
+		void emit_function_enchant_with_levels(std::ostream& out);
+		void emit_function_enchant_randomly(std::ostream& out);
+		void emit_function_set_count(std::ostream& out);
+		void extract_data_prefix(std::ostream& out, data::LootPool* loot_pool, int pool_off);
+
+		void setup_enchant_with_levels(data::LootTreeNode* node, int total_entry_offset);
 	};
 } // namespace kgen
 

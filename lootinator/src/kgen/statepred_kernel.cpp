@@ -56,11 +56,12 @@ namespace kgen {
 	StatepredKernel::StatepredKernel(data::LootTableRoot& root_node, data::LootEntry* entry,
 		loot::Constraint& target_constraint, const kgen::KernelGenConfig& kgen_config)
 		: BruteforceKernel(root_node, kgen_config), target_constraint(target_constraint) {
-	
+
 		this->entry = entry;
 
-		// compute the nextInt bound we're predicting on - here it's just the total weight of the loot table
-		// but int the future (TODO) we might want to predict on enchantment id, roll count, durability...
+		// compute the nextInt bound we're predicting on - here it's just the total weight of the
+		// loot table but int the future (TODO) we might want to predict on enchantment id, roll
+		// count, durability...
 		CAST_CHILD(pool, data::LootPool, entry->parent);
 		this->prediction_bound = pool->get_total_weight();
 	}
@@ -108,10 +109,13 @@ namespace kgen {
 
 	u64 tid = (u64)blockDim.x * blockIdx.x + threadIdx.x + offset;
 	u32 lower17 = tid & ((1ull << 17) - 1);
-	u64 upper31 = (tid >> 17) * )" << pool->entry_lookup.size() << R"(;
+	u64 upper31 = (tid >> 17) * )"
+			   << pool->entry_lookup.size() << R"(;
 	
 	#pragma unroll
-	for (int rem = )" << entry->next_int_range.min << R"(; rem <= )" << entry->next_int_range.max << R"(; rem++) {
+	for (int rem = )"
+			   << entry->next_int_range.min << R"(; rem <= )" << entry->next_int_range.max
+			   << R"(; rem++) {
 		u64 state = ((upper31 + rem) << 17) | lower17;
 		statepred_filter(state, data, result_array, result_count);
 	}
@@ -122,11 +126,14 @@ namespace kgen {
 
 	// ------------------------------------------------
 
-	void StatepredKernel::emit_entry_function_set_count(std::ostream& out, const SharedEntryData& data) {
-		out << "calculated_count = nextIntBounded(&loot_seed, " << data.min_count << ", " << data.max_count << ");";
+	void StatepredKernel::emit_entry_function_set_count(
+		std::ostream& out, const SharedEntryData& data) {
+		out << "calculated_count = nextIntBounded(&loot_seed, " << data.min_count << ", "
+			<< data.max_count << ");";
 	}
 
-	void StatepredKernel::emit_entry_function_enchant_randomly(std::ostream& out, const SharedEntryData& data) {
+	void StatepredKernel::emit_entry_function_enchant_randomly(
+		std::ostream& out, const SharedEntryData& data) {
 		if (!(!(data.enchantment_mask & 1) && data.enchantment_count > 0)) {
 			return;
 		}
@@ -145,9 +152,9 @@ namespace kgen {
 		}
 
 		// based on the constraint, emit proper filters
+		out << "i32 enchant_id = " << data.enchantment_count << " != 0 ? nextInt(&loot_seed, "
+			<< data.enchantment_count << ") : 64;\n";
 
-		out << "i32 enchant_id = " << data.enchantment_count << " != 0 ? nextInt(&loot_seed, enchantment_count) : 64;\n";
-		
 		if (target_constraint.attributes.empty()) {
 			// no attributes - skip
 			out << "bool r = ((" << (data.enchantment_mask >> 1) << R"() & (1ULL << enchant_id));
@@ -158,7 +165,8 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 
 		// find index of filtered enchantment in the order vector
 		auto& vec = func->enchant_randomly.enchantment_order;
-		mc::Enchantment target_ench = mc::get_enchantment_from_attribute(target_constraint.attributes[0]);
+		mc::Enchantment target_ench =
+			mc::get_enchantment_from_attribute(target_constraint.attributes[0]);
 		int ench_idx = 0;
 		for (; ench_idx < vec.size(); ench_idx++) {
 			if (vec[ench_idx] == target_ench) {
@@ -167,7 +175,8 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		}
 
 		out << "if (enchant_id != " << ench_idx << ") return;\n";
-		if (target_constraint.attributes.size() == 1) {
+
+		if (target_constraint.attributes[0].level == -1) {
 			if ((data.enchantment_mask >> 1) & (1ULL << ench_idx)) {
 				out << "loot_seed = (loot_seed * 25214903917 + 11) & MASK_48;\n";
 			}
@@ -176,16 +185,20 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 
 		// enchantment and level
 		int max_level = mc::get_max_level(target_ench);
-		out << "if (nextInt(&loot_seed, " << max_level << ") + 1 != " << target_constraint.attributes[0].level << ") return;\n";
+		out << "if (nextInt(&loot_seed, " << max_level
+			<< ") + 1 != " << target_constraint.attributes[0].level << ") return;\n";
 	}
 
-	void StatepredKernel::emit_entry_function_enchant_with_levels(std::ostream& out, const SharedEntryData& data) {
-		if (data.enchantment_mask & 1) { 
-			out << "enchant_with_levels_function(&loot_seed, &(data[" << (data.enchantment_mask >> 1) << "]));";
+	void StatepredKernel::emit_entry_function_enchant_with_levels(
+		std::ostream& out, const SharedEntryData& data) {
+		if (data.enchantment_mask & 1) {
+			out << "enchant_with_levels_function(&loot_seed, &(data["
+				<< (data.enchantment_mask >> 1) << "]));";
 		}
 	}
 
-	void StatepredKernel::emit_entry_function_apply_damage(std::ostream& out, const SharedEntryData& data, data::LootPool* pool) {
+	void StatepredKernel::emit_entry_function_apply_damage(
+		std::ostream& out, const SharedEntryData& data, data::LootPool* pool) {
 		std::string apply_damage_bitmask = create_apply_damage_item_mask(pool);
 		std::string one = pool->children.size() > 32 ? "((u64)1)" : "((u32)1)";
 
@@ -194,7 +207,8 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		})";
 	}
 
-	void StatepredKernel::emit_state_prediction_entry_handler(std::ostream& out, const SharedEntryData& data) {
+	void StatepredKernel::emit_state_prediction_entry_handler(
+		std::ostream& out, const SharedEntryData& data) {
 		CAST_CHILD(pool, data::LootPool, entry->parent);
 
 		for (auto& child : entry->children) {
@@ -217,6 +231,9 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 					emit_entry_function_set_count(out, data);
 					break;
 				}
+				case data::IGNORED:
+				default: {
+				}
 			}
 		}
 	}
@@ -224,10 +241,12 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 	// ------------------------------------------------
 
 	void StatepredKernel::generate_statepred_filter(std::ostream& out) {
-		out << "__device__ void statepred_filter(u64 original_state, u32 data[], u64* result_array, u32* result_count) {\n";
+		out << "__device__ void statepred_filter(u64 original_state, u32 data[], u64* "
+			   "result_array, u32* result_count) {\n";
 		out << "u64 loot_seed = original_state;\n";
-		out << "i32 calculated_count = 0; // don't know if it will satisfy constraint requirements\n";
-		
+		out << "i32 calculated_count = 1; // don't know if it will satisfy constraint "
+			   "requirements\n";
+
 		CAST_CHILD(pool, data::LootPool, entry->parent);
 		int pool_off = this->pool_memory_offsets[pool->child_index];
 		materialize_level(pool);
@@ -235,11 +254,14 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		std::string arrayPlusIndex = var_name_map[item_ident];
 
 		SharedEntryData sed(pool_off, kgen_config.bytes_per_entry, entry, combined_shared_memory);
-		emit_state_prediction_entry_handler(out, sed); // initializes calculated_count, processes entry functions
+		emit_state_prediction_entry_handler(
+			out, sed); // initializes calculated_count, processes entry functions
 
+		// if (this->target_constraint.count_range.max - this->target_constraint.count_range.min >
+		// 0) {
 		out << "i32 local_constraints[" << (pool->constraints.size() + 1) << "] = {0};\n";
 		out << arrayPlusIndex << " = calculated_count;\n";
-		out << "for (i32 roll = 0; roll < " << (pool->rolls.max-1) << "; roll++) {\n";
+		out << "for (i32 roll = 0; roll < " << (pool->rolls.max - 1) << "; roll++) {\n";
 
 		extract_data_prefix(out, pool, pool_off);
 
@@ -268,21 +290,25 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		out << "}\n"; // end of for loop
 
 		// check constraint satisfaction
-		std::string comp = target_constraint.count_range.min == target_constraint.count_range.max ? " == " : ">=";
-		out << "if (!(local_constraints[1] " << comp << target_constraint.count_range.min << ")) return;\n";
+		std::string comp =
+			target_constraint.count_range.min == target_constraint.count_range.max ? " == " : ">=";
+		out << "if (!(local_constraints[1] " << comp << target_constraint.count_range.min
+			<< ")) return;\n";
+		// }
 
 		// Now it's time to go back and do the full forward check:
 		// - calculate min backward state advancement
 		// - calculate max backward state advancement
 		// - loop over the valid range of states
-
-		int32_t min_back = 1; // TODO
-		int32_t max_back = 1; // TODO
+		int32_t min_back = 1;								// TODO
+		int32_t max_back = pool->get_max_lcg_advancement(); // TODO done???
 
 		out << Kernel::generate_skip("loot_seed", -min_back) << ";\n";
+		// out << "#pragma unroll\n";
 		out << "for (int back = 0; back < " << (max_back - min_back + 1) << "; back++) {\n";
 
-		// TODO optimization: calculate possible roll count range and check before doing full forward filter
+		// TODO optimization: calculate possible roll count range and check before doing full
+		// forward filter
 		out << R"(
 	if (forward_filter(loot_seed, data)) {
 		write_result(loot_seed ^ JRAND_MULTIPLIER, result_array, result_count);
@@ -293,6 +319,4 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 
 		out << "}\n\n"; // end of function
 	}
-}
-
-
+} // namespace kgen

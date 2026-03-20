@@ -14,17 +14,17 @@ int main() {
 		"../../../../example/src/midas.json",
 		"../../../../example/src/item_map_ac.txt",
 #elif __linux__
-		"../../example/src/buried_treasure.json",
-		"../../example/src/ask_for_help.json",
-		"../../example/src/bt.txt",
+		"../../example/src/chests_ancient_city.json",
+		"../../example/src/midas.json",
+		"../../example/src/item_map_ac.txt",
 #endif
 		false);
 
 	kgen::PipelineGenerator pipeline_gen(kgen_config);
-	const auto& pipelines = pipeline_gen.add_bruteforce().add_state_prediction().build();
+	const auto& pipelines = pipeline_gen.add_state_prediction().build();
 
 	for (int k = 0; k < pipelines.size(); k++) {
-		std::ofstream fout("bt_" + std::to_string(k) + ".cu");
+		std::ofstream fout("midas" + std::to_string(k) + ".cu");
 		kgen::generate_runner_source(pipelines[k], fout);
 		fout.close();
 	}

@@ -7,7 +7,11 @@
 namespace data {
 	LootTreeNode::LootTreeNode(data::LootTreeNode* parent) {
 		this->parent = parent;
-		this->child_index = parent == nullptr ? 0 : parent->children.size(); // removed -1, children are added after being created, not before
+		this->child_index =
+			parent == nullptr
+				? 0
+				: parent->children
+					  .size(); // removed -1, children are added after being created, not before
 	}
 
 	mc::VersionRange LootTreeNode::get_version() {
@@ -77,6 +81,16 @@ namespace data {
 			std::cout << ", ";
 		}
 		std::cout << ']';
+	}
+
+	int LootEntry::get_enchant_vector_size() const {
+		for (auto child : this->children) {
+			CAST_CHILD(function, data::LootFunctionData, child);
+			if (function->type != data::LootFunctionType::ENCHANT_RANDOMLY) {
+				continue;
+			}
+			return function->enchant_randomly.enchantment_order.size();
+		}
 	}
 
 	uint32_t LootEntry::get_min_lcg_advancement() const {

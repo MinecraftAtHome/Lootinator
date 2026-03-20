@@ -53,6 +53,8 @@ namespace data {
 		bool matches_constraint(const loot::Constraint& constraint) const;
 		util::RangeInclusive<uint32_t> get_count_range() const;
 
+		int get_enchant_vector_size() const;
+
 		LootEntry(LootTreeNode* parent, const nlohmann::json& json,
 			const util::RangeInclusive<uint32_t> next_int_range, int index);
 		virtual void print(int indentation) const override;

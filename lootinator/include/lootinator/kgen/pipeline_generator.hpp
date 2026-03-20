@@ -8,18 +8,17 @@ namespace kgen {
 		const KernelGenConfig& config;
 		std::vector<KernelPipeline> pipelines;
 
-	public:
+	  public:
 		PipelineGenerator(const KernelGenConfig& kgen_config);
 
 		PipelineGenerator& add_bruteforce();
 		PipelineGenerator& add_state_prediction();
 		//...
+		std::vector<KernelPipeline> build();
 
-		const std::vector<KernelPipeline>& build() const;
-
-	private:
+	  private:
 		bool data_has_enchantments();
 	};
-};
+}; // namespace kgen
 
 #endif

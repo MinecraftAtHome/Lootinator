@@ -80,31 +80,33 @@ namespace kgen {
 		for (auto child : node->children) {
 			update_functions(child, removed_vec);
 			CAST_CHILD(func, data::LootFunctionData, child);
-			if (func == nullptr) { 
-				continue; 
+			if (func == nullptr) {
+				continue;
 			}
 			removed_vec[func->type] = false;
 		}
 	}
 
-	void KernelGenConfig::construct_order(bool** edges, const int num_functions, data::LootTreeNode* root) {
+	void KernelGenConfig::construct_order(
+		bool** edges, const int num_functions, data::LootTreeNode* root) {
 		// while there are unused vertices, find the root and remove it from the graph.
 		// when removing, push back to function order vector
 
 		bool* removed = new bool[num_functions];
-		for (int i = 0; i < num_functions; i++) { 
-			removed[i] = true; 
+		for (int i = 0; i < num_functions; i++) {
+			removed[i] = true;
 		}
 		update_functions(root, removed);
 
 		int remaining = 0;
-		for (int i = 0; i < num_functions; i++) { 
-			remaining += !removed[i]; 
+		for (int i = 0; i < num_functions; i++) {
+			remaining += !removed[i];
 		}
 
 		while (remaining > 0) {
 			for (int v = 0; v < num_functions; v++) {
-				if (removed[v]) continue;
+				if (removed[v])
+					continue;
 
 				// go back to the root, as far as you can
 				int current = v;
@@ -154,7 +156,7 @@ namespace kgen {
 		// "DFS"
 		bool* visited = new bool[NUM_FUNCTIONS];
 		for (int v = 0; v < NUM_FUNCTIONS; v++) {
-			for (int v2 = 0; v2 < NUM_FUNCTIONS; v2++) 
+			for (int v2 = 0; v2 < NUM_FUNCTIONS; v2++)
 				visited[v2] = false;
 			visited[v] = true;
 			if (check_cycles_dfs(v, NUM_FUNCTIONS, edges, visited)) {
@@ -185,7 +187,7 @@ namespace kgen {
 			uint32_t last = function_memory_offsets.back();
 
 			if (func->type == data::LootFunctionType::ENCHANT_WITH_LEVELS) {
-				//printf("func: %ld %ld %ld\n",
+				// printf("func: %ld %ld %ld\n",
 				//	func->enchant_with_levels.enchantability,
 				//	func->enchant_with_levels.level.min,
 				//	func->enchant_with_levels.level.max);
@@ -243,11 +245,11 @@ namespace kgen {
 
 		fill_function_shared_mem(&root_node);
 		uint32_t last_pool_offset = pool_memory_offsets.back();
-		//printf("%ld\n", last_pool_offset);
+		// printf("%ld\n", last_pool_offset);
 		int i = 0;
 		for (auto& func_off : function_memory_offsets) {
 			func_off += last_pool_offset;
-			//printf("start_index for function %d = %d\n", i++, func_off);
+			// printf("start_index for function %d = %d\n", i++, func_off);
 		}
 	}
 
@@ -313,4 +315,9 @@ __device__ void enchant_with_levels_function(u64* rand, const u32* array_pointer
 #endif
 )";
 	}
+
+	float Kernel::heuristic() const {
+		return 1.0f;
+	}
+
 } // namespace kgen

@@ -8,10 +8,11 @@
 #include "lootinator/kgen/statepred_kernel.hpp"
 // ...
 
-
 namespace kgen {
-	PipelineGenerator::PipelineGenerator(const KernelGenConfig& kgen_config) // TODO add number of kernels returned
-		: config(kgen_config) {}
+	PipelineGenerator::PipelineGenerator(
+		const KernelGenConfig& kgen_config) // TODO add number of kernels returned
+		: config(kgen_config) {
+	}
 
 	// FIXME this treats every attribute as enchantment
 	bool PipelineGenerator::data_has_enchantments() {
@@ -50,6 +51,7 @@ namespace kgen {
 		}
 
 		for (auto& kernel1 : kernels1) {
+			printf("%f\n", kernel1.heuristic);
 			KernelPipeline statepred_pipeline;
 			statepred_pipeline.push_back(kernel1);
 			if (!kernels2.empty()) {
@@ -61,10 +63,14 @@ namespace kgen {
 		return *this;
 	}
 
-	const std::vector<KernelPipeline>& PipelineGenerator::build() const {
-		// TODO calc heuristic performance for each pipeline, 
+	std::vector<KernelPipeline> PipelineGenerator::build() {
+		// TODO calc heuristic performance for each pipeline,
 		// sort, return top-scoring N
-
+		std::sort(pipelines.begin(),
+			pipelines.end(),
+			[](const kgen::KernelPipeline& a, const kgen::KernelPipeline& b) {
+				return a[0].heuristic < b[0].heuristic;
+			});
 		return pipelines;
 	}
-}
+} // namespace kgen

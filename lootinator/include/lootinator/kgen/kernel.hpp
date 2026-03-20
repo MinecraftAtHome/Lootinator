@@ -45,6 +45,7 @@ namespace kgen {
 		uint32_t end_batch;
 
 		uint32_t max_results;
+		float heuristic;
 	};
 
 	class Kernel {
@@ -62,6 +63,7 @@ namespace kgen {
 
 		Kernel(data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config);
 		virtual ConfiguredKernel generate() = 0;
+		virtual float heuristic() const;
 
 	  protected:
 		static void write_shared_definitions(std::ostream& out);

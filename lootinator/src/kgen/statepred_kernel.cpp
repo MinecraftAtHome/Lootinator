@@ -1,5 +1,6 @@
 #include "lootinator/kgen/statepred_kernel.hpp"
 #include "lootinator/global_settings.hpp"
+#include "lootinator/utility/mth.h"
 
 #include <iostream>
 #include <sstream>
@@ -70,7 +71,8 @@ namespace kgen {
 		uint64_t threads_per_batch = (UINT64_C(1) << 32);
 		uint64_t total_threads = (UINT64_C(1) << 48) / this->prediction_bound;
 		uint32_t end_batch = total_threads / threads_per_batch;
-		return ConfiguredKernel{this->name,
+		return ConfiguredKernel{
+			this->name,
 			to_string(),
 			total_threads,
 			threads_per_batch,
@@ -79,7 +81,9 @@ namespace kgen {
 			0,
 			0,
 			end_batch,
-			UINT32_C(1) << 19};
+			UINT32_C(1) << 19,
+			this->heuristic(),
+		};
 	}
 
 	std::string kgen::StatepredKernel::to_string() {
@@ -319,4 +323,55 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 
 		out << "}\n\n"; // end of function
 	}
+
+	static float calculate_reduction(const StatepredKernel* sp) {
+		CAST_CHILD(pool, data::LootPool, sp->entry->parent);
+
+		uint64_t target = sp->target_constraint.count_range.min;
+		uint64_t max_rolls = pool->rolls.max;
+		uint64_t remainders = sp->entry->next_int_range.max - sp->entry->next_int_range.min + 1;
+		float p = ((float)remainders / (float)sp->prediction_bound);
+
+		float pre = 1.0f;
+
+		for (const auto& attribute : sp->target_constraint.attributes) { // totally a vector
+			p *= (1.0f / (float)sp->entry->get_enchant_vector_size());
+			pre *= (1.0f / (float)sp->entry->get_enchant_vector_size());
+			if (attribute.level != -1) {
+				p *= (1.0f /
+					  (float)mc::get_max_level(mc::get_enchantment_from_attribute(attribute)));
+				pre *= (1.0f /
+						(float)mc::get_max_level(mc::get_enchantment_from_attribute(attribute)));
+			}
+		}
+
+		float q = 1 - p;
+		float avg_per_roll =
+			(sp->entry->get_count_range().min + sp->entry->get_count_range().max) / 2.0f;
+
+		uint64_t required_rolls = ceil((target - avg_per_roll) / avg_per_roll);
+
+		return ((float)util::choose(max_rolls, required_rolls) * pow(p, required_rolls) *
+				   pow(q, max_rolls - required_rolls)) *
+			   pre;
+	}
+
+	float StatepredKernel::heuristic() const {
+		CAST_CHILD(pool, data::LootPool, entry->parent);
+
+		uint64_t total_threads = (UINT64_C(1) << 48) / this->prediction_bound;
+		uint64_t remainders = this->entry->next_int_range.max - this->entry->next_int_range.min + 1;
+		uint64_t backwards = pool->get_max_lcg_advancement();
+		float reduction = calculate_reduction(this);
+		printf("reduction = %f\n", reduction);
+		float h = (total_threads * remainders * util::max(1.0f, backwards * reduction));
+		return h / (float)(1ull << 48);
+	}
+
 } // namespace kgen
+
+/*
+	heuristic = ((total_thread_count * remainders * (1 + (backwards * reduction)))) / (2 ^ 48))
+	reduction = nCr(max_rolls, required_rolls) * p^{required_rolls} * (1 - p)^{max_rolls -
+   required_rolls}
+*/

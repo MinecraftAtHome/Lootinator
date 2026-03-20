@@ -10,15 +10,15 @@
 int main() {
 	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_21_TO_1_21_10,
 #ifdef _WIN32
-		"../../../../example/src/chests_ancient_city.json",
-		"../../../../example/src/midas.json",
-		"../../../../example/src/item_map_ac.txt",
+		"../../../../example/src/ruined_portal.json",
+		"../../../../example/src/speedrun_starter_pack.json",
+		"../../../../example/src/item_map.txt",
 #elif __linux__
-		"../../example/src/chests_ancient_city.json",
-		"../../example/src/midas.json",
-		"../../example/src/item_map_ac.txt",
+		"../../example/src/ruined_portal.json",
+		"../../example/src/speedrun_starter_pack.json",
+		"../../example/src/item_map.txt",
 #endif
-		false);
+		true);
 
 	kgen::PipelineGenerator pipeline_gen(kgen_config);
 	const auto& pipelines = pipeline_gen.add_state_prediction().build();

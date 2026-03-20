@@ -65,6 +65,7 @@ namespace kgen {
 		// count, durability...
 		CAST_CHILD(pool, data::LootPool, entry->parent);
 		this->prediction_bound = pool->get_total_weight();
+		this->kgen_config.seedcracking = false; // avoid emitting the faulty early exit
 	}
 
 	ConfiguredKernel kgen::StatepredKernel::generate() {
@@ -296,7 +297,7 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		// check constraint satisfaction
 		std::string comp =
 			target_constraint.count_range.min == target_constraint.count_range.max ? " == " : ">=";
-		out << "if (!(local_constraints[1] " << comp << target_constraint.count_range.min
+		out << "if (!(" << arrayPlusIndex  << " " << comp << target_constraint.count_range.min
 			<< ")) return;\n";
 		// }
 

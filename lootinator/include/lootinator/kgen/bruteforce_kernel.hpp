@@ -37,7 +37,7 @@ namespace kgen {
 		void emit_function_enchant_with_levels(std::ostream& out);
 		void emit_function_enchant_randomly(std::ostream& out);
 		void emit_function_set_count(std::ostream& out);
-		void extract_data_prefix(std::ostream& out, data::LootPool* loot_pool, int pool_off);
+		void extract_data_prefix(std::ostream& out, data::LootPool* loot_pool, int pool_off, bool disable_seedcracking);
 
 		void setup_enchant_with_levels(data::LootTreeNode* node, int total_entry_offset);
 	};

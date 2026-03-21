@@ -65,7 +65,6 @@ namespace kgen {
 		// count, durability...
 		CAST_CHILD(pool, data::LootPool, entry->parent);
 		this->prediction_bound = pool->get_total_weight();
-		this->kgen_config.seedcracking = false; // avoid emitting the faulty early exit
 	}
 
 	ConfiguredKernel kgen::StatepredKernel::generate() {
@@ -268,7 +267,7 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		out << arrayPlusIndex << " = calculated_count;\n";
 		out << "for (i32 roll = 0; roll < " << (pool->rolls.max - 1) << "; roll++) {\n";
 
-		extract_data_prefix(out, pool, pool_off);
+		extract_data_prefix(out, pool, pool_off, true);
 
 		for (auto& func : this->kgen_config.function_order) {
 			switch (func) {

@@ -156,7 +156,7 @@ namespace kgen {
 	}
 
 	void BruteforceKernel::extract_data_prefix(
-		std::ostream& out, data::LootPool* pool, int pool_off) {
+		std::ostream& out, data::LootPool* pool, int pool_off, bool disable_seedcracking) {
 		out << "int item = nextInt(&loot_seed, " << pool->get_total_weight() << ");\n";
 
 		int bpe = this->kgen_config.bytes_per_entry;
@@ -171,7 +171,7 @@ u32 min_count = (entry_data >> 18) & 0x3f;
 u32 max_count = (entry_data >> 12) & 0x3f;  
 u32 counter_idx = (entry_data >> 8) & 0xf;)";
 
-		if (this->kgen_config.seedcracking) {
+		if (this->kgen_config.seedcracking && !disable_seedcracking) {
 			std::string one = pool->children.size() > 32 ? "((u64)1)" : "((u32)1)";
 			std::string forbidden_bitmask = create_forbidden_item_mask(pool);
 
@@ -229,7 +229,7 @@ u32 counter_idx = (entry_data >> 8) & 0xf;)";
 			<< pool->rolls.max << ");\n";
 		out << "for (i32 roll = 0; roll < rolls; roll++) {\n";
 
-		extract_data_prefix(out, pool, pool_off);
+		extract_data_prefix(out, pool, pool_off, false);
 
 		for (auto& func : this->kgen_config.function_order) {
 			switch (func) {

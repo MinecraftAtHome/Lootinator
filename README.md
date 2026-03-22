@@ -1,5 +1,5 @@
 <p align="center">
-  <img align="center" src="https://github-production-user-asset-6210df.s3.amazonaws.com/85095943/552607332-e47f3c1e-d22e-40f7-972d-53fced427715.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20260220%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260220T092341Z&X-Amz-Expires=300&X-Amz-Signature=0b5ea976c71dccd370a23bbe93c29418f366cf7a9742c134f2e7ad330df88bf5&X-Amz-SignedHeaders=host"></img>
+  <img align="center" src="https://github.com/user-attachments/assets/b6332fb1-26c8-4cda-acb3-eb919dae957a"></img>
 </p>
 <h1 align="center"><b>Lootinator</b></h1>
 <p align="center">

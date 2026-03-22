@@ -25,6 +25,9 @@ namespace kgen {
 	SecondaryBruteforceKernel::SecondaryBruteforceKernel(
 		data::LootTableRoot& root_node, kgen::KernelGenConfig kgen_config)
 		: Kernel(root_node, kgen_config) {
+		static int kernel_index = 0;
+		kernel_index++;
+		name = "secondary_bruteforce_kernel_" + std::to_string(kernel_index);
 	}
 
 	// -----------------------------------------------------
@@ -53,7 +56,7 @@ namespace kgen {
 
 		generate_forward_filter(result);
 
-		result << R"(extern "C" __global__ void )" << this->name
+		result << c_extern() << R"(__global__ void )" << this->name
 			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents, "
 				  "u64* kernel_1_out, u32 kernel_1_count) {";
 		result <<

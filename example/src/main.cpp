@@ -21,11 +21,14 @@ int main() {
 		true);
 
 	kgen::PipelineGenerator pipeline_gen(kgen_config);
-	const auto& pipelines = pipeline_gen.add_state_prediction().build();
+	const auto& pipelines = pipeline_gen.add_state_prediction().add_bruteforce().build();
 
-	for (int k = 0; k < pipelines.size(); k++) {
-		std::ofstream fout("midas" + std::to_string(k) + ".cu");
-		kgen::generate_runner_source(pipelines[k], fout);
-		fout.close();
-	}
+	std::ofstream fout("full_bench.cu");
+	kgen::generate_benchmarker_source(pipelines, fout);
+
+	//for (int k = 0; k < pipelines.size(); k++) {
+	//	std::ofstream fout("midas" + std::to_string(k) + ".cu");
+	//	kgen::generate_runner_source(pipelines[k], fout);
+	//	fout.close();
+	//}
 }

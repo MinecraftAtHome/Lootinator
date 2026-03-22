@@ -65,6 +65,10 @@ namespace kgen {
 		// count, durability...
 		CAST_CHILD(pool, data::LootPool, entry->parent);
 		this->prediction_bound = pool->get_total_weight();
+
+		static int kernel_index = 0;
+		kernel_index++;
+		name = "statepred_kernel_" + std::to_string(kernel_index);
 	}
 
 	ConfiguredKernel kgen::StatepredKernel::generate() {
@@ -95,7 +99,7 @@ namespace kgen {
 
 		data::LootPool* pool = dynamic_cast<data::LootPool*>(this->entry->parent);
 
-		result << R"(extern "C" __global__ void )" << this->name
+		result << c_extern() << R"(__global__ void )" << this->name
 			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents,"
 				  "u64 offset) {";
 		result <<
@@ -304,9 +308,10 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		// - calculate min backward state advancement
 		// - calculate max backward state advancement
 		// - loop over the valid range of states
-		int32_t min_back = 1;								// TODO
-		int32_t max_back = pool->get_max_lcg_advancement(); // TODO done???
+		int32_t min_back = 1;
+		int32_t max_back = pool->get_max_lcg_advancement();
 
+		out << "loot_seed = original_state;\n";
 		out << Kernel::generate_skip("loot_seed", -min_back) << ";\n";
 		// out << "#pragma unroll\n";
 		out << "for (int back = 0; back < " << (max_back - min_back + 1) << "; back++) {\n";

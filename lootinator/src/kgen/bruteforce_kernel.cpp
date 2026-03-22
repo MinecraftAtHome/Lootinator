@@ -33,6 +33,9 @@ namespace kgen {
 	BruteforceKernel::BruteforceKernel(
 		data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config)
 	: Kernel(root_node, kgen_config) {
+		static int kernel_index = 0;
+		kernel_index++;
+		name = "bruteforce_kernel_" + std::to_string(kernel_index);
 		setup_shared_memory(); // moved from post-constructor call to make sure it's processed by child classes
 	}
 
@@ -57,7 +60,7 @@ namespace kgen {
 
 		generate_forward_filter(result);
 
-		result << R"(extern "C" __global__ void )" << this->name
+		result << c_extern() << R"(__global__ void )" << this->name
 			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents,"
 				  "u64 offset) {";
 		result <<

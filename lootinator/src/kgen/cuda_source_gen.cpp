@@ -220,97 +220,98 @@ int main() {
 
 	// ---------------------------------------------------------------------------------
 
-	// TODO revive
-	
-	void print_benchmarker(
-		std::ostream& out, const std::vector<KernelPipeline>& kernel_configs) {
+	static void print_benchmarker(
+		std::ostream& out, const std::vector<kgen::KernelPipeline>& kernel_configs) {
 		out <<
 			R"(
 int main() {
+	constexpr int BENCHMARK_SCALE_REDUCTION = 4096;
+	constexpr float BENCH_CUTOFF = 500.0f;
 	constexpr int num_kernels = )"
 			<< kernel_configs.size() << R"(;
 	std::vector<launch_function> launchers;
-	std::vector<KernelPipeline> configs;
+	std::vector<KernelPipeline*> configs;
 )";
 
-		for (int i = 0; i < (int)kernel_configs.size(); i++) {
-			const KernelPipeline& pipeline = kernel_configs[i];
+		for (int j = 0; j < (int)kernel_configs.size(); j++) {
+			const kgen::KernelPipeline& pipeline = kernel_configs[j];
 
-			KernelPipeline pipeline;
+			out << "KernelPipeline pipeline" << j << ";\n";
 
 			for (int i = 0; i < pipeline.size(); i++) {
-				out << "ConfiguredKernel ck" << i << " {\"" << pipeline[i].kernel_name << "\", "
+				int index = (j << 8) | i;
+
+				out << "ConfiguredKernel ck" << index << " {\"" << pipeline[i].kernel_name << "\", "
 					 << "std::vector<u32>(), " << pipeline[i].total_threads << "ULL, "
 					 << pipeline[i].threads_per_batch << "ULL, " << pipeline[i].threads_per_block << "U, "
 					 << pipeline[i].device_id << "U, " << pipeline[i].start_batch << ", " << pipeline[i].end_batch << ", "
 					 << pipeline[i].max_results << "};\n";
 
-				out << "pipeline.push_back(&ck" << i << ");\n";
+				out << "pipeline" << j << ".push_back(&ck" << index << ");\n";
 
 				out << "    {uint32_t shmem[] = ";
 				print_shared_mem(out, pipeline[i]);
-				out << " for (int k = 0; k < " << pipeline[i].shared_mem.size() << "; k++) pipeline[" << i
+				out << " for (int k = 0; k < " << pipeline[i].shared_mem.size() << "; k++) pipeline" << j << "[" << i
 					 << "]->shared_memory.push_back(shmem[k]);}\n"
-					 << "\npipeline[" << i << "]->init_memory();\n";
+					 << "\npipeline" << j << "[" << i << "]->init_memory();\n";
 			}
+			out << "    launchers.push_back(kernel" << j << "::launch);\n";
+			out << "	configs.push_back(&pipeline" << j << ");\n";
+		}
 
-			out << "    launchers.push_back(kernel" << i << "::launch);\n";
-			out << "    configs.push_back({\"" << lp.kernel_name << "\", ";
-			out << "std::vector<u32>(), " << lp.total_threads << "ULL, " << lp.threads_per_batch
-				<< "ULL, " << lp.threads_per_block << "U, ";
-			out << lp.device_id << "U, " << lp.start_batch << ", " << lp.end_batch;
-			out << "});\n";
-		}
-		for (int i = 0; i < (int)kernel_configs.size(); i++) {
-			out << "    {uint32_t shmem[] = ";
-			print_shared_mem(out, kernel_configs.at(i));
-			out << " for (int k = 0; k < " << kernel_configs.at(i).shared_mem.size()
-				<< "; k++) configs[" << i << "].shared_memory.push_back(shmem[k]);}\n";
-		}
 		out << "\n";
 		out << "    BenchmarkResults result_array[num_kernels];\n";
+		
 		out << "    for (int k = 0; k < num_kernels; k++) {\n";
 		out <<
-			R"(        const ConfiguredKernel& config = configs[k];
-		ConfiguredKernel work_config = config;
-		KernelMemory kernel_memory(config);
-		BenchmarkResults results{config.kernel_name, false, 0.0f, 0.0f};
+			R"(        std::cerr << "Measuring pipeline " << (k+1) << " / " << num_kernels << "...\n";
+		const KernelPipeline* pipeline = configs[k];
+		i32 pre_modification_start_batch = (*pipeline)[0]->start_batch;
+		i32 pre_modification_end_batch = (*pipeline)[0]->end_batch;
+		u64 pre_modification_threads_per_batch = (*pipeline)[0]->threads_per_batch;
 
-		const i32 middle_batch = (config.start_batch + config.end_batch) / 2;
-		work_config.threads_per_batch /= 4;
+		ConfiguredKernel* work_config = (*pipeline)[0];
+		BenchmarkResults results{work_config->kernel_name, false, 0.0f, 0.0f};
+
+		const i32 middle_batch = (work_config->start_batch + work_config->end_batch) / 2;
+		work_config->threads_per_batch /= BENCHMARK_SCALE_REDUCTION;
 
 		// warmup (to get more accurate measurements)
-		work_config.start_batch = middle_batch;
-		work_config.end_batch = middle_batch + 1;
+		work_config->start_batch = middle_batch;
+		work_config->end_batch = middle_batch + 1;
 
 		CUDA_CHECK(cudaDeviceSynchronize());
 		for (u32 i = 0; i < 3; i++) {
-			launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
+			launch_configured_kernel(launchers[k], *pipeline, false);
 		}
 
 		// benchmarking with auto-tuning
 		i32 batches = 1;
 		float elapsed_ms = 0.0f;
-		while (elapsed_ms < 100.0f) {
-			work_config.end_batch = work_config.start_batch + batches;
+		while (elapsed_ms < BENCH_CUTOFF) {
+			work_config->end_batch = work_config->start_batch + batches;
 
 			auto t0 = std::chrono::high_resolution_clock::now();
-			launch_configured_kernel(launchers[k], work_config, kernel_memory, false);
+			launch_configured_kernel(launchers[k], *pipeline, false);
 			auto t1 = std::chrono::high_resolution_clock::now();
 			elapsed_ms = (t1-t0).count() * 1e-6f;
-			if (elapsed_ms < 100.0f)
+			if (elapsed_ms < BENCH_CUTOFF)
 				batches *= 2;
 		}
 
 		// results
 		results.success = true;
-		results.ms_per_batch = elapsed_ms * 4 / batches;
-		results.ms_total_estimate = results.ms_per_batch * (config.end_batch - config.start_batch);
+		results.ms_per_batch = elapsed_ms * BENCHMARK_SCALE_REDUCTION / batches;
+		results.ms_total_estimate = results.ms_per_batch * (pre_modification_end_batch - pre_modification_start_batch);
 		result_array[k] = results;
+
+		work_config->start_batch = pre_modification_start_batch;
+		work_config->end_batch = pre_modification_end_batch;
+		work_config->threads_per_batch = pre_modification_threads_per_batch;
 	}
 
 	int best_kernel = -1;
-	double best_perf = result_array[0].ms_total_estimate;
+	double best_perf = result_array[0].ms_total_estimate - 1.0;
 	for (int k = 0; k < num_kernels; k++) {
 		if (result_array[k].success && result_array[k].ms_total_estimate < best_perf) {
 			best_perf = result_array[k].ms_total_estimate;
@@ -324,15 +325,14 @@ int main() {
 	for (int k = 0; k < num_kernels; k++) {
 		std::cerr << (k == best_kernel ? "BEST> " : "      ");
 		if (result_array[k].success)
-			std::cerr << configs[k].kernel_name << ", ETA = " << result_array[k].ms_total_estimate
-<< " ms.\n"; else std::cerr << configs[k].kernel_name << " (failed!)\n";
+			std::cerr << (*(configs[k]))[0]->kernel_name << ", ETA = " << result_array[k].ms_total_estimate
+<< " ms.\n"; else std::cerr << (*(configs[k]))[0]->kernel_name << " (failed!)\n";
 	}
 
-	std::cerr << "Running kernel " << configs[best_kernel].kernel_name << "...\n";
+	std::cerr << "Running kernel " << (*(configs[best_kernel]))[0]->kernel_name << "...\n";
 	{
-		const ConfiguredKernel& config = configs[best_kernel];
-		KernelMemory kernel_memory(config);
-		launch_configured_kernel(launchers[best_kernel], config, kernel_memory, true);
+		const KernelPipeline* config = configs[best_kernel];
+		launch_configured_kernel(launchers[best_kernel], *config, true);
 		std::cerr << "Finished.\n";
 	}
 	return 0;
@@ -340,21 +340,17 @@ int main() {
 )";
 	}
 
-	// TODO revive
-	/*
-	int generate_benchmarker_source(
-		std::vector<KernelPipeline> kernel_configs, std::ostream& fout) {
+	int generate_benchmarker_source(const std::vector<kgen::KernelPipeline>& kernel_configs, std::ostream& fout) {
 		if (kernel_configs.size() == 0) {
 			std::cerr << "ERROR: No kernels provided.\n";
 			return 1;
 		}
 
-		print_preamble(fout, kernel_configs[0]);
+		print_preamble(fout, kernel_configs[0][0]);
 		print_kernels(fout, kernel_configs);
 		print_kernel_launchers(fout, kernel_configs);
 
 		print_benchmarker(fout, kernel_configs);
 		return 0;
 	}
-	*/
 } // namespace kgen

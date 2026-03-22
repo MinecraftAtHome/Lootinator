@@ -8,9 +8,6 @@
 namespace kgen {
 	struct KernelGenConfig {
 		bool seedcracking;
-		// std::string constraint_path;
-		// std::string item_map_path;
-		// std::string loot_table_path;
 		mc::VersionRange version;
 
 		nlohmann::json loot_table_json;
@@ -21,6 +18,9 @@ namespace kgen {
 		int bytes_per_entry;
 		std::vector<data::LootFunctionType> function_order;
 		bool no_fast_filter;
+
+		// any extra scuffed stuff goes here
+		bool using_nvrtc = false;
 
 		KernelGenConfig(mc::VersionRange version, std::string loot_table_path,
 			std::string constraint_path, std::string item_map_path, bool seedcracking);
@@ -58,7 +58,7 @@ namespace kgen {
 		std::vector<uint32_t> combined_shared_memory; // final final
 
 		static std::string generate_skip(std::string var, int amount);
-
+		
 		std::string name;
 
 		Kernel(data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config);
@@ -67,8 +67,11 @@ namespace kgen {
 
 	  protected:
 		static void write_shared_definitions(std::ostream& out);
+		std::string c_extern() const;
 		virtual void setup_shared_memory();
 		virtual void fill_function_shared_mem(data::LootTreeNode* current);
+
+
 	};
 } // namespace kgen
 

@@ -227,6 +227,13 @@ namespace kgen {
 			   ") & MASK_48";
 	}
 
+	std::string Kernel::c_extern() const {
+		if (this->kgen_config.using_nvrtc) {
+			return "extern \"C\" ";
+		}
+		return "";
+	}
+
 	void Kernel::setup_shared_memory() {
 		function_memory_offsets.push_back(0);
 		pool_memory_offsets.push_back(0);
@@ -253,12 +260,9 @@ namespace kgen {
 		}
 	}
 
+	
 	Kernel::Kernel(data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config)
-		: root_node(root_node), kgen_config(kgen_config) {
-		static int kernel_index = 0;
-		kernel_index++;
-		name = "kernel_" + std::to_string(kernel_index);
-	}
+		: root_node(root_node), kgen_config(kgen_config) {}
 
 	void Kernel::write_shared_definitions(std::ostream& out) {
 		out << "#ifndef SHARED_DEFINITIONS\n"

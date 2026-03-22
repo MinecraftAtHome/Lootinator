@@ -302,7 +302,6 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 			target_constraint.count_range.min == target_constraint.count_range.max ? " == " : ">=";
 		out << "if (!(" << arrayPlusIndex  << " " << comp << target_constraint.count_range.min
 			<< ")) return;\n";
-		// }
 
 		// Now it's time to go back and do the full forward check:
 		// - calculate min backward state advancement
@@ -354,11 +353,10 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		float avg_per_roll =
 			(sp->entry->get_count_range().min + sp->entry->get_count_range().max) / 2.0f;
 
-		uint64_t required_rolls = ceil((target - avg_per_roll) / avg_per_roll);
+		uint64_t required_rolls = util::min(max_rolls, static_cast<uint64_t>(ceil((target - avg_per_roll) / avg_per_roll)));
 
 		return ((float)util::choose(max_rolls, required_rolls) * pow(p, required_rolls) *
-				   pow(q, max_rolls - required_rolls)) *
-			   pre;
+				   pow(q, max_rolls - required_rolls)) * pre;
 	}
 
 	float StatepredKernel::heuristic() const {

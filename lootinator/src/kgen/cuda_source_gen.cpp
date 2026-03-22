@@ -182,8 +182,46 @@ void launch(const KernelPipeline& pipeline, u32 num_blocks, u64 offset)
 		}
 	}
 
+	void generate_runner_source(const KernelPipeline& kp, std::ostream& fout) {
+		std::vector<KernelPipeline> single_kernel;
+		single_kernel.push_back(kp);
+
+		print_preamble(fout, kp[0]);
+		print_kernels(fout, single_kernel);
+		print_kernel_launchers(fout, single_kernel);
+
+		fout <<
+			R"(
+int main() {
+    KernelPipeline pipeline;
+    )";
+		for (int i = 0; i < kp.size(); i++) {
+			fout << "ConfiguredKernel ck" << i << " {\"" << kp[i].kernel_name << "\", "
+				 << "std::vector<u32>(), " << kp[i].total_threads << "ULL, "
+				 << kp[i].threads_per_batch << "ULL, " << kp[i].threads_per_block << "U, "
+				 << kp[i].device_id << "U, " << kp[i].start_batch << ", " << kp[i].end_batch << ", "
+				 << kp[i].max_results << "};\n";
+
+			fout << "pipeline.push_back(&ck" << i << ");\n";
+
+			fout << "    {uint32_t shmem[] = ";
+			print_shared_mem(fout, kp[i]);
+			fout << " for (int k = 0; k < " << kp[i].shared_mem.size() << "; k++) pipeline[" << i
+				 << "]->shared_memory.push_back(shmem[k]);}\n"
+				 << "\npipeline[" << i << "]->init_memory();\n";
+		}
+
+		fout << R"(
+    launch_configured_kernel(kernel0::launch, pipeline, true);
+    return 0;
+}
+)";
+	}
+
+	// ---------------------------------------------------------------------------------
+
 	// TODO revive
-	/*
+	
 	void print_benchmarker(
 		std::ostream& out, const std::vector<KernelPipeline>& kernel_configs) {
 		out <<
@@ -192,11 +230,30 @@ int main() {
 	constexpr int num_kernels = )"
 			<< kernel_configs.size() << R"(;
 	std::vector<launch_function> launchers;
-	std::vector<ConfiguredKernel> configs;
+	std::vector<KernelPipeline> configs;
 )";
 
 		for (int i = 0; i < (int)kernel_configs.size(); i++) {
-			const ConfiguredKernel& lp = kernel_configs[i];
+			const KernelPipeline& pipeline = kernel_configs[i];
+
+			KernelPipeline pipeline;
+
+			for (int i = 0; i < pipeline.size(); i++) {
+				out << "ConfiguredKernel ck" << i << " {\"" << pipeline[i].kernel_name << "\", "
+					 << "std::vector<u32>(), " << pipeline[i].total_threads << "ULL, "
+					 << pipeline[i].threads_per_batch << "ULL, " << pipeline[i].threads_per_block << "U, "
+					 << pipeline[i].device_id << "U, " << pipeline[i].start_batch << ", " << pipeline[i].end_batch << ", "
+					 << pipeline[i].max_results << "};\n";
+
+				out << "pipeline.push_back(&ck" << i << ");\n";
+
+				out << "    {uint32_t shmem[] = ";
+				print_shared_mem(out, pipeline[i]);
+				out << " for (int k = 0; k < " << pipeline[i].shared_mem.size() << "; k++) pipeline[" << i
+					 << "]->shared_memory.push_back(shmem[k]);}\n"
+					 << "\npipeline[" << i << "]->init_memory();\n";
+			}
+
 			out << "    launchers.push_back(kernel" << i << "::launch);\n";
 			out << "    configs.push_back({\"" << lp.kernel_name << "\", ";
 			out << "std::vector<u32>(), " << lp.total_threads << "ULL, " << lp.threads_per_batch
@@ -279,42 +336,6 @@ int main() {
 		std::cerr << "Finished.\n";
 	}
 	return 0;
-}
-)";
-	}*/
-
-	void generate_runner_source(const KernelPipeline& kp, std::ostream& fout) {
-		std::vector<KernelPipeline> single_kernel;
-		single_kernel.push_back(kp);
-
-		print_preamble(fout, kp[0]);
-		print_kernels(fout, single_kernel);
-		print_kernel_launchers(fout, single_kernel);
-
-		fout <<
-			R"(
-int main() {
-    KernelPipeline pipeline;
-    )";
-		for (int i = 0; i < kp.size(); i++) {
-			fout << "ConfiguredKernel ck" << i << " {\"" << kp[i].kernel_name << "\", "
-				 << "std::vector<u32>(), " << kp[i].total_threads << "ULL, "
-				 << kp[i].threads_per_batch << "ULL, " << kp[i].threads_per_block << "U, "
-				 << kp[i].device_id << "U, " << kp[i].start_batch << ", " << kp[i].end_batch << ", "
-				 << kp[i].max_results << "};\n";
-
-			fout << "pipeline.push_back(&ck" << i << ");\n";
-
-			fout << "    {uint32_t shmem[] = ";
-			print_shared_mem(fout, kp[i]);
-			fout << " for (int k = 0; k < " << kp[i].shared_mem.size() << "; k++) pipeline[" << i
-				 << "]->shared_memory.push_back(shmem[k]);}\n"
-				 << "\npipeline[" << i << "]->init_memory();\n";
-		}
-
-		fout << R"(
-    launch_configured_kernel(kernel0::launch, pipeline, true);
-    return 0;
 }
 )";
 	}

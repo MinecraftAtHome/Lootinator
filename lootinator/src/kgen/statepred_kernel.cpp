@@ -1,6 +1,7 @@
 #include "lootinator/kgen/statepred_kernel.hpp"
 #include "lootinator/global_settings.hpp"
 #include "lootinator/utility/mth.h"
+#include "lootinator/probability/loot_prob.h"
 
 #include <iostream>
 #include <sstream>
@@ -359,16 +360,61 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 				   pow(q, max_rolls - required_rolls)) * pre;
 	}
 
+	static double calculate_loot_probability(const StatepredKernel* sp) {
+		// construct the probability loot table with modified rolls (done?)
+		// construct the limited constraint set ( = target constraint) (done?)
+		// call loot_prob -> return
+
+		uint64_t remainders = sp->entry->next_int_range.max - sp->entry->next_int_range.min + 1;
+		double p_orig = ((double)remainders / (double)sp->prediction_bound);
+		double p = p_orig;
+		for (const auto& attribute : sp->target_constraint.attributes) { // totally a vector
+			p /= (double)sp->entry->get_enchant_vector_size();
+			if (attribute.level != -1) {
+				p /= (double)mc::get_max_level(mc::get_enchantment_from_attribute(attribute));
+			}
+		}
+
+		prob::LootTable pt;
+		prob::LootPool loot_pool_first {
+			1, 1,
+			std::vector<prob::LootEntry>({{
+				{1, 1.0, static_cast<int>(sp->entry->get_count_range().min), static_cast<int>(sp->entry->get_count_range().max)}
+			}})
+		};
+		auto rolls = dynamic_cast<data::LootPool*>(sp->entry->parent)->rolls;
+		prob::LootPool loot_pool {
+			rolls.max - 1, rolls.max - 1,
+			std::vector<prob::LootEntry>({{
+				{1, p, static_cast<int>(sp->entry->get_count_range().min), static_cast<int>(sp->entry->get_count_range().max)},
+				{2, 1.0 - p, 1, 1}
+			}})
+		};
+
+		pt.pools.push_back(loot_pool_first);
+		pt.pools.push_back(loot_pool);
+
+		std::vector<prob::TargetItem> target_items({{
+			1, static_cast<int>(sp->target_constraint.count_range.min), sp->target_constraint.count_range.min == sp->target_constraint.count_range.max
+		}});
+
+		return prob::get_loot_probability(pt, target_items);
+	}
+
 	float StatepredKernel::heuristic() const {
 		CAST_CHILD(pool, data::LootPool, entry->parent);
 
 		uint64_t total_threads = (UINT64_C(1) << 48) / this->prediction_bound;
 		uint64_t remainders = this->entry->next_int_range.max - this->entry->next_int_range.min + 1;
 		uint64_t backwards = pool->get_max_lcg_advancement();
-		float reduction = calculate_reduction(this);
-		printf("reduction = %f\n", reduction);
-		float h = (total_threads * remainders * util::max(1.0f, backwards * reduction));
-		return h / (float)(1ull << 48);
+
+		//float reduction = calculate_reduction(this);
+		//printf("old reduction = %f\n", reduction);
+		double reduction = calculate_loot_probability(this);
+		printf("new reduction = %f\n", reduction);
+
+		double h = (total_threads * remainders * util::max(1.0, backwards * reduction));
+		return h / (double)(1ull << 48);
 	}
 
 } // namespace kgen

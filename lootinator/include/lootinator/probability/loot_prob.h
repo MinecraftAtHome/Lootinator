@@ -2,6 +2,7 @@
 #define LOOTINATOR_PROBABILITY_LOOT_PROB_H
 
 #include "lootinator/data/loot_data.hpp"
+#include "lootinator/kgen/kernel.hpp"
 #include <vector>
 
 namespace prob {
@@ -20,7 +21,6 @@ namespace prob {
 
 	struct LootTable {
 		std::vector<LootPool> pools;
-		LootTable get_for(const data::LootTableRoot& root);
 	};
 
 	struct TargetItem {
@@ -29,7 +29,9 @@ namespace prob {
 		bool need_exact_count;
 	};
 
-	prob::LootTable get_probability_table(const data::LootTableRoot& loot_table);
+	LootTable get_probability_table(const data::LootTableRoot& loot_table);
+
+	double get_probability_of_config(kgen::KernelGenConfig& config);
 	double get_loot_probability(
 		const LootTable& loot_table, const std::vector<prob::TargetItem>& target_items);
 } // namespace prob

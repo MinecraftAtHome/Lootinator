@@ -6,6 +6,7 @@
 #include "lootinator/utility/debug.h"
 
 #include "lootinator/kgen/pipeline_generator.hpp"
+#include "lootinator/probability/loot_prob.h"
 
 int main() {
 	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_21_TO_1_21_10,
@@ -18,15 +19,15 @@ int main() {
 #endif
 		true);
 
-	kgen::PipelineGenerator pipeline_gen(kgen_config);
-	const auto& pipelines = pipeline_gen.add_state_prediction().add_bruteforce().build();
+	// 	kgen::PipelineGenerator pipeline_gen(kgen_config);
+	// 	const auto& pipelines = pipeline_gen.add_state_prediction().add_bruteforce().build();
 
-	std::ofstream fout("full_bench.cu");
-	kgen::generate_benchmarker_source(pipelines, fout);
+	// 	std::ofstream fout("full_bench.cu");
+	// 	kgen::generate_benchmarker_source(pipelines, fout);
 
-	//for (int k = 0; k < pipelines.size(); k++) {
+	// for (int k = 0; k < pipelines.size(); k++) {
 	//	std::ofstream fout("midas" + std::to_string(k) + ".cu");
 	//	kgen::generate_runner_source(pipelines[k], fout);
 	//	fout.close();
-	//}
+	// }
 }

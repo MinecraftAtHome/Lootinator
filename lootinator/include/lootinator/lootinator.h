@@ -1,6 +1,8 @@
 #ifndef LOOTINATOR_LOOTINATOR_H
 #define LOOTINATOR_LOOTINATOR_H
 
+#include "lootinator/mc/minecraft.hpp"
+
 #include <string>
 #include <vector>
 
@@ -23,10 +25,22 @@ namespace loot {
 		INTERNAL_ERROR
 	};
 
-	LootinatorError generate_best_pipeline(const std::string loot_table_filepath,
-		const std::string constraint_filepath, bool use_heuristics, std::string* result);
-	LootinatorError generate_benchmark_source(const std::string loot_table_filepath,
-		const std::string constraint_filepath, std::string* result);
+	LootinatorError generate_best_pipeline_heur(
+		const std::string loot_table_filepath,
+		const std::string constraint_filepath, 
+		const mc::VersionRange version_range,
+		const bool use_seedcracking_mode,
+		std::string* result
+	);
+	
+	LootinatorError generate_benchmark_source(
+		const std::string loot_table_filepath,
+		const std::string constraint_filepath, 
+		const mc::VersionRange version_range,
+		const bool use_seedcracking_mode,
+		std::string* result
+	);
+	
 	std::string parse_errno(LootinatorError error);
 } // namespace loot
 

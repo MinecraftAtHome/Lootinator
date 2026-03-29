@@ -29,7 +29,7 @@ namespace prob {
 		bool need_exact_count;
 	};
 
-	LootTable get_probability_table(const data::LootTable& loot_table);
+	prob::LootTable get_probability_table(const data::LootTableRoot& loot_table);
 	double get_loot_probability(
 		const LootTable& loot_table, const std::vector<prob::TargetItem>& target_items);
 } // namespace prob

@@ -1,28 +1,45 @@
 #include "lootinator/kgen/kernel.hpp"
 #include "lootinator/global_settings.hpp"
+#include "lootinator/lootinator.h"
+
 #include <cinttypes>
 #include <fstream>
 
 namespace kgen {
 	KernelGenConfig::KernelGenConfig(mc::VersionRange version, std::string loot_table_path,
-		std::string constraint_path, std::string item_map_path, bool seedcracking)
+		std::string constraint_path, bool seedcracking)
 		: version(version), seedcracking(seedcracking) {
-		std::ifstream f(loot_table_path);
-		loot_table_json = nlohmann::json::parse(f);
+		
+		try {
+			std::ifstream f(loot_table_path);
+			loot_table_json = nlohmann::json::parse(f);
 
-		std::ifstream fin(item_map_path);
-		std::string item_name;
-		int ix = 0;
-		while (fin >> item_name) {
-			item_map[item_name] = ix++;
+			// derive item map from the json file
+			for (const auto& pool : loot_table_json["pools"]) {
+				for (const auto& entry : pool["entries"]) {
+					if (entry.contains("type") && entry["type"] != "minecraft:empty") {
+						std::string item_name = entry["name"];
+						int new_index = item_map.size();
+						item_map[item_name] = new_index;
+					}
+				}
+			}
+		}
+		catch (std::runtime_error& err) {
+			throw loot::LootinatorError::BAD_LOOT_TABLE;
 		}
 
-		std::vector<loot::Constraint> constr =
+		try {
+			std::vector<loot::Constraint> constr =
 			loot::parse_constraints_from_json(constraint_path.c_str(), item_map);
-		std::function<bool(const loot::Constraint& a, const loot::Constraint& b)> cmp_func =
-			[](const loot::Constraint& a, const loot::Constraint& b) { return a.item_equal(b); };
-		merge_contraints(constr, constraints, cmp_func);
-
+			std::function<bool(const loot::Constraint& a, const loot::Constraint& b)> cmp_func =
+				[](const loot::Constraint& a, const loot::Constraint& b) { return a.item_equal(b); };
+			merge_contraints(constr, constraints, cmp_func);
+		}
+		catch (std::runtime_error& err) {
+			throw loot::LootinatorError::BAD_CONSTRAINT_FILE;
+		}
+		
 		derive_mode_from_tree();
 	}
 

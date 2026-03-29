@@ -12,11 +12,9 @@ int main() {
 #ifdef _WIN32
 		"../../../../example/src/ruined_portal.json",
 		"../../../../example/src/speedrun_starter_pack.json",
-		"../../../../example/src/item_map.txt",
 #elif __linux__
 		"../../example/src/ruined_portal.json",
 		"../../example/src/speedrun_starter_pack.json",
-		"../../example/src/item_map.txt",
 #endif
 		true);
 

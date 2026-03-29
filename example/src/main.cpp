@@ -1,33 +1,38 @@
+#include "lootinator/lootinator.h"
 #include <fstream>
 #include <iostream>
-#include <vector>
 
-#include "lootinator/lootinator.h"
-#include "lootinator/utility/debug.h"
-
-#include "lootinator/kgen/pipeline_generator.hpp"
-#include "lootinator/probability/loot_prob.h"
 
 int main() {
-	kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(mc::MC_1_21_TO_1_21_10,
-#ifdef _WIN32
-		"../../../../example/src/ruined_portal.json",
-		"../../../../example/src/speedrun_starter_pack.json",
-#elif __linux__
-		"../../example/src/ruined_portal.json",
-		"../../example/src/speedrun_starter_pack.json",
-#endif
-		true);
+	std::string loot_table_file = 
+		#ifdef _WIN32
+				"../../../../example/src/ruined_portal.json";
+		#elif __linux__
+				"../../example/src/ruined_portal.json";
+		#endif
 
-	// 	kgen::PipelineGenerator pipeline_gen(kgen_config);
-	// 	const auto& pipelines = pipeline_gen.add_state_prediction().add_bruteforce().build();
+	std::string constraints_file = 
+		#ifdef _WIN32
+				"../../../../example/src/speedrun_starter_pack.json";
+		#elif __linux__
+				"../../example/src/speedrun_starter_pack.json";
+		#endif
 
-	// 	std::ofstream fout("full_bench.cu");
-	// 	kgen::generate_benchmarker_source(pipelines, fout);
+	std::ofstream fout("bench_full.cu");
+	std::string s;
 
-	// for (int k = 0; k < pipelines.size(); k++) {
-	//	std::ofstream fout("midas" + std::to_string(k) + ".cu");
-	//	kgen::generate_runner_source(pipelines[k], fout);
-	//	fout.close();
-	// }
+	loot::LootinatorError err_code = loot::generate_benchmark_source(
+		loot_table_file,
+		constraints_file,
+		mc::MC_1_21_TO_1_21_10,
+		true,
+		&s
+	);
+	if (err_code == loot::LootinatorError::SUCCESS) {
+		fout << s;
+		std::cout << "Cuda generation was successful.\n";
+	}
+	else {
+		std::cout << "Lootinator failed: " << loot::parse_errno(err_code) << '\n';
+	}
 }

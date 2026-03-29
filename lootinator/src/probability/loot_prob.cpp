@@ -958,8 +958,8 @@ namespace prob {
 		std::vector<TargetItem> tis;
 		for (auto constraint : constraints) {
 			tis.push_back(TargetItem{
-				constraint.item,
-				constraint.count_range.min,
+				static_cast<int>(constraint.item),
+				static_cast<int>(constraint.count_range.min),
 				constraint.count_range.min == constraint.count_range.max,
 			});
 		}

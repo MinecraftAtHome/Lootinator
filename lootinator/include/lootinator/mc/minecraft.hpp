@@ -8,11 +8,13 @@
 
 namespace mc {
 	enum VersionRange {
+		MC_UNDEFINED,
 		MC_1_13,
 		MC_1_14_TO_1_15,
 		MC_1_16_TO_1_20,
 		MC_1_21_TO_1_21_10,
-		MC_1_21_11_TO_26_1
+		MC_1_21_11_TO_26_1,
+		MC_LATEST = MC_1_21_11_TO_26_1,
 	};
 
 	/*
@@ -146,6 +148,7 @@ namespace mc {
 	mc::ItemType string_to_item_type(const std::string& item_type_string);
 	std::string enchantment_to_string(mc::Enchantment type);
 	mc::Enchantment string_to_enchantment(const std::string& enchantment_string);
+	mc::VersionRange parse_version(std::string vstring);
 } // namespace mc
 
 #endif

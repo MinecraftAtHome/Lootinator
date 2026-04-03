@@ -228,6 +228,30 @@ namespace mc {
 
 	// item name to enum translation (and reverse for debugging purposes)
 
+	// enum VersionRange {
+	// 	MC_1_13,
+	// 	MC_1_14_TO_1_15,
+	// 	MC_1_16_TO_1_20,
+	// 	MC_1_21_TO_1_21_10,
+	// 	MC_1_21_11_TO_26_1
+	// };
+
+	std::unordered_map<std::string, mc::VersionRange> STRING_TO_VERSION({
+		{"latest", mc::VersionRange::MC_LATEST},
+		{"1.13", mc::VersionRange::MC_1_13},
+		{"1.14", mc::VersionRange::MC_1_14_TO_1_15},
+		{"1.15", mc::VersionRange::MC_1_14_TO_1_15},
+		{"1.16", mc::VersionRange::MC_1_16_TO_1_20},
+		{"1.17", mc::VersionRange::MC_1_16_TO_1_20},
+		{"1.18", mc::VersionRange::MC_1_16_TO_1_20},
+		{"1.19", mc::VersionRange::MC_1_16_TO_1_20},
+		{"1.20", mc::VersionRange::MC_1_16_TO_1_20},
+		{"1.21", mc::VersionRange::MC_1_21_TO_1_21_10},
+		{"1.21.10", mc::VersionRange::MC_1_21_TO_1_21_10},
+		{"1.21.11", mc::VersionRange::MC_1_21_11_TO_26_1},
+		{"26.1", mc::VersionRange::MC_1_21_11_TO_26_1},
+	});
+
 	std::unordered_map<mc::ItemType, std::string> ITEM_TYPE_TO_NAME({
 		{CHESTPLATE, "chestplate"},
 		{HELMET, "helmet"},
@@ -916,5 +940,12 @@ namespace mc {
 			.add("type", attribute.type)
 			.add("level", attribute.level)
 			.finish();
+	}
+
+	mc::VersionRange parse_version(std::string vstring) {
+		if (STRING_TO_VERSION.find(vstring) != STRING_TO_VERSION.end()) {
+			return STRING_TO_VERSION[vstring];
+		}
+		return MC_UNDEFINED;
 	}
 } // namespace mc

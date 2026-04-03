@@ -385,8 +385,8 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 				static_cast<int>(sp->entry->get_count_range().min),
 				static_cast<int>(sp->entry->get_count_range().max)}}})};
 		auto rolls = dynamic_cast<data::LootPool*>(sp->entry->parent)->rolls;
-		prob::LootPool loot_pool{rolls.max - 1,
-			rolls.max - 1,
+		prob::LootPool loot_pool{static_cast<int>(rolls.max - 1),
+			static_cast<int>(rolls.max - 1),
 			std::vector<prob::LootEntry>({{{1,
 											   p,
 											   static_cast<int>(sp->entry->get_count_range().min),

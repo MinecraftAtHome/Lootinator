@@ -179,6 +179,7 @@ namespace data {
 	}
 
 	bool LootEntry::matches_constraint(const loot::Constraint& constraint) const {
+		// printf("%d %d\n", item, constraint.item);
 		if (item < 0 || static_cast<uint32_t>(item) != constraint.item) {
 			return false;
 		}
@@ -205,7 +206,6 @@ namespace data {
 				return false;
 			}
 		}
-
 		return true;
 	}
 
@@ -224,6 +224,7 @@ namespace data {
 		for (auto child : children) {
 			LootEntry* entry = dynamic_cast<LootEntry*>(child);
 			if (entry->matches_constraint(constraint)) {
+				printf("entry: %s\n", entry->name.c_str());
 				entry->constraints.push_back(constraint);
 				matches = true;
 			}
@@ -244,7 +245,8 @@ namespace data {
 			}
 
 			if (matching_pools.empty()) {
-				throw "we messed up";
+				throw loot::LootinatorError(
+					loot::LootinatorErrorKind::USER_CONSTRAINT_NOT_POSSIBLE);
 			} else if (matching_pools.size() > 1) {
 				constraints.push_back(constraint);
 			} else {

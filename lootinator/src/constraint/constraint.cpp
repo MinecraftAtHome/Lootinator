@@ -41,20 +41,15 @@ namespace loot {
 	Constraint Constraint::truncate_attribute(int attribute_prefix_length) const {
 		std::vector<mc::ItemAttribute> new_attrs;
 
-		if (attribute_prefix_length >= 1 && !attributes.empty()) { 
+		if (attribute_prefix_length >= 1 && !attributes.empty()) {
 			new_attrs.push_back(attributes[0]);
 			new_attrs[0].level = -1; // truncation unsets the level
 		}
-		if (attribute_prefix_length >= 2 && !attributes.empty()) { 
+		if (attribute_prefix_length >= 2 && !attributes.empty()) {
 			new_attrs[0].level = attributes[0].level; // set the level
 		}
-		
-		return Constraint{
-			item,
-			count_range,
-			slot_id,
-			new_attrs
-		};
+
+		return Constraint{item, count_range, slot_id, new_attrs};
 	}
 
 	bool loot::Constraint::operator==(const Constraint& other) const {
@@ -118,18 +113,39 @@ namespace loot {
 
 	std::vector<loot::Constraint> parse_constraints_from_json(
 		const char* filepath, std::unordered_map<std::string, int>& item_map) {
-		std::vector<loot::Constraint> constraints;
-		std::ifstream f(filepath);
-		nlohmann::json data = nlohmann::json::parse(f);
-		for (auto con : data) {
-			std::string item_name = con["item"];
-			std::uint32_t item = item_map[item_name];
-			std::int32_t slot_id = con["slot"];
-			util::RangeInclusive<std::uint32_t> count_range =
-				util::RangeInclusive<std::uint32_t>::from_json(con["range"]);
-			std::vector<mc::ItemAttribute> attributes = parse_attribute_json(con["attributes"]);
-			constraints.push_back({item, count_range, slot_id, attributes});
+		try {
+			std::vector<loot::Constraint> constraints;
+			std::ifstream f(filepath);
+			nlohmann::json data = nlohmann::json::parse(f);
+
+			for (auto con : data) {
+				std::string item_name = con["item"];
+				std::int32_t item = -1;
+				for (auto& value : item_map) {
+					if (value.first == item_name) {
+						item = item_map[item_name];
+					}
+				}
+				if (item < 0) {
+					throw loot::LootinatorError(
+						loot::LootinatorErrorKind::USER_CONSTRAINT_NOT_POSSIBLE);
+				}
+				std::int32_t slot_id = con["slot"];
+				try {
+					util::RangeInclusive<std::uint32_t> count_range =
+						util::RangeInclusive<std::uint32_t>::from_json(con["range"]);
+					std::vector<mc::ItemAttribute> attributes =
+						parse_attribute_json(con["attributes"]);
+					constraints.push_back(
+						{static_cast<uint32_t>(item), count_range, slot_id, attributes});
+				} catch (loot::LootinatorError& e) {
+					e.message += " at parse_constaint_from_json";
+					throw e;
+				}
+			}
+			return constraints;
+		} catch (std::exception& e) {
+			throw loot::LootinatorError(loot::LootinatorErrorKind::BAD_CONSTRAINT_FILE);
 		}
-		return constraints;
 	}
 } // namespace loot

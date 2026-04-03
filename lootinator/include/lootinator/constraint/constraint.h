@@ -1,6 +1,7 @@
 #ifndef LOOTINATOR_CONSTRAINT_CONSTRAINT_H
 #define LOOTINATOR_CONSTRAINT_CONSTRAINT_H
 
+#include "lootinator/lootinator.h"
 #include "lootinator/mc/minecraft.hpp"
 #include "lootinator/utility/debug.h"
 #include "lootinator/utility/range.h"

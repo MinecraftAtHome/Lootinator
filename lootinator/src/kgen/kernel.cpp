@@ -9,7 +9,7 @@ namespace kgen {
 	KernelGenConfig::KernelGenConfig(mc::VersionRange version, std::string loot_table_path,
 		std::string constraint_path, bool seedcracking)
 		: version(version), seedcracking(seedcracking) {
-		
+
 		try {
 			std::ifstream f(loot_table_path);
 			loot_table_json = nlohmann::json::parse(f);
@@ -24,22 +24,22 @@ namespace kgen {
 					}
 				}
 			}
-		}
-		catch (std::runtime_error& err) {
-			throw loot::LootinatorError::BAD_LOOT_TABLE;
+		} catch (std::runtime_error& err) {
+			throw loot::LootinatorError(loot::LootinatorErrorKind::BAD_LOOT_TABLE);
 		}
 
 		try {
 			std::vector<loot::Constraint> constr =
-			loot::parse_constraints_from_json(constraint_path.c_str(), item_map);
+				loot::parse_constraints_from_json(constraint_path.c_str(), item_map);
 			std::function<bool(const loot::Constraint& a, const loot::Constraint& b)> cmp_func =
-				[](const loot::Constraint& a, const loot::Constraint& b) { return a.item_equal(b); };
+				[](const loot::Constraint& a, const loot::Constraint& b) {
+					return a.item_equal(b);
+				};
 			merge_contraints(constr, constraints, cmp_func);
+		} catch (std::runtime_error& err) {
+			throw loot::LootinatorError(loot::LootinatorErrorKind::BAD_LOOT_TABLE);
 		}
-		catch (std::runtime_error& err) {
-			throw loot::LootinatorError::BAD_CONSTRAINT_FILE;
-		}
-		
+
 		derive_mode_from_tree();
 	}
 
@@ -277,9 +277,9 @@ namespace kgen {
 		}
 	}
 
-	
 	Kernel::Kernel(data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config)
-		: root_node(root_node), kgen_config(kgen_config) {}
+		: root_node(root_node), kgen_config(kgen_config) {
+	}
 
 	void Kernel::write_shared_definitions(std::ostream& out) {
 		out << "#ifndef SHARED_DEFINITIONS\n"

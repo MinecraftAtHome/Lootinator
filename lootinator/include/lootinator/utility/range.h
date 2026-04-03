@@ -1,7 +1,9 @@
 #ifndef LOOTINATOR_UTILITY_RANGE_H
 #define LOOTINATOR_UTILITY_RANGE_H
 
+#include "lootinator/lootinator.h"
 #include "lootinator/utility/debug.h"
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 namespace util {
@@ -25,6 +27,9 @@ namespace util {
 			if (json.is_number()) {
 				return {json, json};
 			} else {
+				if (json["min"] > json["max"]) {
+					throw loot::LootinatorError(loot::LootinatorErrorKind::RANGE_PARSE);
+				}
 				return {json["min"], json["max"]};
 			}
 		}

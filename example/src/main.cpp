@@ -20,20 +20,13 @@ int main() {
 	std::ofstream fout("bench_full.cu");
 	std::string s;
 
-	// LootinatorError generate_best_pipeline_heur(
-	// 	const std::string loot_table_filepath,
-	// 	const std::string constraint_filepath,
-	// 	const mc::VersionRange version_range,
-	// 	const bool use_seedcracking_mode,
-	// 	std::string* result
-	// );
-
-	loot::LootinatorError err_code = loot::generate_best_pipeline_heur(
+	loot::LootinatorError err = loot::generate_best_pipeline_heur(
 		loot_table_file, constraints_file, mc::MC_1_21_TO_1_21_10, true, &s);
-	if (err_code == loot::LootinatorError::SUCCESS) {
+
+	if (err.kind == loot::LootinatorErrorKind::SUCCESS) {
 		fout << s;
 		std::cout << "Cuda generation was successful.\n";
 	} else {
-		std::cout << "Lootinator failed: " << loot::parse_errno(err_code) << '\n';
+		std::cout << "Lootinator failed: " << err.message << '\n';
 	}
 }

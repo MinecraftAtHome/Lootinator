@@ -942,8 +942,8 @@ namespace prob {
 				LootEntry entry_out = {
 					entry_in->item,
 					entry_in->weight / (double)pool_in->get_total_weight(),
-					count_range.min,
-					count_range.max,
+					static_cast<int>(count_range.min),
+					static_cast<int>(count_range.max),
 				};
 				pool_out.entries.push_back(entry_out);
 			}

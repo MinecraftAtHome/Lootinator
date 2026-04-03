@@ -1,0 +1,58 @@
+[
+    {
+        "item": "minecraft:gunpowder",
+        "range": {
+            "min": 5,
+            "max": 5
+        },
+		"slot": 0
+    },
+    {
+        "item": "minecraft:melon_seeds",
+        "range": {
+            "min": 4,
+            "max": 4
+        },
+        "slot": 0
+    },
+    {
+        "item": "minecraft:bone",
+        "range": {
+            "min": 3,
+            "max": 3
+        },
+        "slot": 0
+    },
+    {
+        "item": "minecraft:bread",
+        "range": {
+            "min": 1,
+            "max": 1
+        },
+        "slot": 0
+    },
+    {
+        "item": "minecraft:string",
+        "range": {
+            "min": 5,
+            "max": 5
+        },
+        "slot": 0
+    },
+    {
+        "item": "minecraft:beetroot_seed",
+        "range": {
+            "min": 4,
+            "max": 4
+        },
+        "slot": 0
+    },
+    {
+        "item": "minecraft:enchanted_golden_apple",
+        "range": {
+            "min": 1,
+            "max": 1
+        },
+        "slot": 0
+    }
+]

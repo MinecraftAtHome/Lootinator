@@ -26,17 +26,18 @@ namespace kgen {
 		}
 
 		BruteforceKernel bk(root, kgen_config);
-		//bk.setup_shared_memory(); // moved into constructor
+		// bk.setup_shared_memory(); // moved into constructor
 		out.push_back(bk.generate());
 	}
 
 	BruteforceKernel::BruteforceKernel(
 		data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config)
-	: Kernel(root_node, kgen_config) {
+		: Kernel(root_node, kgen_config) {
 		static int kernel_index = 0;
 		kernel_index++;
 		name = "bruteforce_kernel_" + std::to_string(kernel_index);
-		setup_shared_memory(); // moved from post-constructor call to make sure it's processed by child classes
+		setup_shared_memory(); // moved from post-constructor call to make sure it's processed by
+							   // child classes
 	}
 
 	// -----------------------------------------------------
@@ -255,9 +256,11 @@ u32 counter_idx = (entry_data >> 8) & 0xf;)";
 			}
 		}
 
-		out << R"(
-		local_constraints[counter_idx] += item_count;
-		)";
+		if (!pool->constraints.empty()) {
+			out << R"(
+			local_constraints[counter_idx] += item_count;
+			)";
+		}
 
 		out << "}\n";
 

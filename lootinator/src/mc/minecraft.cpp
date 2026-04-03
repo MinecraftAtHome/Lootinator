@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace mc {
-	std::unordered_set<mc::Enchantment> TREASURE_ENCHANTS({CURSE_OF_BINDING,
+	std::set<mc::Enchantment> TREASURE_ENCHANTS({CURSE_OF_BINDING,
 		CURSE_OF_VANISHING,
 		FROST_WALKER,
 		MENDING,

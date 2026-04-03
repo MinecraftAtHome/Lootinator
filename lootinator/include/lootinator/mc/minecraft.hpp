@@ -2,8 +2,8 @@
 #define LOOTINATOR_MINECRAFT_H
 
 #include "nlohmann/json.hpp"
+#include <map>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace mc {

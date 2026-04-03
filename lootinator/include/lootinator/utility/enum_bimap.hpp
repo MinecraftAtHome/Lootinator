@@ -6,8 +6,8 @@
 
 namespace util {
 	template <typename T> class EnumToStringBimap {
-		std::unordered_map<T, std::string> enum_to_string;
-		std::unordered_map<std::string, T> string_to_enum;
+		std::map<T, std::string> enum_to_string;
+		std::map<std::string, T> string_to_enum;
 
 	  public:
 		EnumToStringBimap(std::initializer_list<std::pair<T, std::string>> il);

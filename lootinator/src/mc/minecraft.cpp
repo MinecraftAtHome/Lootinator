@@ -16,7 +16,7 @@ namespace mc {
 		SWIFT_SNEAK,
 		WIND_BURST});
 
-	std::unordered_map<mc::ItemType, std::vector<Enchantment>> ITEM_ENCHANTMENTS(
+	std::map<mc::ItemType, std::vector<Enchantment>> ITEM_ENCHANTMENTS(
 		{{CHESTPLATE,
 			 {PROTECTION,
 				 FIRE_PROTECTION,
@@ -69,7 +69,7 @@ namespace mc {
 			{HOE, {EFFICIENCY, SILK_TOUCH, FORTUNE}},
 			{FISHING_ROD, {LUCK_OF_THE_SEA, LURE}}});
 
-	std::unordered_map<Enchantment, uint32_t> ENCHANTMENT_MAX_LEVEL({
+	std::map<Enchantment, uint32_t> ENCHANTMENT_MAX_LEVEL({
 		{EFFICIENCY, 5},
 		{SHARPNESS, 5},
 		{SMITE, 5},
@@ -134,7 +134,7 @@ namespace mc {
 	constexpr uint32_t GOLD_ENCHANTABILITY_TOOLS = 22;
 	constexpr uint32_t GOLD_ENCHANTABILITY_ARMOR = 25;
 
-	std::unordered_map<std::string, uint32_t> ITEM_NAME_TO_ENCHANTABILITY({
+	std::map<std::string, uint32_t> ITEM_NAME_TO_ENCHANTABILITY({
 		{"leather_chestplate", LEATHER_ENCHANTABILITY},
 		{"chainmail_chestplate", CHAINMAIL_ENCHANTABILITY},
 		{"copper_chestplate", COPPER_ENCHANTABILITY_ARMOR},
@@ -236,7 +236,7 @@ namespace mc {
 	// 	MC_1_21_11_TO_26_1
 	// };
 
-	std::unordered_map<std::string, mc::VersionRange> STRING_TO_VERSION({
+	std::map<std::string, mc::VersionRange> STRING_TO_VERSION({
 		{"latest", mc::VersionRange::MC_LATEST},
 		{"1.13", mc::VersionRange::MC_1_13},
 		{"1.14", mc::VersionRange::MC_1_14_TO_1_15},
@@ -252,7 +252,7 @@ namespace mc {
 		{"26.1", mc::VersionRange::MC_1_21_11_TO_26_1},
 	});
 
-	std::unordered_map<mc::ItemType, std::string> ITEM_TYPE_TO_NAME({
+	std::map<mc::ItemType, std::string> ITEM_TYPE_TO_NAME({
 		{CHESTPLATE, "chestplate"},
 		{HELMET, "helmet"},
 		{LEGGINGS, "leggings"},
@@ -271,105 +271,104 @@ namespace mc {
 		{SPEAR, "spear"},
 	});
 
-	std::unordered_map<std::string, mc::ItemType> ITEM_NAME_TO_ITEM_TYPE(
-		{{"chestplate", CHESTPLATE},
-			{"leather_chestplate", CHESTPLATE},
-			{"chainmail_chestplate", CHESTPLATE},
-			{"copper_chestplate", CHESTPLATE},
-			{"iron_chestplate", CHESTPLATE},
-			{"golden_chestplate", CHESTPLATE},
-			{"diamond_chestplate", CHESTPLATE},
-			{"netherite_chestplate", CHESTPLATE},
+	std::map<std::string, mc::ItemType> ITEM_NAME_TO_ITEM_TYPE({{"chestplate", CHESTPLATE},
+		{"leather_chestplate", CHESTPLATE},
+		{"chainmail_chestplate", CHESTPLATE},
+		{"copper_chestplate", CHESTPLATE},
+		{"iron_chestplate", CHESTPLATE},
+		{"golden_chestplate", CHESTPLATE},
+		{"diamond_chestplate", CHESTPLATE},
+		{"netherite_chestplate", CHESTPLATE},
 
-			{"helmet", HELMET},
-			{"leather_helmet", HELMET},
-			{"chainmail_helmet", HELMET},
-			{"copper_helmet", HELMET},
-			{"iron_helmet", HELMET},
-			{"golden_helmet", HELMET},
-			{"diamond_helmet", HELMET},
-			{"netherite_helmet", HELMET},
-			{"turtle_helmet", HELMET},
+		{"helmet", HELMET},
+		{"leather_helmet", HELMET},
+		{"chainmail_helmet", HELMET},
+		{"copper_helmet", HELMET},
+		{"iron_helmet", HELMET},
+		{"golden_helmet", HELMET},
+		{"diamond_helmet", HELMET},
+		{"netherite_helmet", HELMET},
+		{"turtle_helmet", HELMET},
 
-			{"leggings", LEGGINGS},
-			{"leather_leggings", LEGGINGS},
-			{"chainmail_leggings", LEGGINGS},
-			{"copper_leggings", LEGGINGS},
-			{"iron_leggings", LEGGINGS},
-			{"golden_leggings", LEGGINGS},
-			{"diamond_leggings", LEGGINGS},
-			{"netherite_leggings", LEGGINGS},
+		{"leggings", LEGGINGS},
+		{"leather_leggings", LEGGINGS},
+		{"chainmail_leggings", LEGGINGS},
+		{"copper_leggings", LEGGINGS},
+		{"iron_leggings", LEGGINGS},
+		{"golden_leggings", LEGGINGS},
+		{"diamond_leggings", LEGGINGS},
+		{"netherite_leggings", LEGGINGS},
 
-			{"boots", BOOTS},
-			{"leather_boots", BOOTS},
-			{"chainmail_boots", BOOTS},
-			{"copper_boots", BOOTS},
-			{"iron_boots", BOOTS},
-			{"golden_boots", BOOTS},
-			{"diamond_boots", BOOTS},
-			{"netherite_boots", BOOTS},
+		{"boots", BOOTS},
+		{"leather_boots", BOOTS},
+		{"chainmail_boots", BOOTS},
+		{"copper_boots", BOOTS},
+		{"iron_boots", BOOTS},
+		{"golden_boots", BOOTS},
+		{"diamond_boots", BOOTS},
+		{"netherite_boots", BOOTS},
 
-			{"sword", SWORD},
-			{"wooden_sword", SWORD},
-			{"stone_sword", SWORD},
-			{"copper_sword", SWORD},
-			{"iron_sword", SWORD},
-			{"golden_sword", SWORD},
-			{"diamond_sword", SWORD},
-			{"netherite_sword", SWORD},
+		{"sword", SWORD},
+		{"wooden_sword", SWORD},
+		{"stone_sword", SWORD},
+		{"copper_sword", SWORD},
+		{"iron_sword", SWORD},
+		{"golden_sword", SWORD},
+		{"diamond_sword", SWORD},
+		{"netherite_sword", SWORD},
 
-			{"mace", MACE},
-			{"bow", BOW},
-			{"crossbow", CROSSBOW},
-			{"trident", TRIDENT},
+		{"mace", MACE},
+		{"bow", BOW},
+		{"crossbow", CROSSBOW},
+		{"trident", TRIDENT},
 
-			{"pickaxe", PICKAXE},
-			{"wooden_pickaxe", PICKAXE},
-			{"stone_pickaxe", PICKAXE},
-			{"copper_pickaxe", PICKAXE},
-			{"iron_pickaxe", PICKAXE},
-			{"golden_pickaxe", PICKAXE},
-			{"diamond_pickaxe", PICKAXE},
-			{"netherite_pickaxe", PICKAXE},
+		{"pickaxe", PICKAXE},
+		{"wooden_pickaxe", PICKAXE},
+		{"stone_pickaxe", PICKAXE},
+		{"copper_pickaxe", PICKAXE},
+		{"iron_pickaxe", PICKAXE},
+		{"golden_pickaxe", PICKAXE},
+		{"diamond_pickaxe", PICKAXE},
+		{"netherite_pickaxe", PICKAXE},
 
-			{"axe", AXE},
-			{"wooden_axe", AXE},
-			{"stone_axe", AXE},
-			{"copper_axe", AXE},
-			{"iron_axe", AXE},
-			{"golden_axe", AXE},
-			{"diamond_axe", AXE},
-			{"netherite_axe", AXE},
+		{"axe", AXE},
+		{"wooden_axe", AXE},
+		{"stone_axe", AXE},
+		{"copper_axe", AXE},
+		{"iron_axe", AXE},
+		{"golden_axe", AXE},
+		{"diamond_axe", AXE},
+		{"netherite_axe", AXE},
 
-			{"shovel", SHOVEL},
-			{"wooden_shovel", SHOVEL},
-			{"stone_shovel", SHOVEL},
-			{"copper_shovel", SHOVEL},
-			{"iron_shovel", SHOVEL},
-			{"golden_shovel", SHOVEL},
-			{"diamond_shovel", SHOVEL},
-			{"netherite_shovel", SHOVEL},
+		{"shovel", SHOVEL},
+		{"wooden_shovel", SHOVEL},
+		{"stone_shovel", SHOVEL},
+		{"copper_shovel", SHOVEL},
+		{"iron_shovel", SHOVEL},
+		{"golden_shovel", SHOVEL},
+		{"diamond_shovel", SHOVEL},
+		{"netherite_shovel", SHOVEL},
 
-			{"hoe", HOE},
-			{"wooden_hoe", HOE},
-			{"stone_hoe", HOE},
-			{"copper_hoe", HOE},
-			{"iron_hoe", HOE},
-			{"golden_hoe", HOE},
-			{"diamond_hoe", HOE},
-			{"netherite_hoe", HOE},
+		{"hoe", HOE},
+		{"wooden_hoe", HOE},
+		{"stone_hoe", HOE},
+		{"copper_hoe", HOE},
+		{"iron_hoe", HOE},
+		{"golden_hoe", HOE},
+		{"diamond_hoe", HOE},
+		{"netherite_hoe", HOE},
 
-			{"wooden_spear", SPEAR},
-			{"golden_spear", SPEAR},
-			{"stone_spear", SPEAR},
-			{"copper_spear", SPEAR},
-			{"iron_spear", SPEAR},
-			{"diamond_spear", SPEAR},
-			{"netherite_spear", SPEAR},
+		{"wooden_spear", SPEAR},
+		{"golden_spear", SPEAR},
+		{"stone_spear", SPEAR},
+		{"copper_spear", SPEAR},
+		{"iron_spear", SPEAR},
+		{"diamond_spear", SPEAR},
+		{"netherite_spear", SPEAR},
 
-			{"fishing_rod", FISHING_ROD},
-			{"book", BOOK},
-			{"enchanted_book", BOOK}});
+		{"fishing_rod", FISHING_ROD},
+		{"book", BOOK},
+		{"enchanted_book", BOOK}});
 
 	// bidirectional map for enchantment name <-> enum translation
 
@@ -421,7 +420,7 @@ namespace mc {
 	});
 
 	// validation of enchantment level i and effective level n for enchant_with_levels
-	std::unordered_map<mc::Enchantment, std::function<bool(int, int)>> ENCHANT_LEVEL_VALIDATORS(
+	std::map<mc::Enchantment, std::function<bool(int, int)>> ENCHANT_LEVEL_VALIDATORS(
 		{{NO_ENCHANTMENT,
 			 [](int i, int n) {
 				 (void)i;
@@ -515,7 +514,7 @@ namespace mc {
 			{WIND_BURST,
 				[](int i, int n) { return n >= 15 + (i - 1) * 9 && n <= 65 + (i - 1) * 9; }}});
 
-	std::unordered_map<mc::Enchantment, int> ENCHANTMENT_GROUPS({
+	std::map<mc::Enchantment, int> ENCHANTMENT_GROUPS({
 		{NO_ENCHANTMENT, 0},
 
 		{PROTECTION, 1},

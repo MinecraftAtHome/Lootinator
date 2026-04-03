@@ -1,7 +1,7 @@
 #include "lootinator/kgen/statepred_kernel.hpp"
 #include "lootinator/global_settings.hpp"
-#include "lootinator/utility/mth.h"
 #include "lootinator/probability/loot_prob.h"
+#include "lootinator/utility/mth.h"
 
 #include <iostream>
 #include <sstream>
@@ -301,7 +301,7 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		// check constraint satisfaction
 		std::string comp =
 			target_constraint.count_range.min == target_constraint.count_range.max ? " == " : ">=";
-		out << "if (!(" << arrayPlusIndex  << " " << comp << target_constraint.count_range.min
+		out << "if (!(" << arrayPlusIndex << " " << comp << target_constraint.count_range.min
 			<< ")) return;\n";
 
 		// Now it's time to go back and do the full forward check:
@@ -354,10 +354,12 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		float avg_per_roll =
 			(sp->entry->get_count_range().min + sp->entry->get_count_range().max) / 2.0f;
 
-		uint64_t required_rolls = util::min(max_rolls, static_cast<uint64_t>(ceil((target - avg_per_roll) / avg_per_roll)));
+		uint64_t required_rolls = util::min(
+			max_rolls, static_cast<uint64_t>(ceil((target - avg_per_roll) / avg_per_roll)));
 
 		return ((float)util::choose(max_rolls, required_rolls) * pow(p, required_rolls) *
-				   pow(q, max_rolls - required_rolls)) * pre;
+				   pow(q, max_rolls - required_rolls)) *
+			   pre;
 	}
 
 	static double calculate_loot_probability(const StatepredKernel* sp) {
@@ -376,27 +378,27 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		}
 
 		prob::LootTable pt;
-		prob::LootPool loot_pool_first {
-			1, 1,
-			std::vector<prob::LootEntry>({{
-				{1, 1.0, static_cast<int>(sp->entry->get_count_range().min), static_cast<int>(sp->entry->get_count_range().max)}
-			}})
-		};
+		prob::LootPool loot_pool_first{1,
+			1,
+			std::vector<prob::LootEntry>({{{1,
+				1.0,
+				static_cast<int>(sp->entry->get_count_range().min),
+				static_cast<int>(sp->entry->get_count_range().max)}}})};
 		auto rolls = dynamic_cast<data::LootPool*>(sp->entry->parent)->rolls;
-		prob::LootPool loot_pool {
-			rolls.max - 1, rolls.max - 1,
-			std::vector<prob::LootEntry>({{
-				{1, p, static_cast<int>(sp->entry->get_count_range().min), static_cast<int>(sp->entry->get_count_range().max)},
-				{2, 1.0 - p, 1, 1}
-			}})
-		};
+		prob::LootPool loot_pool{rolls.max - 1,
+			rolls.max - 1,
+			std::vector<prob::LootEntry>({{{1,
+											   p,
+											   static_cast<int>(sp->entry->get_count_range().min),
+											   static_cast<int>(sp->entry->get_count_range().max)},
+				{2, 1.0 - p, 1, 1}}})};
 
 		pt.pools.push_back(loot_pool_first);
 		pt.pools.push_back(loot_pool);
 
-		std::vector<prob::TargetItem> target_items({{
-			1, static_cast<int>(sp->target_constraint.count_range.min), sp->target_constraint.count_range.min == sp->target_constraint.count_range.max
-		}});
+		std::vector<prob::TargetItem> target_items({{1,
+			static_cast<int>(sp->target_constraint.count_range.min),
+			sp->target_constraint.count_range.min == sp->target_constraint.count_range.max}});
 
 		return prob::get_loot_probability(pt, target_items);
 	}
@@ -408,10 +410,9 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		uint64_t remainders = this->entry->next_int_range.max - this->entry->next_int_range.min + 1;
 		uint64_t backwards = pool->get_max_lcg_advancement();
 
-		//float reduction = calculate_reduction(this);
-		//printf("old reduction = %f\n", reduction);
+		// float reduction = calculate_reduction(this);
+		// printf("old reduction = %f\n", reduction);
 		double reduction = calculate_loot_probability(this);
-		printf("new reduction = %f\n", reduction);
 
 		double h = (total_threads * remainders * util::max(1.0, backwards * reduction));
 		return h / (double)(1ull << 48);

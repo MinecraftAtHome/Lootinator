@@ -224,7 +224,6 @@ namespace data {
 		for (auto child : children) {
 			LootEntry* entry = dynamic_cast<LootEntry*>(child);
 			if (entry->matches_constraint(constraint)) {
-				printf("entry: %s\n", entry->name.c_str());
 				entry->constraints.push_back(constraint);
 				matches = true;
 			}

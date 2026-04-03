@@ -51,7 +51,6 @@ namespace kgen {
 		}
 
 		for (auto& kernel1 : kernels1) {
-			printf("%f\n", kernel1.heuristic);
 			KernelPipeline statepred_pipeline;
 			statepred_pipeline.push_back(kernel1);
 			if (!kernels2.empty()) {

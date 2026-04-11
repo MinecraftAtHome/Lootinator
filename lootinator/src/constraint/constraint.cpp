@@ -112,11 +112,10 @@ namespace loot {
 	}
 
 	std::vector<loot::Constraint> parse_constraints_from_json(
-		const char* filepath, std::unordered_map<std::string, int>& item_map) {
+		std::string constraint_string, std::unordered_map<std::string, int>& item_map) {
 		try {
 			std::vector<loot::Constraint> constraints;
-			std::ifstream f(filepath);
-			nlohmann::json data = nlohmann::json::parse(f);
+			nlohmann::json data = nlohmann::json::parse(constraint_string);
 
 			for (auto con : data) {
 				std::string item_name = con["item"];

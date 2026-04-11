@@ -22,8 +22,8 @@ namespace kgen {
 		// any extra scuffed stuff goes here
 		bool using_nvrtc = false;
 
-		KernelGenConfig(mc::VersionRange version, std::string loot_table_path,
-			std::string constraint_path, bool seedcracking);
+		KernelGenConfig(mc::VersionRange version, std::string loot_table, std::string constraints,
+			bool seedcracking);
 
 		void traverse_and_derive(data::LootTreeNode* root, bool** edges);
 		void construct_order(bool** edges, const int num_functions, data::LootTreeNode* root);
@@ -58,7 +58,7 @@ namespace kgen {
 		std::vector<uint32_t> combined_shared_memory; // final final
 
 		static std::string generate_skip(std::string var, int amount);
-		
+
 		std::string name;
 
 		Kernel(data::LootTableRoot& root_node, const kgen::KernelGenConfig& kgen_config);
@@ -70,8 +70,6 @@ namespace kgen {
 		std::string c_extern() const;
 		virtual void setup_shared_memory();
 		virtual void fill_function_shared_mem(data::LootTreeNode* current);
-
-
 	};
 } // namespace kgen
 

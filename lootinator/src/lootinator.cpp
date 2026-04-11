@@ -2,6 +2,7 @@
 #include "lootinator/kgen/pipeline_generator.hpp"
 #include "lootinator/probability/loot_prob.h"
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -10,8 +11,17 @@ namespace loot {
 		const std::string constraint_filepath, const mc::VersionRange version_range,
 		const bool use_seedcracking_mode, std::string* result) {
 		try {
+			std::ifstream loot_table_f(loot_table_filepath);
+			std::ifstream constraints_f(constraint_filepath);
+
+			std::stringstream loot_table;
+			loot_table << loot_table_f.rdbuf();
+
+			std::stringstream constraints;
+			constraints << constraints_f.rdbuf();
+
 			kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(
-				version_range, loot_table_filepath, constraint_filepath, use_seedcracking_mode);
+				version_range, loot_table.str(), constraints.str(), use_seedcracking_mode);
 
 			double config_probability = prob::get_probability_of_config(kgen_config);
 			if (config_probability > CUTOFF_PROBABILIY) {
@@ -36,8 +46,17 @@ namespace loot {
 		const std::string constraint_filepath, const mc::VersionRange version_range,
 		const bool use_seedcracking_mode, std::string* result) {
 		try {
+			std::ifstream loot_table_f(loot_table_filepath);
+			std::ifstream constraints_f(constraint_filepath);
+
+			std::stringstream loot_table;
+			loot_table << loot_table_f.rdbuf();
+
+			std::stringstream constraints;
+			constraints << constraints_f.rdbuf();
+
 			kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(
-				version_range, loot_table_filepath, constraint_filepath, use_seedcracking_mode);
+				version_range, loot_table.str(), constraints.str(), use_seedcracking_mode);
 
 			double config_probability = prob::get_probability_of_config(kgen_config);
 			if (config_probability > CUTOFF_PROBABILIY) {
@@ -56,6 +75,58 @@ namespace loot {
 			return loot::LootinatorError(loot::LootinatorErrorKind::INTERNAL_ERROR);
 		}
 
+		return loot::LootinatorError(loot::LootinatorErrorKind::SUCCESS);
+	}
+
+	LootinatorError generate_best_pipeline_heur_from_string(const std::string loot_table,
+		const std::string constraints, const mc::VersionRange version_range,
+		const bool use_seedcracking_mode, std::string* result) {
+		try {
+			kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(
+				version_range, loot_table, constraints, use_seedcracking_mode);
+
+			double config_probability = prob::get_probability_of_config(kgen_config);
+			if (config_probability > CUTOFF_PROBABILIY) {
+				return loot::LootinatorError(loot::LootinatorErrorKind::USER_CONSTRAINT_TOO_WEAK);
+			}
+
+			kgen::PipelineGenerator pipeline_gen(kgen_config);
+			auto pipelines = pipeline_gen.add_state_prediction().add_bruteforce().build();
+
+			std::stringstream ss;
+			kgen::generate_runner_source(pipelines[0], ss);
+			*result = ss.str();
+		} catch (loot::LootinatorError err) {
+			return err;
+		} catch (std::runtime_error& err) {
+			return loot::LootinatorError(loot::LootinatorErrorKind::INTERNAL_ERROR);
+		}
+		return loot::LootinatorError(loot::LootinatorErrorKind::SUCCESS);
+	}
+
+	LootinatorError generate_benchmark_source_from_string(const std::string loot_table,
+		const std::string constraints, const mc::VersionRange version_range,
+		const bool use_seedcracking_mode, std::string* result) {
+		try {
+			kgen::KernelGenConfig kgen_config = kgen::KernelGenConfig(
+				version_range, loot_table, constraints, use_seedcracking_mode);
+
+			double config_probability = prob::get_probability_of_config(kgen_config);
+			if (config_probability > CUTOFF_PROBABILIY) {
+				return loot::LootinatorError(loot::LootinatorErrorKind::USER_CONSTRAINT_TOO_WEAK);
+			}
+
+			kgen::PipelineGenerator pipeline_gen(kgen_config);
+			auto pipelines = pipeline_gen.add_state_prediction().add_bruteforce().build();
+
+			std::stringstream ss;
+			kgen::generate_benchmarker_source(pipelines, ss);
+			*result = ss.str();
+		} catch (loot::LootinatorError err) {
+			return err;
+		} catch (std::runtime_error& err) {
+			return loot::LootinatorError(loot::LootinatorErrorKind::INTERNAL_ERROR);
+		}
 		return loot::LootinatorError(loot::LootinatorErrorKind::SUCCESS);
 	}
 

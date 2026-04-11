@@ -6,13 +6,12 @@
 #include <fstream>
 
 namespace kgen {
-	KernelGenConfig::KernelGenConfig(mc::VersionRange version, std::string loot_table_path,
-		std::string constraint_path, bool seedcracking)
+	KernelGenConfig::KernelGenConfig(mc::VersionRange version, std::string loot_table,
+		std::string constraint_string, bool seedcracking)
 		: version(version), seedcracking(seedcracking) {
 
 		try {
-			std::ifstream f(loot_table_path);
-			loot_table_json = nlohmann::json::parse(f);
+			loot_table_json = nlohmann::json::parse(loot_table);
 
 			// derive item map from the json file
 			for (const auto& pool : loot_table_json["pools"]) {
@@ -30,7 +29,7 @@ namespace kgen {
 
 		try {
 			std::vector<loot::Constraint> constr =
-				loot::parse_constraints_from_json(constraint_path.c_str(), item_map);
+				loot::parse_constraints_from_json(constraint_string, item_map);
 			std::function<bool(const loot::Constraint& a, const loot::Constraint& b)> cmp_func =
 				[](const loot::Constraint& a, const loot::Constraint& b) {
 					return a.item_equal(b);

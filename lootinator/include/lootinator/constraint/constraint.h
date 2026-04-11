@@ -38,7 +38,7 @@ namespace loot {
 		std::vector<loot::Constraint>& dest,
 		std::function<bool(const Constraint& a, const Constraint& b)> cmp);
 	std::vector<loot::Constraint> parse_constraints_from_json(
-		const char* filepath, std::unordered_map<std::string, int>& item_map);
+		std::string constaints, std::unordered_map<std::string, int>& item_map);
 } // namespace loot
 
 #endif

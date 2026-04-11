@@ -51,6 +51,14 @@ namespace loot {
 	LootinatorError generate_benchmark_source(const std::string loot_table_filepath,
 		const std::string constraint_filepath, const mc::VersionRange version_range,
 		const bool use_seedcracking_mode, std::string* result);
+
+	LootinatorError generate_best_pipeline_heur_from_string(const std::string loot_table,
+		const std::string constraints, const mc::VersionRange version_range,
+		const bool use_seedcracking_mode, std::string* result);
+
+	LootinatorError generate_benchmark_source_from_string(const std::string loot_table,
+		const std::string constraints, const mc::VersionRange version_range,
+		const bool use_seedcracking_mode, std::string* result);
 } // namespace loot
 
 #endif

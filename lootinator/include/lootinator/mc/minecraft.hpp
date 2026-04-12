@@ -7,14 +7,21 @@
 #include <vector>
 
 namespace mc {
+#define VersionRangeList(X)                                                                        \
+	X(MC_UNDEFINED)                                                                                \
+	X(MC_1_13)                                                                                     \
+	X(MC_1_14_TO_1_15)                                                                             \
+	X(MC_1_16_TO_1_20)                                                                             \
+	X(MC_1_21_TO_1_21_10)                                                                          \
+	X(MC_1_21_11_TO_26_1)
+
 	enum VersionRange {
-		MC_UNDEFINED,
-		MC_1_13,
-		MC_1_14_TO_1_15,
-		MC_1_16_TO_1_20,
-		MC_1_21_TO_1_21_10,
-		MC_1_21_11_TO_26_1,
-		MC_LATEST = MC_1_21_11_TO_26_1,
+#define X(v) v,
+		VersionRangeList(X)
+#undef X
+#define X(v) 1 +
+			MC_LATEST = VersionRangeList(X) - 1
+#undef X
 	};
 
 	/*

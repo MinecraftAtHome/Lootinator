@@ -7,4 +7,4 @@ kernel-launcher/auto-benchmark/run.bat
 kernel-launcher/auto-benchmark/temp/first_cuda.cu
 kernel-launcher/auto-benchmark/source.cu
 /.vs
-/out/build/x64-Debug
+/out/build/

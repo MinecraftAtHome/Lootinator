@@ -240,7 +240,7 @@ namespace mc {
 	// static_assert(mc::VersionRange::MC_1_21_11_TO_26_1 ==
 	// static_cast<VersionRange>(mc::VersionRange::LENGTH - 1), "incorrect version for latest,
 	// please update this assert as well as the line below");
-	std::map<std::string, mc::VersionRange> STRING_TO_VERSION({
+	util::EnumToStringBimap<mc::VersionRange> VERSION_BIMAP({
 		{"latest", MC_LATEST},
 
 		{"1.13", mc::VersionRange::MC_1_13},
@@ -300,6 +300,10 @@ namespace mc {
 		{"1.21.11", mc::VersionRange::MC_1_21_11_TO_26_1},
 		{"26.1", mc::VersionRange::MC_1_21_11_TO_26_1},
 	});
+
+	std::string get_version_from_enum(mc::VersionRange version) {
+		return VERSION_BIMAP.lookup_enum(version);
+	}
 
 	std::vector<std::string> ALL_VERSIONS = {"1.13",
 		"1.13.1",
@@ -1038,8 +1042,8 @@ namespace mc {
 	}
 
 	mc::VersionRange parse_version(std::string vstring) {
-		if (STRING_TO_VERSION.find(vstring) != STRING_TO_VERSION.end()) {
-			return STRING_TO_VERSION[vstring];
+		if (VERSION_BIMAP.contains_string(vstring)) {
+			return VERSION_BIMAP.lookup_string(vstring);
 		}
 		return MC_UNDEFINED;
 	}

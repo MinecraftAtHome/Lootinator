@@ -156,6 +156,10 @@ namespace mc {
 	std::string enchantment_to_string(mc::Enchantment type);
 	mc::Enchantment string_to_enchantment(const std::string& enchantment_string);
 	mc::VersionRange parse_version(std::string vstring);
+<<<<<<< Updated upstream
+=======
+	std::string get_version_from_enum(mc::VersionRange version);
+>>>>>>> Stashed changes
 } // namespace mc
 
 #endif

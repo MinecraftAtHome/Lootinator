@@ -4,7 +4,16 @@
 
 #include "lootinator/lootinator.h"
 
-int main(int argc, char** argv) {
+<<<<<<< Updated upstream
+=======
+	/*
+		Version scheme:
+		major.minor
+	*/
+
+>>>>>>> Stashed changes
+	int
+	main(int argc, char** argv) {
 	bool seedcracking = false;
 	bool single_kernel = false;
 
@@ -48,6 +57,15 @@ int main(int argc, char** argv) {
 	if (err.kind == loot::LootinatorErrorKind::SUCCESS) {
 		fout << s;
 		std::cout << "Cuda generation was successful.\n";
+<<<<<<< Updated upstream
+=======
+		std::cout << "==== Selected Options ====\n";
+		std::cout << "	Version:       " << version << "\n";
+		std::cout << "	Constraints:   " << constraint_file << "\n";
+		std::cout << "	Seedcracking:  " << (seedcracking ? "true\n" : "false\n");
+		std::cout << "	Single Kernel: " << (single_kernel ? "true\n" : "false\n");
+		std::cout << "	Output File:   " << mc::get_version_from_enum(output_file) << "\n";
+>>>>>>> Stashed changes
 	} else {
 		std::cout << "Lootinator failed: " << err.message << '\n';
 	}

@@ -1,0 +1,10 @@
+[
+    {
+        "item": "minecraft:gold_block",
+        "range": {
+            "min": 5,
+            "max": 1000
+        },
+        "slot": 0
+    }
+]

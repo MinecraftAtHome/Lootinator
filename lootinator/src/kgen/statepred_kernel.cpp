@@ -177,7 +177,7 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		mc::Enchantment target_ench =
 			mc::get_enchantment_from_attribute(target_constraint.attributes[0]);
 		int ench_idx = 0;
-		for (; ench_idx < vec.size(); ench_idx++) {
+		for (; ench_idx < static_cast<int>(vec.size()); ench_idx++) {
 			if (vec[ench_idx] == target_ench) {
 				break;
 			}
@@ -292,6 +292,8 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 					emit_function_set_count(out);
 					break;
 				}
+				case data::IGNORED: {
+				}
 			}
 		}
 
@@ -327,39 +329,6 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		out << "}\n"; // end of for loop
 
 		out << "}\n\n"; // end of function
-	}
-
-	static float calculate_reduction(const StatepredKernel* sp) {
-		CAST_CHILD(pool, data::LootPool, sp->entry->parent);
-
-		uint64_t target = sp->target_constraint.count_range.min;
-		uint64_t max_rolls = pool->rolls.max;
-		uint64_t remainders = sp->entry->next_int_range.max - sp->entry->next_int_range.min + 1;
-		float p = ((float)remainders / (float)sp->prediction_bound);
-
-		float pre = 1.0f;
-
-		for (const auto& attribute : sp->target_constraint.attributes) { // totally a vector
-			p *= (1.0f / (float)sp->entry->get_enchant_vector_size());
-			pre *= (1.0f / (float)sp->entry->get_enchant_vector_size());
-			if (attribute.level != -1) {
-				p *= (1.0f /
-					  (float)mc::get_max_level(mc::get_enchantment_from_attribute(attribute)));
-				pre *= (1.0f /
-						(float)mc::get_max_level(mc::get_enchantment_from_attribute(attribute)));
-			}
-		}
-
-		float q = 1 - p;
-		float avg_per_roll =
-			(sp->entry->get_count_range().min + sp->entry->get_count_range().max) / 2.0f;
-
-		uint64_t required_rolls = util::min(
-			max_rolls, static_cast<uint64_t>(ceil((target - avg_per_roll) / avg_per_roll)));
-
-		return ((float)util::choose(max_rolls, required_rolls) * pow(p, required_rolls) *
-				   pow(q, max_rolls - required_rolls)) *
-			   pre;
 	}
 
 	static double calculate_loot_probability(const StatepredKernel* sp) {
@@ -410,8 +379,6 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		uint64_t remainders = this->entry->next_int_range.max - this->entry->next_int_range.min + 1;
 		uint64_t backwards = pool->get_max_lcg_advancement();
 
-		// float reduction = calculate_reduction(this);
-		// printf("old reduction = %f\n", reduction);
 		double reduction = calculate_loot_probability(this);
 
 		double h = (total_threads * remainders * util::max(1.0, backwards * reduction));

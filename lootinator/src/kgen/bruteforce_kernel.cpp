@@ -43,7 +43,8 @@ namespace kgen {
 	// -----------------------------------------------------
 
 	ConfiguredKernel BruteforceKernel::generate() {
-		return ConfiguredKernel{this->name,
+		return ConfiguredKernel{
+			this->name,
 			to_string(),
 			UINT64_C(1) << 48,
 			UINT64_C(1) << 32,
@@ -52,7 +53,9 @@ namespace kgen {
 			0,
 			0,
 			UINT32_C(1) << 16,
-			UINT32_C(1) << 19};
+			UINT32_C(1) << 19,
+			0,
+		};
 	}
 
 	std::string BruteforceKernel::to_string() {
@@ -164,7 +167,6 @@ namespace kgen {
 		out << "int item = nextInt(&loot_seed, " << pool->get_total_weight() << ");\n";
 
 		int bpe = this->kgen_config.bytes_per_entry;
-		int bpe_offset = (bpe == 3) ? 2 : 0;
 		// TODO can the unpacking be done with an intrinsic function?
 		out << R"(u32 entry_data = data[)" << pool_off << R"( + item * )" << bpe
 			<< R"(]; // min_max_count__counter_index__enchantment_count
@@ -251,6 +253,9 @@ u32 counter_idx = (entry_data >> 8) & 0xf;)";
 				}
 				case data::SET_COUNT: {
 					emit_function_set_count(out);
+					break;
+				}
+				case data::IGNORED: {
 					break;
 				}
 			}
@@ -384,7 +389,9 @@ u32 counter_idx = (entry_data >> 8) & 0xf;)";
 		CAST_CHILD(entry_node, data::LootEntry, node->parent);
 
 		uint32_t current_offset = combined_shared_memory.size();
-		for (int w = entry_node->next_int_range.min; w <= entry_node->next_int_range.max; w++) {
+		for (int w = entry_node->next_int_range.min;
+			 w <= static_cast<int>(entry_node->next_int_range.max);
+			 w++) {
 			combined_shared_memory[total_entry_offset + w * this->kgen_config.bytes_per_entry +
 								   1] |= current_offset << 1;
 		}

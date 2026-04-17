@@ -38,7 +38,8 @@ namespace kgen {
 			fout << v << " ";
 		}
 
-		return ConfiguredKernel{this->name,
+		return ConfiguredKernel{
+			this->name,
 			to_string(),
 			UINT64_C(1) << 48,
 			UINT64_C(1) << 32,
@@ -47,7 +48,9 @@ namespace kgen {
 			0,
 			0,
 			UINT32_C(1) << 16,
-			UINT32_C(1) << 18};
+			UINT32_C(1) << 18,
+			0,
+		};
 	}
 
 	std::string SecondaryBruteforceKernel::to_string() {
@@ -118,11 +121,11 @@ namespace kgen {
 		mc::Enchantment ench = mc::get_enchantment_from_attribute(constraint.attributes[0]);
 		int i = 0;
 		auto& vec = lfd_enchant_randomly->enchant_randomly.enchantment_order;
-		for (; i < vec.size(); i++) {
+		for (; i < static_cast<int>(vec.size()); i++) {
 			if (vec[i] == ench)
 				break;
 		}
-		if (i == vec.size()) {
+		if (i == static_cast<int>(vec.size())) {
 			throw "messed up, need to fix :)";
 		}
 

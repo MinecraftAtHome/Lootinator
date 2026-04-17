@@ -49,7 +49,7 @@ namespace kgen {
 
 		CAST_CHILD(entry, data::LootEntry, root);
 		if (entry != nullptr && !entry->children.empty()) {
-			for (int i = 0; i < entry->children.size() - 1; i++) {
+			for (int i = 0; i < static_cast<int>(entry->children.size() - 1); i++) {
 				CAST_CHILD(f1, data::LootFunctionData, entry->children[i]);
 				CAST_CHILD(f2, data::LootFunctionData, entry->children[i + 1]);
 				if (f1->type != data::IGNORED && f2->type != data::IGNORED) {
@@ -268,11 +268,8 @@ namespace kgen {
 
 		fill_function_shared_mem(&root_node);
 		uint32_t last_pool_offset = pool_memory_offsets.back();
-		// printf("%ld\n", last_pool_offset);
-		int i = 0;
 		for (auto& func_off : function_memory_offsets) {
 			func_off += last_pool_offset;
-			// printf("start_index for function %d = %d\n", i++, func_off);
 		}
 	}
 

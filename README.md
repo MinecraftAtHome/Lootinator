@@ -3,8 +3,8 @@
 </p>
 <h1 align="center"><b>Lootinator</b></h1>
 <p align="center">
-  <img src="https://img.shields.io/github/last-commit/Kludwisz/Lootinator?style=%22for-the-badge%22"></img>
-  <img src="https://img.shields.io/github/languages/top/Kludwisz/Lootinator?style=for-the-badge">
+  <img src="https://img.shields.io/github/last-commit/MinecraftAtHome/Lootinator?style=%22for-the-badge%22"></img>
+  <img src="https://img.shields.io/github/languages/top/MinecraftAtHome/Lootinator?style=for-the-badge">
 </p>
 <p align="center">
 GPU accelerated Minecraft loot finding

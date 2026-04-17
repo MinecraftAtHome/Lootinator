@@ -195,7 +195,7 @@ void launch(const KernelPipeline& pipeline, u32 num_blocks, u64 offset)
 int main() {
     KernelPipeline pipeline;
     )";
-		for (int i = 0; i < kp.size(); i++) {
+		for (int i = 0; i < static_cast<int>(kp.size()); i++) {
 			fout << "ConfiguredKernel ck" << i << " {\"" << kp[i].kernel_name << "\", "
 				 << "std::vector<u32>(), " << kp[i].total_threads << "ULL, "
 				 << kp[i].threads_per_batch << "ULL, " << kp[i].threads_per_block << "U, "
@@ -238,22 +238,22 @@ int main() {
 
 			out << "KernelPipeline pipeline" << j << ";\n";
 
-			for (int i = 0; i < pipeline.size(); i++) {
+			for (int i = 0; i < static_cast<int>(pipeline.size()); i++) {
 				int index = (j << 8) | i;
 
 				out << "ConfiguredKernel ck" << index << " {\"" << pipeline[i].kernel_name << "\", "
-					 << "std::vector<u32>(), " << pipeline[i].total_threads << "ULL, "
-					 << pipeline[i].threads_per_batch << "ULL, " << pipeline[i].threads_per_block << "U, "
-					 << pipeline[i].device_id << "U, " << pipeline[i].start_batch << ", " << pipeline[i].end_batch << ", "
-					 << pipeline[i].max_results << "};\n";
+					<< "std::vector<u32>(), " << pipeline[i].total_threads << "ULL, "
+					<< pipeline[i].threads_per_batch << "ULL, " << pipeline[i].threads_per_block
+					<< "U, " << pipeline[i].device_id << "U, " << pipeline[i].start_batch << ", "
+					<< pipeline[i].end_batch << ", " << pipeline[i].max_results << "};\n";
 
 				out << "pipeline" << j << ".push_back(&ck" << index << ");\n";
 
 				out << "    {uint32_t shmem[] = ";
 				print_shared_mem(out, pipeline[i]);
-				out << " for (int k = 0; k < " << pipeline[i].shared_mem.size() << "; k++) pipeline" << j << "[" << i
-					 << "]->shared_memory.push_back(shmem[k]);}\n"
-					 << "\npipeline" << j << "[" << i << "]->init_memory();\n";
+				out << " for (int k = 0; k < " << pipeline[i].shared_mem.size() << "; k++) pipeline"
+					<< j << "[" << i << "]->shared_memory.push_back(shmem[k]);}\n"
+					<< "\npipeline" << j << "[" << i << "]->init_memory();\n";
 			}
 			out << "    launchers.push_back(kernel" << j << "::launch);\n";
 			out << "	configs.push_back(&pipeline" << j << ");\n";
@@ -261,7 +261,7 @@ int main() {
 
 		out << "\n";
 		out << "    BenchmarkResults result_array[num_kernels];\n";
-		
+
 		out << "    for (int k = 0; k < num_kernels; k++) {\n";
 		out <<
 			R"(        std::cerr << "Measuring pipeline " << (k+1) << " / " << num_kernels << "...\n";
@@ -340,7 +340,8 @@ int main() {
 )";
 	}
 
-	int generate_benchmarker_source(const std::vector<kgen::KernelPipeline>& kernel_configs, std::ostream& fout) {
+	int generate_benchmarker_source(
+		const std::vector<kgen::KernelPipeline>& kernel_configs, std::ostream& fout) {
 		if (kernel_configs.size() == 0) {
 			std::cerr << "ERROR: No kernels provided.\n";
 			return 1;

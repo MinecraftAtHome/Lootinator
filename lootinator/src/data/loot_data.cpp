@@ -91,6 +91,7 @@ namespace data {
 			}
 			return function->enchant_randomly.enchantment_order.size();
 		}
+		return 0;
 	}
 
 	uint32_t LootEntry::get_min_lcg_advancement() const {

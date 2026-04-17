@@ -3,6 +3,8 @@ set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_EXE_LINKER_FLAGS "-static")
 add_compile_options(-Os)
 
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 add_executable(lootinator-cli
 	src/main.cpp
 )
@@ -12,4 +14,3 @@ target_include_directories(lootinator-cli PUBLIC ${CMAKE_SOURCE_DIR}/external/cl
 target_link_libraries(lootinator-cli PRIVATE clipp::clipp)
 
 target_link_libraries(lootinator-cli PRIVATE lootinator)
-

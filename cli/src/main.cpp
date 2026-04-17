@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 
 	mc::VersionRange version = mc::parse_version(version_str);
 	if (version == mc::MC_UNDEFINED) {
-		fprintf(stderr, "version is undefined!\n");
+		fprintf(stderr, "Lootinator failed: version is undefined!\n");
 		exit(1);
 	}
 

@@ -261,8 +261,13 @@ namespace data {
 
 		int entry_index = 0;
 		for (auto& entry : json["entries"]) {
-			uint32_t entry_weight =
-				(entry.contains("weight") ? static_cast<uint32_t>(entry["weight"]) : 1);
+			int32_t entry_weight =
+				(entry.contains("weight") ? static_cast<int32_t>(entry["weight"]) : 1);
+
+			if (entry_weight < 0) {
+				throw loot::LootinatorError(loot::LootinatorErrorKind::BAD_LOOT_TABLE);
+			}
+
 			uint32_t start_weight = static_cast<uint32_t>(entry_lookup.size());
 			uint32_t end_weight =
 				start_weight + entry_weight - 1; // -1 accounts for range being inclusive-inclusive

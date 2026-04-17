@@ -130,6 +130,9 @@ namespace loot {
 						loot::LootinatorErrorKind::USER_CONSTRAINT_NOT_POSSIBLE);
 				}
 				std::int32_t slot_id = con["slot"];
+				if (slot_id < 0) {
+					throw loot::LootinatorError(loot::LootinatorErrorKind::BAD_CONSTRAINT_FILE);
+				}
 				try {
 					util::RangeInclusive<std::uint32_t> count_range =
 						util::RangeInclusive<std::uint32_t>::from_json(con["range"]);

@@ -27,6 +27,10 @@ namespace util {
 			if (json.is_number()) {
 				return {json, json};
 			} else {
+				if (json["min"] < 0 || json["max"] < 0) {
+					throw loot::LootinatorError(
+						loot::LootinatorErrorKind::RANGE_PARSE, "min or max is less than zero");
+				}
 				if (json["min"] > json["max"]) {
 					throw loot::LootinatorError(loot::LootinatorErrorKind::RANGE_PARSE);
 				}

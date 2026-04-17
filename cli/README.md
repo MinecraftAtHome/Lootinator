@@ -1,24 +1,38 @@
 # Lootinator CLI Usage Guide
 
-## Quick Start
+## About the project
+
+Lootinator lets you find *loot seeds* - a type of internal seed that Minecraft uses to determine chest loot.
 
 Lootinator does not find loot seeds directly, it instead generates cuda kernels which can in turn be compiled and run on any
 NVIDIA graphics card.
 
-- In order to run the cli, you will need the json of the loot table you are targetting. These can be found for all versions here: https://mcasset.cloud/26.1.2/data/minecraft/loot_table/chests
+## Quick Start
+
+- In order to run the CLI, you will need the json of the loot table you are targetting. These can be found for all versions here: https://mcasset.cloud/latest
 
 - In addition, you will need a constraint file describing all the constraints you are targetting. The json schematic is as follows:
-```json
+```
 [
     {
-        "item": <item_name>, // the name of the item you are targetting, must be prefixed with minecraft:
-        "range": { // the minimum and maximum item count for this constraint
-            "min": <item_min>,
+        // the name of the item you are targetting, must be prefixed with minecraft:
+        "item": <item_name>,
+
+        // the minimum and maximum item count for this constraint
+        "range": { 
+            "min": <item_min>",
             "max": <item_max>
         },
-        "slot": slot_index>, // the slot of the item between 0-27 (currently ignored)
-		"attributes": [ // optional attribute data for enchantments
-			{"type": <enchant_name>, "level": <enchant_level>} // level is optional. 
+
+        // the slot of the item between 0-27 (currently ignored)
+        "slot": <slot_index>, 
+
+        // optional attribute data for enchantments
+		"attributes": [ 
+			{
+                "type": <enchant_name>, // e.g. efficiency
+                "level": <enchant_level> // optional
+            }
 		]
     }
 ]
@@ -27,8 +41,7 @@ NVIDIA graphics card.
 - With both of these json files, we can call the lootinator-cli
 
 ```bash
-./lootinator-cli --loot-table <file_path.json> --constraint-file <file_path.json> -o
-                    <filepath> [-sc] [-sk] [-v <version>]
+./lootinator-cli --loot-table <file_path.json> --constraint-file <file_path.json> -o <filepath> [-sc] [-sk] [-v <version>]
 ```
 
 - The options are as follows
@@ -44,3 +57,37 @@ NVIDIA graphics card.
 ```
 
 - Once you have run the cli, you will be left with an output cuda (.cu) file
+
+## Usage example
+
+- Target loot table: https://mcasset.cloud/26.1.2/data/minecraft/loot_table/chests/ruined_portal.json
+
+- Constraints file - `constraints_4_notches.json` (looking for at least 4 enchanted golden apples in a ruined portal chest):
+
+```json
+[
+    {
+        "item": "minecraft:enchanted_golden_apple",
+        "range": {
+            "min": 4,
+            "max": 10000
+        },
+        "slot": 0
+    }
+]
+```
+
+- Use lootinator CLI like this (assuming the constraints and loot table files are in the same directory as the executable):
+```bash
+./lootinator-cli --loot-table ruined_portal.json --constraint-file constraints_4_notches.json -o four_notches.cu -v 26.1
+```
+
+- Compile the CUDA source code file (four_notches.cu). This requires `nvcc` to be available on the host machine.
+```bash
+nvcc four_notches.cu -o four_notches
+```
+
+- Run the compiled code, saving results to the output file `out.txt`. Requires a CUDA-capable GPU.
+```bash
+./four_notches 1> out.txt
+```

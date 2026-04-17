@@ -91,3 +91,14 @@ nvcc four_notches.cu -o four_notches
 ```bash
 ./four_notches 1> out.txt
 ```
+
+## Features
+
+### CLI
+- Support for Minecraft 1.13 and above (experimental).
+- Support for any loot table defined as a json file (experimental).
+- Two modes of operation - *seedcracking* (finding the exact specified chest contents, enable with the `-sc` flag) and *seedfinding* (default, finding a chest with at least the specified items, and potentially others)
+- Built-in automated benchmarking (turn off with the `-sk` flag)
+
+### API
+- supports all the operations provided by the CLI, see `lootinator/include/lootinator.h` for available functions

@@ -1,29 +1,10 @@
 [
     {
-        "item": 2,
+        "item": "minecraft:obsidian",
         "range": {
-            "min": 56,
-            "max": 80
+            "min": 50,
+            "max": 1000
         },
-        "slot": 0,
-        "attributes": []
-    },
-    {
-        "item": 2,
-        "range": {
-            "min": 4,
-            "max": 10
-        },
-        "slot": 0,
-        "attributes": []
-    },
-    {
-        "item": 2,
-        "range": {
-            "min": 14,
-            "max": 24
-        },
-        "slot": 0,
-        "attributes": []
+        "slot": 0
     }
 ]

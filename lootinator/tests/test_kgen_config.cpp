@@ -383,12 +383,12 @@ int LOOTINATOR_EXTERN tests_test_kgen_config(int argc, char** argv) {
 	kgen_config = kgen::KernelGenConfig(
 		mc::VersionRange::MC_1_21_TO_1_21_10, loot_table, simple_constraints, true);
 	config_probability = prob::get_probability_of_config(kgen_config);
-	ASSERT_FLOAT_EQ(config_probability, 0.000680201f);
+	ASSERT_FLOAT_EQ(config_probability, 0.000680201);
 
 	kgen_config = kgen::KernelGenConfig(
 		mc::VersionRange::MC_1_21_TO_1_21_10, loot_table, simple_constraints2, false);
 	config_probability = prob::get_probability_of_config(kgen_config);
-	ASSERT_FLOAT_EQ(config_probability, 0.007537f);
+	ASSERT_FLOAT_EQ(config_probability, 0.007537);
 
 #undef EPS
 #undef ASSERT_FLOAT_EQ

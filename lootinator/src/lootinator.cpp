@@ -24,6 +24,10 @@ namespace loot {
 				version_range, loot_table.str(), constraints.str(), use_seedcracking_mode);
 
 			double config_probability = prob::get_probability_of_config(kgen_config);
+			if (config_probability == 0.0) {
+				return loot::LootinatorError(
+					loot::LootinatorErrorKind::USER_CONSTRAINT_NOT_POSSIBLE);
+			}
 			if (config_probability > CUTOFF_PROBABILIY) {
 				return loot::LootinatorError(loot::LootinatorErrorKind::USER_CONSTRAINT_TOO_WEAK);
 			}
@@ -59,6 +63,10 @@ namespace loot {
 				version_range, loot_table.str(), constraints.str(), use_seedcracking_mode);
 
 			double config_probability = prob::get_probability_of_config(kgen_config);
+			if (config_probability == 0.0) {
+				return loot::LootinatorError(
+					loot::LootinatorErrorKind::USER_CONSTRAINT_NOT_POSSIBLE);
+			}
 			if (config_probability > CUTOFF_PROBABILIY) {
 				return loot::LootinatorError(loot::LootinatorErrorKind::USER_CONSTRAINT_TOO_WEAK);
 			}
@@ -86,6 +94,10 @@ namespace loot {
 				version_range, loot_table, constraints, use_seedcracking_mode);
 
 			double config_probability = prob::get_probability_of_config(kgen_config);
+			if (config_probability == 0.0) {
+				return loot::LootinatorError(
+					loot::LootinatorErrorKind::USER_CONSTRAINT_NOT_POSSIBLE);
+			}
 			if (config_probability > CUTOFF_PROBABILIY) {
 				return loot::LootinatorError(loot::LootinatorErrorKind::USER_CONSTRAINT_TOO_WEAK);
 			}
@@ -112,6 +124,10 @@ namespace loot {
 				version_range, loot_table, constraints, use_seedcracking_mode);
 
 			double config_probability = prob::get_probability_of_config(kgen_config);
+			if (config_probability == 0.0) {
+				return loot::LootinatorError(
+					loot::LootinatorErrorKind::USER_CONSTRAINT_NOT_POSSIBLE);
+			}
 			if (config_probability > CUTOFF_PROBABILIY) {
 				return loot::LootinatorError(loot::LootinatorErrorKind::USER_CONSTRAINT_TOO_WEAK);
 			}

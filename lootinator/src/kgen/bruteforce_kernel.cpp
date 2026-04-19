@@ -172,12 +172,13 @@ namespace kgen {
 			<< R"(]; // min_max_count__counter_index__enchantment_count
 u64 enchantment_mask = data[)"
 			<< pool_off << R"( + item * )" << bpe << R"( + 1]; 
-u32 item_idx = entry_data >> 24; // [8b][6b][6b][4b][8b]
 u32 min_count = (entry_data >> 18) & 0x3f; 
 u32 max_count = (entry_data >> 12) & 0x3f;  
 u32 counter_idx = (entry_data >> 8) & 0xf;)";
 
 		if (this->kgen_config.seedcracking && !disable_seedcracking) {
+			out << "u32 item_idx = entry_data >> 24; // [8b][6b][6b][4b][8b]\n";
+
 			std::string one = pool->children.size() > 32 ? "((u64)1)" : "((u32)1)";
 			std::string forbidden_bitmask = create_forbidden_item_mask(pool);
 

@@ -36,7 +36,7 @@ target_include_directories(lootinator PUBLIC include)
 
 set(TEST_FILES
 	tests/function_order_dfs.cpp
-	tests/smoke_tests.cpp
+	tests/test_kgen_config.cpp
 )
 
 # TODO: compiler flags, (-O3, warnings, etc)

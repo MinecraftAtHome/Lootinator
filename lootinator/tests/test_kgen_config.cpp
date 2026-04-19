@@ -6,7 +6,7 @@
 #include "lootinator/mc/minecraft.hpp"
 #include "lootinator/probability/loot_prob.h"
 
-int LOOTINATOR_EXTERN tests_test_kgen_config(int argc, char** argv) {
+int LOOTINATOR_EXTERN tests_test_kgen_config(int argc, char** const argv) {
 	(void)argc;
 	(void)argv;
 

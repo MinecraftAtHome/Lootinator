@@ -77,14 +77,20 @@ namespace kgen {
 		}
 	}
 
-	static bool check_cycles_dfs(int vertex, const int num_functions, bool** edges, bool* visited) {
+	static bool check_cycles_dfs(int vertex, const int num_functions, bool** edges, bool* visited, bool from_root) {
 		for (int v = 0; v < num_functions; v++) {
+			if (from_root) {
+				for (int v2 = 0; v2 < num_functions; v2++)
+					visited[v2] = false;
+				visited[vertex] = true;
+			}
+
 			if (edges[vertex][v]) {
 				if (visited[v]) {
 					return true;
 				}
 				visited[v] = true;
-				if (check_cycles_dfs(v, num_functions, edges, visited)) {
+				if (check_cycles_dfs(v, num_functions, edges, visited, false)) {
 					return true;
 				}
 			}
@@ -172,10 +178,7 @@ namespace kgen {
 		// "DFS"
 		bool* visited = new bool[NUM_FUNCTIONS];
 		for (int v = 0; v < NUM_FUNCTIONS; v++) {
-			for (int v2 = 0; v2 < NUM_FUNCTIONS; v2++)
-				visited[v2] = false;
-			visited[v] = true;
-			if (check_cycles_dfs(v, NUM_FUNCTIONS, edges, visited)) {
+			if (check_cycles_dfs(v, NUM_FUNCTIONS, edges, visited, true)) {
 				no_fast_filter = true;
 			}
 		}

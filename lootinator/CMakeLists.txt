@@ -12,10 +12,6 @@ add_library(lootinator
 	include/lootinator/lootinator.h
 	include/lootinator/mc/minecraft.hpp
 	include/lootinator/probability/loot_prob.h
-	include/lootinator/template/helpers.h
-	include/lootinator/template/kernel/naive_bruteforce_template.h
-	include/lootinator/template/kernel_template.h
-	include/lootinator/template/template.h
 	include/lootinator/utility/debug.h
 	include/lootinator/utility/enum_bimap.hpp
 	include/lootinator/utility/mth.h
@@ -33,16 +29,13 @@ add_library(lootinator
 	src/lootinator.cpp
 	src/mc/minecraft.cpp
 	src/probability/loot_prob.cpp
-	src/template/helpers.cpp
-	src/template/kernel/naive_bruteforce_template.cpp
-	src/template/kernel_template.cpp
-	src/template/template.cpp
 	src/utility/debug.cpp
 )
 
 target_include_directories(lootinator PUBLIC include)
 
 set(TEST_FILES
+	tests/function_order_dfs.cpp
 	tests/smoke_tests.cpp
 )
 

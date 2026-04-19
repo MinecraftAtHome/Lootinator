@@ -24,7 +24,9 @@ namespace loot {
 		BAD_CONSTRAINT_FILE,
 		BAD_LOOT_TABLE,
 		RANGE_PARSE,
-		INTERNAL_ERROR
+		INTERNAL_ERROR,
+		MC_VERSION_UNDEFINED,
+		INVALID_ARGUMENTS
 	};
 
 	std::string parse_errno(LootinatorErrorKind error);

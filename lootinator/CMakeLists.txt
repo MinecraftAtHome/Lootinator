@@ -43,7 +43,7 @@ add_library(lootinator
 target_include_directories(lootinator PUBLIC include)
 
 set(TEST_FILES
-	tests/smoke_tests.cpp
+	tests/test_kgen_config.cpp
 )
 
 # TODO: compiler flags, (-O3, warnings, etc)

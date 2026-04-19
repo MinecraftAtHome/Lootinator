@@ -1047,4 +1047,8 @@ namespace mc {
 		}
 		return MC_UNDEFINED;
 	}
+
+	std::vector<std::string> get_supported_versions() {
+		return VERSION_BIMAP.get_strings();
+	}
 } // namespace mc

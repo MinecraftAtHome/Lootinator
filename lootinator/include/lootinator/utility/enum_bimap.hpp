@@ -16,7 +16,17 @@ namespace util {
 		bool contains_enum(const T value) const;
 		T lookup_string(const std::string& str) const;
 		std::string lookup_enum(const T value) const;
+		std::vector<std::string> get_strings() const;
 	};
+
+	template <typename T>
+	inline std::vector<std::string> EnumToStringBimap<T>::get_strings() const {
+		std::vector<std::string> strings;
+		for (const auto& elem : string_to_enum) {
+			strings.push_back(elem.first);
+		}
+		return strings;
+	}
 
 	template <typename T>
 	inline EnumToStringBimap<T>::EnumToStringBimap(

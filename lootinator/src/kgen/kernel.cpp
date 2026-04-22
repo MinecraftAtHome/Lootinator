@@ -23,7 +23,7 @@ namespace kgen {
 					}
 				}
 			}
-		} catch (std::runtime_error& err) {
+		} catch (std::exception& err) {
 			throw loot::LootinatorError(loot::LootinatorErrorKind::BAD_LOOT_TABLE);
 		}
 
@@ -35,7 +35,7 @@ namespace kgen {
 					return a.item_equal(b);
 				};
 			merge_contraints(constr, constraints, cmp_func);
-		} catch (std::runtime_error& err) {
+		} catch (std::exception& err) {
 			throw loot::LootinatorError(loot::LootinatorErrorKind::BAD_LOOT_TABLE);
 		}
 

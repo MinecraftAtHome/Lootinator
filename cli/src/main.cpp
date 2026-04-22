@@ -43,8 +43,9 @@ int main(int argc, char** argv) {
 
 	mc::VersionRange version = mc::parse_version(version_str);
 	if (version == mc::MC_UNDEFINED) {
-		fprintf(stderr, "Lootinator failed: version is undefined!\n");
-		exit(loot::LootinatorErrorKind::MC_VERSION_UNDEFINED);
+		int error_code = loot::LootinatorErrorKind::INVALID_ARGUMENTS;
+		std::cout << "Lootinator failed (" << error_code << "): version is undefined.\n";
+		exit(error_code);
 	}
 
 	std::ofstream fout(output_file);
@@ -62,7 +63,7 @@ int main(int argc, char** argv) {
 
 	if (err.kind == loot::LootinatorErrorKind::SUCCESS) {
 		fout << s;
-		std::cout << "Cuda generation was successful.\n";
+		std::cout << "CUDA generation was successful.\n";
 		std::cout << "==== Selected Options ====\n";
 		std::cout << "  Version Range: " << mc::get_version_from_enum(version) << "\n";
 		std::cout << "  Constraints:   " << constraint_file << "\n";
@@ -71,7 +72,7 @@ int main(int argc, char** argv) {
 		std::cout << "  Output File:   " << output_file << "\n";
 		std::cout << "==========================\n";
 	} else {
-		std::cout << "Lootinator failed: " << err.message << '\n';
+		std::cout << "Lootinator failed (" << err.kind << "): " << err.message << '\n';
 		exit(err.kind);
 	}
 }

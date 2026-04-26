@@ -297,8 +297,9 @@ namespace mc {
 		{mc::VersionRange::MC_1_21_TO_1_21_10, "1.21.9"},
 		{mc::VersionRange::MC_1_21_TO_1_21_10, "1.21.10"},
 
-		{mc::VersionRange::MC_1_21_11_TO_26_1, "1.21.11"},
-		{mc::VersionRange::MC_1_21_11_TO_26_1, "26.1"},
+		{mc::VersionRange::MC_1_21_11_TO_26_2, "1.21.11"},
+		{mc::VersionRange::MC_1_21_11_TO_26_2, "26.1"},
+		{mc::VersionRange::MC_1_21_11_TO_26_2, "26.2"},
 	});
 
 	std::string get_version_from_enum(mc::VersionRange version) {
@@ -858,7 +859,7 @@ namespace mc {
 				CURSE_OF_VANISHING,
 				FROST_WALKER,
 				MENDING}});
-		} else if (version_range == mc::VersionRange::MC_1_21_11_TO_26_1) {
+		} else if (version_range == mc::VersionRange::MC_1_21_11_TO_26_2) {
 			return std::vector<mc::Enchantment>({{
 				PROTECTION,
 				FIRE_PROTECTION,

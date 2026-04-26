@@ -45,6 +45,7 @@ namespace kgen {
 	ConfiguredKernel BruteforceKernel::generate() {
 		return ConfiguredKernel{
 			this->name,
+			this->kgen_config.seeds_output,
 			to_string(),
 			UINT64_C(1) << 48,
 			UINT64_C(1) << 32,
@@ -54,7 +55,7 @@ namespace kgen {
 			0,
 			UINT32_C(1) << 16,
 			UINT32_C(1) << 19,
-			0,
+			this->heuristic(),
 		};
 	}
 

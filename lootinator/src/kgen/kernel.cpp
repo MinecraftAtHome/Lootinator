@@ -4,11 +4,12 @@
 
 #include <cinttypes>
 #include <fstream>
+#include <random>
 
 namespace kgen {
 	KernelGenConfig::KernelGenConfig(mc::VersionRange version, std::string loot_table,
-		std::string constraint_string, bool seedcracking)
-		: version(version), seedcracking(seedcracking) {
+		std::string constraint_string, bool seedcracking, std::string seeds_output)
+		: seeds_output(seeds_output), version(version), seedcracking(seedcracking) {
 
 		try {
 			loot_table_json = nlohmann::json::parse(loot_table);

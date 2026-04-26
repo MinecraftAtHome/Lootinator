@@ -47,21 +47,22 @@ int main(int argc, char** argv) {
 
 	if (!clipp::parse(argc, argv, cli)) {
 		std::cout << clipp::make_man_page(cli, argv[0]);
-		exit(1);
+		exit(loot::LootinatorErrorKind::INVALID_ARGUMENTS);
 	}
 
 	if (list_versions) {
 		std::cout << "Supported Minecraft Versions:\n";
-		for (const auto& v : mc::get_supported_versions()) {
-			std::cout << v << "\n";
+		for (const auto& version : mc::get_supported_versions()) {
+			std::cout << version << "\n";
 		}
-		exit(0);
+		exit(loot::LootinatorErrorKind::SUCCESS);
 	}
 
 	mc::VersionRange version = mc::parse_version(version_str);
 	if (version == mc::MC_UNDEFINED) {
-		fprintf(stderr, "Lootinator failed: version is undefined!\n");
-		exit(1);
+		int error_code = loot::LootinatorErrorKind::INVALID_ARGUMENTS;
+		std::cout << "Lootinator failed (" << error_code << "): version is undefined.\n";
+		exit(error_code);
 	}
 
 	std::ofstream fout(output_file);
@@ -87,6 +88,7 @@ int main(int argc, char** argv) {
 		std::cout << "  Single Kernel: " << (single_kernel ? "true\n" : "false\n");
 		std::cout << "===========================\n";
 	} else {
-		std::cout << "Lootinator failed: " << err.message << '\n';
+		std::cout << "Lootinator failed (" << err.kind << "): " << err.message << '\n';
+		exit(err.kind);
 	}
 }

@@ -21,4 +21,4 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: lootinator-cli-linux
-        path: ./${{ github.event.repository.name }}/build/cli/lootinator-cli
+        path: ./build/cli/lootinator-cli

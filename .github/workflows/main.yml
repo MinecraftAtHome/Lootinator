@@ -1,0 +1,38 @@
+name: lootinator-release-build
+
+on: [push]
+
+jobs:
+  linux:
+    name: build/release/linux
+    runs-on: [ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: setup
+      run: |
+        sudo apt update
+    - name: build
+      run: |
+        mkdir build && cd build && cmake ..
+        make -B -j8
+    - uses: actions/upload-artifact@v4
+      with:
+        name: lootinator-cli-linux
+        path: ./build/cli/lootinator-cli
+  windows:
+    name: build/release/windows
+    runs-on: [windows-latest]
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: build
+      run: |
+        cmake -S . -B build
+        cmake --build build --config Release
+    - uses: actions/upload-artifact@v4
+      with:
+        name: lootinator-cli-windows.exe
+        path: .\build\cli\Release\lootinator-cli.exe

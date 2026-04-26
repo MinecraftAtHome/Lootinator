@@ -10,7 +10,8 @@ val generate_best_pipeline_heur(
     std::string loot_table,
     std::string constraints,
     mc::VersionRange version_range,
-    bool seedcracking_mode
+    bool seedcracking_mode,
+    std::string output_filename,
 ) {
     std::string result;
 
@@ -19,7 +20,8 @@ val generate_best_pipeline_heur(
         constraints,
         version_range,
         seedcracking_mode,
-        &result
+        &result,
+        output_filename
     );
 
     val error = val::object();
@@ -37,7 +39,8 @@ val generate_benchmark_source(
     std::string loot_table,
     std::string constraints,
     mc::VersionRange version_range,
-    bool seedcracking_mode
+    bool seedcracking_mode,
+    std::string output_filename,
 ) {
     std::string result;
 
@@ -46,7 +49,8 @@ val generate_benchmark_source(
         constraints,
         version_range,
         seedcracking_mode,
-        &result
+        &result,
+        output_filename
     );
 
     val error = val::object();

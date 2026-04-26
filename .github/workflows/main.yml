@@ -11,7 +11,7 @@ jobs:
     - name: setup
       run: |
         sudo apt update
-        sudo apt install build-essentials
+        sudo apt install build-essential
     - name: build
       run: |
         mkdir build && cd build && cmake ..

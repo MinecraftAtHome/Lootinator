@@ -11,7 +11,7 @@ val generate_best_pipeline_heur(
     std::string constraints,
     mc::VersionRange version_range,
     bool seedcracking_mode,
-    std::string output_filename,
+    std::string output_filename
 ) {
     std::string result;
 
@@ -40,7 +40,7 @@ val generate_benchmark_source(
     std::string constraints,
     mc::VersionRange version_range,
     bool seedcracking_mode,
-    std::string output_filename,
+    std::string output_filename
 ) {
     std::string result;
 

@@ -13,10 +13,8 @@ BinPackArguments: false
 
 AllowAllParametersOfDeclarationOnNextLine: false
 BinPackParameters: true
-ColumnLimit: 0
 
 AlignAfterOpenBracket: DontAlign
-ContinuationIndentWidth: 4
 
 ColumnLimit: 100
 SpaceBeforeParens: ControlStatements

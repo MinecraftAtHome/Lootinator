@@ -21,7 +21,7 @@ int main() {
 	std::string s;
 
 	loot::LootinatorError err = loot::generate_best_pipeline_heur(
-		loot_table_file, constraints_file, mc::MC_1_21_TO_1_21_10, true, &s);
+		loot_table_file, constraints_file, mc::MC_1_21_TO_1_21_10, true, &s, "loot_seeds.txt");
 
 	if (err.kind == loot::LootinatorErrorKind::SUCCESS) {
 		fout << s;

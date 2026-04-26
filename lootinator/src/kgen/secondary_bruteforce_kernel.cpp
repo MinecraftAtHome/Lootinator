@@ -40,6 +40,7 @@ namespace kgen {
 
 		return ConfiguredKernel{
 			this->name,
+			this->kgen_config.seeds_output,
 			to_string(),
 			UINT64_C(1) << 48,
 			UINT64_C(1) << 32,

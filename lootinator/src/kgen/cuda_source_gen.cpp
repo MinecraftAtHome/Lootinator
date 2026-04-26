@@ -21,6 +21,7 @@ namespace kgen {
 #include <cstdint>
 #include <cinttypes>
 #include <iostream>
+#include <fstream>
 
 // start of shared definitions block
 #define SHARED_DEFINITIONS
@@ -37,6 +38,7 @@ void gpuAssert(cudaError_t code, const char *file, int line) {
 
 struct ConfiguredKernel {
     std::string kernel_name;
+	std::string seeds_output;
     std::vector<u32> shared_memory;
     u64 total_threads;
     u64 threads_per_batch;
@@ -79,7 +81,7 @@ struct BenchmarkResults {
 typedef std::vector<ConfiguredKernel*> KernelPipeline;
 typedef void (*launch_function)(const KernelPipeline&, u32, u64);
 
-void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline, bool print_results) {
+void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline, bool print_results, std::ostream &out) {
     u64* h_result_array = (u64*)malloc(pipeline.back()->max_results * sizeof(u64));
     const u32 num_blocks = pipeline[0]->threads_per_batch / pipeline[0]->threads_per_block;
     
@@ -97,7 +99,7 @@ void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline
         
         if (!print_results) continue;
         for (u32 i = 0; i < h_result_count; i++) {
-            std::cout << h_result_array[i] << '\n';
+            out << h_result_array[i] << '\n';
         }
         std::cout << std::flush;
     }
@@ -197,6 +199,7 @@ int main() {
     )";
 		for (int i = 0; i < static_cast<int>(kp.size()); i++) {
 			fout << "ConfiguredKernel ck" << i << " {\"" << kp[i].kernel_name << "\", "
+				 << "\"" << kp[i].seeds_output << "\", "
 				 << "std::vector<u32>(), " << kp[i].total_threads << "ULL, "
 				 << kp[i].threads_per_batch << "ULL, " << kp[i].threads_per_block << "U, "
 				 << kp[i].device_id << "U, " << kp[i].start_batch << ", " << kp[i].end_batch << ", "
@@ -212,7 +215,11 @@ int main() {
 		}
 
 		fout << R"(
-    launch_configured_kernel(kernel0::launch, pipeline, true);
+
+	std::ofstream seeds_file(")"
+			 << kp[0].seeds_output << R"(");
+
+    launch_configured_kernel(kernel0::launch, pipeline, true, seeds_file);
     return 0;
 }
 )";
@@ -242,6 +249,7 @@ int main() {
 				int index = (j << 8) | i;
 
 				out << "ConfiguredKernel ck" << index << " {\"" << pipeline[i].kernel_name << "\", "
+					<< "\"" << pipeline[i].seeds_output << "\", "
 					<< "std::vector<u32>(), " << pipeline[i].total_threads << "ULL, "
 					<< pipeline[i].threads_per_batch << "ULL, " << pipeline[i].threads_per_block
 					<< "U, " << pipeline[i].device_id << "U, " << pipeline[i].start_batch << ", "
@@ -282,7 +290,7 @@ int main() {
 
 		CUDA_CHECK(cudaDeviceSynchronize());
 		for (u32 i = 0; i < 3; i++) {
-			launch_configured_kernel(launchers[k], *pipeline, false);
+			launch_configured_kernel(launchers[k], *pipeline, false, std::cout);
 		}
 
 		// benchmarking with auto-tuning
@@ -292,7 +300,7 @@ int main() {
 			work_config->end_batch = work_config->start_batch + batches;
 
 			auto t0 = std::chrono::high_resolution_clock::now();
-			launch_configured_kernel(launchers[k], *pipeline, false);
+			launch_configured_kernel(launchers[k], *pipeline, false, std::cout);
 			auto t1 = std::chrono::high_resolution_clock::now();
 			elapsed_ms = (t1-t0).count() * 1e-6f;
 			if (elapsed_ms < BENCH_CUTOFF)
@@ -311,7 +319,7 @@ int main() {
 	}
 
 	int best_kernel = -1;
-	double best_perf = result_array[0].ms_total_estimate - 1.0;
+	double best_perf = result_array[0].ms_total_estimate + 1.0;
 	for (int k = 0; k < num_kernels; k++) {
 		if (result_array[k].success && result_array[k].ms_total_estimate < best_perf) {
 			best_perf = result_array[k].ms_total_estimate;
@@ -331,8 +339,10 @@ int main() {
 
 	std::cerr << "Running kernel " << (*(configs[best_kernel]))[0]->kernel_name << "...\n";
 	{
+		std::ofstream seeds_file((*(configs[best_kernel]))[0]->seeds_output);
+
 		const KernelPipeline* config = configs[best_kernel];
-		launch_configured_kernel(launchers[best_kernel], *config, true);
+		launch_configured_kernel(launchers[best_kernel], *config, true, seeds_file);
 		std::cerr << "Finished.\n";
 	}
 	return 0;

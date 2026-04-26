@@ -13,7 +13,7 @@ namespace mc {
 	X(MC_1_14_TO_1_15)                                                                             \
 	X(MC_1_16_TO_1_20)                                                                             \
 	X(MC_1_21_TO_1_21_10)                                                                          \
-	X(MC_1_21_11_TO_26_1)
+	X(MC_1_21_11_TO_26_2)
 
 	enum VersionRange {
 #define X(v) v,

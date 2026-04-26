@@ -21,9 +21,10 @@ namespace kgen {
 
 		// any extra scuffed stuff goes here
 		bool using_nvrtc = false;
+		std::string seeds_output;
 
 		KernelGenConfig(mc::VersionRange version, std::string loot_table, std::string constraints,
-			bool seedcracking);
+			bool seedcracking, std::string seeds_output);
 
 		void traverse_and_derive(data::LootTreeNode* root, bool** edges);
 		void construct_order(bool** edges, const int num_functions, data::LootTreeNode* root);
@@ -32,6 +33,7 @@ namespace kgen {
 
 	struct ConfiguredKernel {
 		std::string kernel_name;
+		std::string seeds_output;
 		std::string code;
 
 		uint64_t total_threads;

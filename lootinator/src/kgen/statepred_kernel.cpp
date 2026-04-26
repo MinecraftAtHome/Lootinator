@@ -78,6 +78,7 @@ namespace kgen {
 		uint32_t end_batch = total_threads / threads_per_batch;
 		return ConfiguredKernel{
 			this->name,
+			this->kgen_config.seeds_output,
 			to_string(),
 			total_threads,
 			threads_per_batch,

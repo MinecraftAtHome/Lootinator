@@ -13,7 +13,7 @@ namespace mc {
 	X(MC_1_14_TO_1_15)                                                                             \
 	X(MC_1_16_TO_1_20)                                                                             \
 	X(MC_1_21_TO_1_21_10)                                                                          \
-	X(MC_1_21_11_TO_26_1)
+	X(MC_1_21_11_TO_26_2)
 
 	enum VersionRange {
 #define X(v) v,
@@ -157,6 +157,7 @@ namespace mc {
 	mc::Enchantment string_to_enchantment(const std::string& enchantment_string);
 	mc::VersionRange parse_version(std::string vstring);
 	std::string get_version_from_enum(mc::VersionRange version);
+	std::vector<std::string> get_supported_versions();
 } // namespace mc
 
 #endif

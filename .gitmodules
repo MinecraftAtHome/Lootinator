@@ -1,12 +1,6 @@
 [submodule "external/json"]
 	path = external/json
 	url = https://github.com/nlohmann/json.git
-[submodule "external/flag.h"]
-	path = external/flag.h
-	url = https://github.com/tsoding/flag.h
-[submodule "external/CLI11"]
-	path = external/CLI11
-	url = https://github.com/CLIUtils/CLI11
 [submodule "external/clipp"]
 	path = external/clipp
 	url = https://github.com/muellan/clipp

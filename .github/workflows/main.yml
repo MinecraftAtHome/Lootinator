@@ -1,6 +1,9 @@
 name: lootinator-release-build
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   linux:

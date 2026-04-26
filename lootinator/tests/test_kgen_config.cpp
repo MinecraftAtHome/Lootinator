@@ -376,17 +376,17 @@ int LOOTINATOR_EXTERN tests_test_kgen_config(int argc, char** const argv) {
 	double config_probability;
 
 	kgen::KernelGenConfig kgen_config =
-		kgen::KernelGenConfig(mc::VersionRange::MC_1_21_TO_1_21_10, loot_table, constraints, false);
+		kgen::KernelGenConfig(mc::VersionRange::MC_1_21_TO_1_21_10, loot_table, constraints, false, "");
 	config_probability = prob::get_probability_of_config(kgen_config);
 	ASSERT_FLOAT_EQ(config_probability, 1.77305e-09);
 
 	kgen_config = kgen::KernelGenConfig(
-		mc::VersionRange::MC_1_21_TO_1_21_10, loot_table, simple_constraints, true);
+		mc::VersionRange::MC_1_21_TO_1_21_10, loot_table, simple_constraints, true, "");
 	config_probability = prob::get_probability_of_config(kgen_config);
 	ASSERT_FLOAT_EQ(config_probability, 0.000680201);
 
 	kgen_config = kgen::KernelGenConfig(
-		mc::VersionRange::MC_1_21_TO_1_21_10, loot_table, simple_constraints2, false);
+		mc::VersionRange::MC_1_21_TO_1_21_10, loot_table, simple_constraints2, false, "");
 	config_probability = prob::get_probability_of_config(kgen_config);
 	ASSERT_FLOAT_EQ(config_probability, 0.007537);
 

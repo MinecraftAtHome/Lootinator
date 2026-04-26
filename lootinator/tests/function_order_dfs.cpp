@@ -95,7 +95,8 @@ int LOOTINATOR_EXTERN tests_function_order_dfs(int argc, char** const argv) {
 	}
 ]
 			)",
-			false);
+			false,
+      "");
 
 		// there should exist a good ordering here
 		ASSERT_EQ(conf.no_fast_filter, false);

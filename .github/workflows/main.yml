@@ -1,22 +1,15 @@
-<<<<<<< HEAD
 name: lootinator-release-build
 
 on:
   push:
     branches:
       - main
-=======
-name: lootinator-release-builds
-
-on: [push]
->>>>>>> main
 
 jobs:
   linux:
     name: build/release/linux
     runs-on: [ubuntu-latest]
     steps:
-<<<<<<< HEAD
     - uses: actions/checkout@v4
       with:
         submodules: recursive
@@ -46,22 +39,3 @@ jobs:
       with:
         name: lootinator-cli-windows.exe
         path: .\build\cli\Release\lootinator-cli.exe
-=======
-      - uses: actions/checkout@v4
-
-      - name: setup
-        run: |
-          sudo apt update
-          sudo apt install build-essentials
-
-      - name: build
-          mkdir build && cd build && cmake ..
-          make -B -j8
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: lootinator-cli-linux
-          path: ./${{ github.event.repository.name }}/build/cli/lootinator-cli
-
-
->>>>>>> main

@@ -18,7 +18,8 @@ jobs:
         sudo apt update
     - name: build
       run: |
-        mkdir build && cd build && cmake ..
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        cd build
         make -B -j8
     - uses: actions/upload-artifact@v4
       with:

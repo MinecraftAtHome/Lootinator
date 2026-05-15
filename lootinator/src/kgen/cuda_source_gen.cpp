@@ -122,10 +122,11 @@ void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline
 
 			float work_done = (b - pipeline[0]->start_batch + 1.0f) / (pipeline[0]->end_batch - pipeline[0]->start_batch);
 			float percent = work_done * 100;
-			int bar_blocks = std::round(work_done * 40);
+			float bar_blocks = work_done * 40;
 			std::cerr << "\r|";
 			for (int i = 0; i < 40; i++) {
-				std::cerr << ((i < bar_blocks) ? '#' : '.');
+				const char* characters[] = { "\u2840", "\u2844", "\u2846", "\u2847", "\u28c7", "\u28e7", "\u28f7", "\u28ff" };
+				std::cerr << ((i + 1 <= bar_blocks) ? characters[7] : (i <= bar_blocks) ? characters[static_cast<std::size_t>((bar_blocks - i) * 8)] : " ");
 			}
 			std::fprintf(stderr, "| %6.2f%%", percent); 
 		}

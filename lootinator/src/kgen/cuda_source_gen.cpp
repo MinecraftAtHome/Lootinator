@@ -36,6 +36,16 @@ void gpuAssert(cudaError_t code, const char *file, int line) {
     }
 }
 
+static void print_eta(std::ostream& out, double eta_ms) {
+	// hours, minutes, seconds
+	double hrs = std::floor(eta_ms * 1e-3 / 3600.0);
+	eta_ms -= 3.6e6 * hrs;
+	double mins = std::floor(eta_ms * 1e-3 / 60.0);
+	eta_ms -= 60.0 * 1e3 * mins;
+	double secs = std::round(eta_ms * 1e-3);
+	out << static_cast<int>(hrs) << "h " << static_cast<int>(mins) << "m " << static_cast<int>(secs) << "s"; 
+}
+
 struct ConfiguredKernel {
     std::string kernel_name;
 	std::string seeds_output;
@@ -85,6 +95,8 @@ void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline
     u64* h_result_array = (u64*)malloc(pipeline.back()->max_results * sizeof(u64));
     const u32 num_blocks = pipeline[0]->threads_per_batch / pipeline[0]->threads_per_block;
     
+	auto t0 = std::chrono::steady_clock::now();
+
     for (u32 b = pipeline[0]->start_batch; b < pipeline[0]->end_batch; b++) {
         u32 h_result_count = 0;
 
@@ -101,7 +113,22 @@ void launch_configured_kernel(launch_function lf, const KernelPipeline& pipeline
         for (u32 i = 0; i < h_result_count; i++) {
             out << h_result_array[i] << '\n';
         }
-        std::cout << std::flush;
+        out << std::flush;
+
+		auto t1 = std::chrono::steady_clock::now();
+		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0);
+		if (ms.count() > 100 || b+1 == pipeline[0]->end_batch) {
+			t0 = t1;
+
+			float work_done = (b - pipeline[0]->start_batch + 1.0f) / (pipeline[0]->end_batch - pipeline[0]->start_batch);
+			float percent = work_done * 100;
+			int bar_blocks = std::round(work_done * 40);
+			std::cerr << "\r|";
+			for (int i = 0; i < 40; i++) {
+				std::cerr << ((i < bar_blocks) ? '#' : '.');
+			}
+			std::fprintf(stderr, "| %6.2f%%", percent); 
+		}
     }
 
     delete[] h_result_array;
@@ -332,9 +359,14 @@ int main() {
 	}
 	for (int k = 0; k < num_kernels; k++) {
 		std::cerr << (k == best_kernel ? "BEST> " : "      ");
-		if (result_array[k].success)
-			std::cerr << (*(configs[k]))[0]->kernel_name << ", ETA = " << result_array[k].ms_total_estimate
-<< " ms.\n"; else std::cerr << (*(configs[k]))[0]->kernel_name << " (failed!)\n";
+		if (result_array[k].success) {
+			std::cerr << (*(configs[k]))[0]->kernel_name << ", ETA = ";
+			print_eta(std::cerr, result_array[k].ms_total_estimate);
+			std::cerr << '\n'; 
+		}
+		else {
+			std::cerr << (*(configs[k]))[0]->kernel_name << " (failed!)\n";
+		}
 	}
 
 	std::cerr << "Running kernel " << (*(configs[best_kernel]))[0]->kernel_name << "...\n";
@@ -343,7 +375,7 @@ int main() {
 
 		const KernelPipeline* config = configs[best_kernel];
 		launch_configured_kernel(launchers[best_kernel], *config, true, seeds_file);
-		std::cerr << "Finished.\n";
+		std::cerr << "\nFinished.\n";
 	}
 	return 0;
 }

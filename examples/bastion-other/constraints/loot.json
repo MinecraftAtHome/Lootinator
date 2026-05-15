@@ -1,0 +1,10 @@
+[
+  {
+    "item": "minecraft:gilded_blackstone",
+    "range": {
+      "min": 17,
+      "max": 17
+    },
+    "slot": 0
+  }
+]

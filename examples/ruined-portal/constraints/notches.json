@@ -1,0 +1,10 @@
+[
+  {
+    "item": "minecraft:enchanted_golden_apple",
+    "slot": 0,
+    "range": {
+      "min": 4,
+      "max": 10000
+    }
+  }
+]

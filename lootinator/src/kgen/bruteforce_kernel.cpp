@@ -165,7 +165,13 @@ namespace kgen {
 
 	void BruteforceKernel::extract_data_prefix(
 		std::ostream& out, data::LootPool* pool, int pool_off, bool disable_seedcracking) {
-		out << "int item = nextInt(&loot_seed, " << pool->get_total_weight() << ");\n";
+
+		if (pool->children.size() != 1) {
+			out << "int item = nextInt(&loot_seed, " << pool->get_total_weight() << ");\n";
+		}
+		else {
+			out << "int item = 0;\n";
+		}
 
 		int bpe = this->kgen_config.bytes_per_entry;
 		// TODO can the unpacking be done with an intrinsic function?

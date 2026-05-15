@@ -1,0 +1,10 @@
+[
+  {
+    "item": "minecraft:tnt",
+    "slot": 0,
+    "range": {
+      "min": 16,
+      "max": 10000
+    }
+  }
+]

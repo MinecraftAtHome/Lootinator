@@ -250,8 +250,15 @@ namespace kgen {
 		out << "i32 rolls = nextIntBounded(&loot_seed, " << pool->rolls.min << ","
 			<< pool->rolls.max << ");\n";
 		out << "for (i32 roll = 0; roll < rolls; roll++) {\n";
-		out << "int item = data[" << this->pool_memory_offsets[pool_idx] << "+ nextInt(&loot_seed, "
-			<< pool->get_total_weight() << ")];\n";
+
+		if (pool->children.size() != 1) {
+			out << "int item = data[" << this->pool_memory_offsets[pool_idx] << "+ nextInt(&loot_seed, "
+				<< pool->get_total_weight() << ")];\n";
+		}
+		else {
+			out << "int item = data[" << this->pool_memory_offsets[pool_idx] << "];\n";
+		}
+		
 		out << "switch (item) {\n";
 		for (const auto child : pool->children) {
 			data::LootEntry* entry = dynamic_cast<data::LootEntry*>(child);

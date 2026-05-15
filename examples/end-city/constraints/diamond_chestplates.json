@@ -1,0 +1,10 @@
+[
+  {
+    "item": "minecraft:diamond_chestplate",
+    "slot": 0,
+    "range": {
+      "min": 6,
+      "max": 6
+    }
+  }
+]

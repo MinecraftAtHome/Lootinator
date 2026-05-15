@@ -218,8 +218,12 @@ u32 counter_idx = (entry_data >> 8) & 0xf;)";
 		std::string apply_damage_bitmask = create_apply_damage_item_mask(pool);
 		std::string one = pool->children.size() > 32 ? "((u64)1)" : "((u32)1)";
 
-		out << R"(if ()" << apply_damage_bitmask << " & (" << one << R"(<< item_idx)) {
-			loot_seed = (loot_seed * 25214903917 + 11) & MASK_48;
+		out << R"(
+		{
+			u32 item_idx = entry_data >> 24;
+			if ()" << apply_damage_bitmask << " & (" << one << R"(<< item_idx)) {
+				loot_seed = (loot_seed * 25214903917 + 11) & MASK_48;
+			}
 		})";
 	}
 

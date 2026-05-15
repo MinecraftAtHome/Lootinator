@@ -1,0 +1,50 @@
+[
+  {
+    "item": "minecraft:diamond_chestplate",
+    "slot": 0,
+    "range": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  {
+    "item": "minecraft:diamond_leggings",
+    "slot": 0,
+    "range": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  {
+    "item": "minecraft:diamond_boots",
+    "slot": 0,
+    "range": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  {
+    "item": "minecraft:diamond_helmet",
+    "slot": 0,
+    "range": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  {
+    "item": "minecraft:diamond_pickaxe",
+    "slot": 0,
+    "range": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  {
+    "item": "minecraft:diamond_sword",
+    "slot": 0,
+    "range": {
+      "min": 1,
+      "max": 1
+    }
+  }
+]

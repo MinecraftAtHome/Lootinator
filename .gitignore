@@ -1,10 +1,7 @@
 *.exe
 *.ncu-rep
 /.vscode
+/.vs
 /.cache
 /build
-kernel-launcher/auto-benchmark/run.bat
-kernel-launcher/auto-benchmark/temp/first_cuda.cu
-kernel-launcher/auto-benchmark/source.cu
-/.vs
 /out/build/

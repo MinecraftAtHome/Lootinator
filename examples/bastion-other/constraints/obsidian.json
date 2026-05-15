@@ -1,0 +1,10 @@
+[
+  {
+    "item": "minecraft:obsidian",
+    "range": {
+      "min": 24,
+      "max": 1000
+    },
+    "slot": 0
+  }
+]

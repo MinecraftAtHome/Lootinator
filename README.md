@@ -16,7 +16,7 @@
 
 Lootinator finds _loot seeds_ - the internal seeds Minecraft uses to determine chest loot.
 
-Lootinator does not find loot seeds directly, instead it generates optimized CUDA kernels that can be compiled and run on any NVIDIA graphics card.
+Lootinator does not find loot seeds directly, instead it generates optimized CUDA kernels that can be compiled and run on any NVIDIA graphics card from 2012 onwards.
 
 ## Prerequisites
 

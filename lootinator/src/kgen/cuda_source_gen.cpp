@@ -7,8 +7,6 @@
 namespace kgen {
 	typedef uint32_t u32;
 
-	constexpr u32 RESULT_BUFFER_SIZE = 16u * 1024u; // max results per kernel launch
-
 	void print_preamble(std::ostream& out, const kgen::ConfiguredKernel& reference_kernel) {
 		std::stringstream sout;
 		sout <<

@@ -15,7 +15,7 @@ namespace loot {
 			3: bad constraint file
 			4: bad loot table
 	*/
-	const double CUTOFF_PROBABILIY = 1.0 / 10000.0;
+	const double CUTOFF_PROBABILIY = 1.0 / 10.0;
 
 	enum LootinatorErrorKind {
 		SUCCESS,

@@ -925,7 +925,9 @@ namespace prob {
 			active_factors = std::move(untouched);
 		}
 
-		return factor_value(multiply_many_factors(active_factors, prepared));
+		double p = factor_value(multiply_many_factors(active_factors, prepared));
+		std::cout << p * 100 << "\n";
+		return p;
 	}
 
 	LootTable get_probability_table(const data::LootTableRoot& tbl_in) {

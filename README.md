@@ -1,9 +1,9 @@
 ﻿<p align="center">
-  <img align="center" alt="Lootinator logo of a Minecraft chest" src="https://github.com/user-attachments/assets/b6332fb1-26c8-4cda-acb3-eb919dae957a"></img>
+  <img align="center" alt="Lootinator logo of a Minecraft chest" src="https://github.com/user-attachments/assets/b6332fb1-26c8-4cda-acb3-eb919dae957a">
 </p>
 <h1 align="center"><b>Lootinator</b></h1>
 <p align="center">
-  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/MinecraftAtHome/Lootinator?style=for-the-badge"></img>
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/MinecraftAtHome/Lootinator?style=for-the-badge">
   <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/MinecraftAtHome/Lootinator?style=for-the-badge">
   <img alt="GitHub Downloads" src="https://img.shields.io/github/downloads/MinecraftAtHome/Lootinator/total?style=for-the-badge">
   <img alt="GitHub License" src="https://img.shields.io/github/license/MinecraftAtHome/Lootinator?style=for-the-badge">

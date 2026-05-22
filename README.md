@@ -70,7 +70,7 @@ nvcc output.cu -o loot_finder
 ./loot_finder
 ```
 
-A full example of the CLI can be found [further down below](#usage-example).
+A full example of the CLI can be found [below](#usage-example).
 
 ## CLI Reference
 
@@ -147,6 +147,12 @@ A full example of the CLI can be found [further down below](#usage-example).
 
 - **Web interface** - run Lootinator directly in the browser using WebGPU.
 - **Native GUI** - a native desktop application for Windows and Linux.
+
+## Issues
+
+If you have any issues, please report them at <https://github.com/MinecraftAtHome/Lootinator/issues>.
+
+You can also join the `#lootinator` channel in the [Minecraft@Home Discord server](https://discord.gg/QmE5zeWVBA).
 
 ## Usage Example
 

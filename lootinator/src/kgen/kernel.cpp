@@ -20,7 +20,10 @@ namespace kgen {
 					if (entry.contains("type") && entry["type"] != "minecraft:empty") {
 						std::string item_name = entry["name"];
 						int new_index = item_map.size();
-						item_map[item_name] = new_index;
+						if (item_map.find(item_name) == item_map.end()) {
+							// ONLY assign the new index if it didn't already exist
+							item_map[item_name] = new_index;
+						}
 					}
 				}
 			}
@@ -189,6 +192,8 @@ namespace kgen {
 		if (!no_fast_filter) {
 			construct_order(edges, NUM_FUNCTIONS, &root);
 		}
+
+		// TODO : set no_fast_filter to true if multiple entries have same item
 
 		for (int i = 0; i < NUM_FUNCTIONS; i++) {
 			delete[] edges[i];

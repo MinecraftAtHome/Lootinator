@@ -18,8 +18,8 @@
   {
     "item": "minecraft:iron_block",
     "range": {
-      "min": 5,
-      "max": 5
+      "min": 20,
+      "max": 20
     },
     "slot": 0
   }

@@ -200,7 +200,7 @@ namespace kgen {
 			data::LootFunctionData* function = dynamic_cast<data::LootFunctionData*>(child);
 			switch (function->type) {
 				case data::APPLY_DAMAGE: {
-					out << Kernel::generate_skip("loot_seed", 1);
+					out << Kernel::generate_skip("loot_seed", 1) << ";\n";
 					break;
 				}
 				case data::SET_COUNT: {

@@ -228,9 +228,9 @@ namespace prob {
 			if (!available_items.count(target.item_id)) {
 				throw std::invalid_argument("Target item_id does not appear in the loot table.");
 			}
-			if (!seen.insert(target.item_id).second) {
-				throw std::invalid_argument("Duplicate target item_id.");
-			}
+			//if (!seen.insert(target.item_id).second) {
+			//	throw std::invalid_argument("Duplicate target item_id.");
+			//}
 		}
 		return target_items;
 	}

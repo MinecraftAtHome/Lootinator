@@ -72,6 +72,8 @@ namespace kgen {
 		kernel_index++;
 		BruteforceKernel::name = "statepred_kernel_" + std::to_string(kernel_index);
 		SecondaryBruteforceKernel::name = "statepred_kernel_" + std::to_string(kernel_index);
+
+		SecondaryBruteforceKernel::setup_shared_memory();
 	}
 
 	ConfiguredKernel kgen::StatepredKernel::generate() {
@@ -286,6 +288,7 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		out << "u64 loot_seed = original_state;\n";
 		out << "i32 calculated_count = 1; // don't know if it will satisfy constraint "
 			   "requirements\n";
+		out << "i32 local_constraints[2]; // just to make it compile\n";
 
 		CAST_CHILD(pool, data::LootPool, entry->parent);
 		int pool_idx = pool->child_index;
@@ -295,7 +298,7 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		emit_cuda_for_entry(out, entry);
 		out << "calculated_count = item_count;";
 
-		out << "{\n";
+		out << "[&]() {\n";
 		if (!pool->constraints.empty()) {
 			out << "i32 local_constraints[" << pool->constraints.size() << "] = {0};\n";
 		}
@@ -335,7 +338,36 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		out << "if (!(" << arrayPlusIndex << comp << target_constraint.count_range.min
 			<< ")) return false;\n";
 
-		out << "}\n";
+		out << "}();\n";
+
+		// Now it's time to go back and do the full forward check:
+		// - calculate min backward state advancement
+		// - calculate max backward state advancement
+		// - loop over the valid range of states
+		int32_t min_back = 1;
+		int32_t max_back = pool->get_max_lcg_advancement();
+
+		for (auto& child : BruteforceKernel::root_node.children) {
+			CAST_CHILD(pool2, data::LootPool, child);
+			if (pool2->child_index < pool->child_index) {
+				min_back += pool2->get_min_lcg_advancement();
+				max_back += pool2->get_max_lcg_advancement();
+			}
+		}
+
+		out << "loot_seed = original_state;\n";
+		out << Kernel::generate_skip("loot_seed", -min_back) << ";\n";
+		out << "for (int back = 0; back < " << (max_back - min_back + 1) << "; back++) {\n";
+
+		out << R"(
+	if (forward_filter_full(loot_seed, data)) {
+		write_result(loot_seed ^ JRAND_MULTIPLIER, result_array, result_count);
+	}
+)";
+		out << "    " << Kernel::generate_skip("loot_seed", -1) << ";\n";
+		out << "}\n"; // end of for loop
+
+		out << "}\n\n"; // end of function 
 	}
 
 	void StatepredKernel::generate_statepred_filter(std::ostream& out) {

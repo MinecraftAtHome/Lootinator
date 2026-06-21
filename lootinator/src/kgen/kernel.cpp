@@ -2,6 +2,7 @@
 #include "lootinator/global_settings.hpp"
 #include "lootinator/lootinator.h"
 
+#include <unordered_set>
 #include <cinttypes>
 #include <fstream>
 #include <random>
@@ -193,7 +194,16 @@ namespace kgen {
 			construct_order(edges, NUM_FUNCTIONS, &root);
 		}
 
-		// TODO : set no_fast_filter to true if multiple entries have same item
+		std::unordered_set<std::string> taken_item_names;
+		for (auto& child : root.children) {
+			for (auto& child2 : child->children) {
+				CAST_CHILD(entry, data::LootEntry, child2);
+				if (taken_item_names.find(entry->name) != taken_item_names.end()) {
+					no_fast_filter = true;
+				}
+				taken_item_names.emplace(entry->name);
+			}
+		}
 
 		for (int i = 0; i < NUM_FUNCTIONS; i++) {
 			delete[] edges[i];

@@ -1,0 +1,45 @@
+[
+  {
+    "item": "minecraft:diamond_sword",
+    "range": {
+      "min": 1,
+      "max": 1
+    },
+    "attributes": [
+      {
+        "type": "smite",
+        "level": 4
+      }
+    ],
+    "slot": 0
+  },
+  {
+    "item": "minecraft:diamond_sword",
+    "range": {
+      "min": 1,
+      "max": 1
+    },
+    "attributes": [
+      {
+        "type": "mending"
+      }
+    ],
+    "slot": 0
+  },
+  {
+    "item": "minecraft:diamond_sword",
+    "range": {
+      "min": 1,
+      "max": 1
+    },
+    "slot": 0
+  },
+  {
+    "item": "minecraft:iron_block",
+    "range": {
+      "min": 20,
+      "max": 20
+    },
+    "slot": 0
+  }
+]

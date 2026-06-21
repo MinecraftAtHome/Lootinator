@@ -2,9 +2,10 @@
 #define LOOTINATOR_KERNGEN_STATEPRED_KERNEL_H
 
 #include "lootinator/kgen/bruteforce_kernel.hpp"
+#include "lootinator/kgen/secondary_bruteforce_kernel.hpp"
 
 namespace kgen {
-	class StatepredKernel : public BruteforceKernel {
+	class StatepredKernel : public BruteforceKernel, public SecondaryBruteforceKernel {
 	  public:
 		static void gen_kernels(
 			std::vector<ConfiguredKernel>& out, kgen::KernelGenConfig kgen_config);
@@ -57,6 +58,8 @@ namespace kgen {
 		std::string to_string();
 
 		void emit_state_prediction_entry_handler(std::ostream& out, const SharedEntryData& data);
+
+		void generate_statepred_filter_secondary(std::ostream& out);
 		virtual void generate_statepred_filter(std::ostream& out);
 	};
 } // namespace kgen

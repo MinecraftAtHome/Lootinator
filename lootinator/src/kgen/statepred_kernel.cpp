@@ -57,7 +57,8 @@ namespace kgen {
 
 	StatepredKernel::StatepredKernel(data::LootTableRoot& root_node, data::LootEntry* entry,
 		loot::Constraint& target_constraint, const kgen::KernelGenConfig& kgen_config)
-		: BruteforceKernel(root_node, kgen_config), target_constraint(target_constraint) {
+		: BruteforceKernel(root_node, kgen_config), target_constraint(target_constraint),
+	      SecondaryBruteforceKernel(root_node, kgen_config) {
 
 		this->entry = entry;
 
@@ -69,7 +70,8 @@ namespace kgen {
 
 		static int kernel_index = 0;
 		kernel_index++;
-		name = "statepred_kernel_" + std::to_string(kernel_index);
+		BruteforceKernel::name = "statepred_kernel_" + std::to_string(kernel_index);
+		SecondaryBruteforceKernel::name = "statepred_kernel_" + std::to_string(kernel_index);
 	}
 
 	ConfiguredKernel kgen::StatepredKernel::generate() {
@@ -77,13 +79,15 @@ namespace kgen {
 		uint64_t total_threads = (UINT64_C(1) << 48) / this->prediction_bound;
 		uint32_t end_batch = total_threads / threads_per_batch;
 		return ConfiguredKernel{
-			this->name,
-			this->kgen_config.seeds_output,
+			BruteforceKernel::name,
+			BruteforceKernel::kgen_config.seeds_output,
 			to_string(),
 			total_threads,
 			threads_per_batch,
 			global_settings.THREADS_PER_BLOCK,
-			combined_shared_memory,
+			BruteforceKernel::kgen_config.no_fast_filter 
+				? SecondaryBruteforceKernel::combined_shared_memory
+				: BruteforceKernel::combined_shared_memory,
 			0,
 			0,
 			end_batch,
@@ -96,25 +100,51 @@ namespace kgen {
 		std::stringstream result;
 		Kernel::write_shared_definitions(result);
 
-		BruteforceKernel::generate_forward_filter(result);
-		generate_statepred_filter(result);
+		if (!BruteforceKernel::kgen_config.no_fast_filter) {
+			BruteforceKernel::generate_forward_filter(result);
+			generate_statepred_filter(result);
+		}
+		else {
+			SecondaryBruteforceKernel::generate_forward_filter(result);
+			generate_statepred_filter_secondary(result);
+		}
+		
 
 		data::LootPool* pool = dynamic_cast<data::LootPool*>(this->entry->parent);
 
-		result << c_extern() << R"(__global__ void )" << this->name
+		result <<  BruteforceKernel::c_extern() << R"(__global__ void )" << BruteforceKernel::name
 			   << "(u64* result_array, u32* result_count, u32* shared_mem_contents,"
 				  "u64 offset) {";
-		result <<
+		
+		if (BruteforceKernel::kgen_config.no_fast_filter) {
+			result <<
 			R"(
     __shared__ u32 data[)"
-			   << combined_shared_memory.size() << R"(];
+			   << SecondaryBruteforceKernel::combined_shared_memory.size() << R"(];
     if (threadIdx.x < )"
-			   << combined_shared_memory.size() << R"() {
+			   << SecondaryBruteforceKernel::combined_shared_memory.size() << R"() {
         for (int i = threadIdx.x; i < )"
-			   << combined_shared_memory.size() << R"(; i += blockDim.x) {
+			   << SecondaryBruteforceKernel::combined_shared_memory.size() << R"(; i += blockDim.x) {
             data[i] = shared_mem_contents[i];
         }
-    }
+    })";
+		}
+		else {
+			result <<
+			R"(
+    __shared__ u32 data[)"
+			   << BruteforceKernel::combined_shared_memory.size() << R"(];
+    if (threadIdx.x < )"
+			   << BruteforceKernel::combined_shared_memory.size() << R"() {
+        for (int i = threadIdx.x; i < )"
+			   << BruteforceKernel::combined_shared_memory.size() << R"(; i += blockDim.x) {
+            data[i] = shared_mem_contents[i];
+        }
+    })";
+		}
+		
+		result <<
+			R"(
     __syncthreads();
 
 	u64 tid = (u64)blockDim.x * blockIdx.x + threadIdx.x + offset;
@@ -250,6 +280,64 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 
 	// ------------------------------------------------
 
+	void StatepredKernel::generate_statepred_filter_secondary(std::ostream& out) {
+		out << "__device__ void statepred_filter(u64 original_state, u32 data[], u64* "
+			   "result_array, u32* result_count) {\n";
+		out << "u64 loot_seed = original_state;\n";
+		out << "i32 calculated_count = 1; // don't know if it will satisfy constraint "
+			   "requirements\n";
+
+		CAST_CHILD(pool, data::LootPool, entry->parent);
+		int pool_idx = pool->child_index;
+		int pool_off = SecondaryBruteforceKernel::pool_memory_offsets[pool_idx];
+		SecondaryBruteforceKernel::materialize_level(pool);
+
+		emit_cuda_for_entry(out, entry);
+		out << "calculated_count = item_count;";
+
+		out << "{\n";
+		if (!pool->constraints.empty()) {
+			out << "i32 local_constraints[" << pool->constraints.size() << "] = {0};\n";
+		}
+		out << "for (i32 roll = 0; roll < " << (pool->rolls.max-1) << "; roll++) {\n";
+
+		if (pool->children.size() != 1) {
+			out << "int item = data[" << SecondaryBruteforceKernel::pool_memory_offsets[pool_idx] << "+ nextInt(&loot_seed, "
+				<< pool->get_total_weight() << ")];\n";
+		}
+		else {
+			out << "int item = data[" << SecondaryBruteforceKernel::pool_memory_offsets[pool_idx] << "];\n";
+		}
+		
+		out << "switch (item) {\n";
+		for (const auto child : pool->children) {
+			data::LootEntry* entry2 = dynamic_cast<data::LootEntry*>(child);
+			if (SecondaryBruteforceKernel::kgen_config.seedcracking && entry2->constraints.empty()) {
+				continue;
+			}
+			out << "case " << entry2->index << ": { //" << entry2->name << '\n';
+			if (entry2 == entry) {
+				emit_cuda_for_entry(out, entry2);
+			}
+			else {
+				emit_skip_for_entry(out, entry2);
+			}
+			out << "break;}\n";
+		}
+		out << "default: {return false;}\n";
+		out << "}}\n";
+
+		// check constraint sat
+		std::string item_ident = constraint_to_item_identifier(target_constraint);
+		std::string arrayPlusIndex = SecondaryBruteforceKernel::var_name_map[item_ident];
+		std::string comp =
+			target_constraint.count_range.min == target_constraint.count_range.max ? " == " : ">=";
+		out << "if (!(" << arrayPlusIndex << comp << target_constraint.count_range.min
+			<< ")) return false;\n";
+
+		out << "}\n";
+	}
+
 	void StatepredKernel::generate_statepred_filter(std::ostream& out) {
 		out << "__device__ void statepred_filter(u64 original_state, u32 data[], u64* "
 			   "result_array, u32* result_count) {\n";
@@ -258,12 +346,12 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 			   "requirements\n";
 
 		CAST_CHILD(pool, data::LootPool, entry->parent);
-		int pool_off = this->pool_memory_offsets[pool->child_index];
-		materialize_level(pool);
+		int pool_off = BruteforceKernel::pool_memory_offsets[pool->child_index];
+		BruteforceKernel::materialize_level(pool);
 		std::string item_ident = std::to_string(target_constraint.item);
-		std::string arrayPlusIndex = var_name_map[item_ident];
+		std::string arrayPlusIndex = BruteforceKernel::var_name_map[item_ident];
 
-		SharedEntryData sed(pool_off, kgen_config.bytes_per_entry, entry, combined_shared_memory);
+		SharedEntryData sed(pool_off, BruteforceKernel::kgen_config.bytes_per_entry, entry, BruteforceKernel::combined_shared_memory);
 		emit_state_prediction_entry_handler(
 			out, sed); // initializes calculated_count, processes entry functions
 
@@ -275,7 +363,7 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 
 		extract_data_prefix(out, pool, pool_off, true);
 
-		for (auto& func : this->kgen_config.function_order) {
+		for (auto& func : BruteforceKernel::kgen_config.function_order) {
 			switch (func) {
 				case data::ENCHANT_WITH_LEVELS: {
 					emit_function_enchant_with_levels(out);
@@ -313,6 +401,14 @@ loot_seed = (loot_seed * (1|(25214903917&m)) + (11&m)) & MASK_48;)";
 		// - loop over the valid range of states
 		int32_t min_back = 1;
 		int32_t max_back = pool->get_max_lcg_advancement();
+
+		for (auto& child : BruteforceKernel::root_node.children) {
+			CAST_CHILD(pool2, data::LootPool, child);
+			if (pool2->child_index < pool->child_index) {
+				min_back += pool2->get_min_lcg_advancement();
+				max_back += pool2->get_max_lcg_advancement();
+			}
+		}
 
 		out << "loot_seed = original_state;\n";
 		out << Kernel::generate_skip("loot_seed", -min_back) << ";\n";

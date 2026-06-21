@@ -88,7 +88,7 @@ namespace kgen {
 		return result.str();
 	}
 
-	static std::string constraint_to_item_identifier(const loot::Constraint& constraint) {
+	std::string constraint_to_item_identifier(const loot::Constraint& constraint) {
 		std::stringstream item_identifier;
 		item_identifier << constraint.item << "_";
 		if (constraint.attributes.size() > 0) {
@@ -155,7 +155,6 @@ namespace kgen {
 					break;
 				}
 				case data::ENCHANT_RANDOMLY: {
-					// TODO remove awful code
 					auto& vec = function->enchant_randomly.enchantment_order;
 					std::string bitmask = "0b";
 					for (int bit = vec.size() - 1; bit >= 0; bit--) {
@@ -223,6 +222,12 @@ namespace kgen {
 					// std::cout << "...done!\n";
 					out << "u32 max_level = data[" << offset << "+ enchantment];\n";
 					out << "i32 level = nextIntBounded(&loot_seed, 1, max_level);\n";
+					break;
+				}
+				case data::ENCHANT_WITH_LEVELS: {
+					int index = function_memory_offsets[function->id];
+					out << "// ENCHANT WITH LEVELS >:)\n";
+					out << "enchant_with_levels_function(&loot_seed, &(data[" << index << "]));\n";
 					break;
 				}
 				default: {

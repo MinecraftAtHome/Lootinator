@@ -25,6 +25,9 @@ namespace kgen {
 
 		void materialize_level(data::LootTreeNode* node);
 	};
+
+	// don't ask
+	std::string constraint_to_item_identifier(const loot::Constraint& constraint);
 } // namespace kgen
 
 #endif
